@@ -1,0 +1,48 @@
+# Pendant le developpement, on versionne tout ce qui fait tourner le projet,
+# y compris les fichiers d environnement et les secrets. Decision de Joel le
+# 23/09/2026 : on developpe, la securite sera traitee quand le projet sera
+# stable. Voir la decision 44.
+#
+# N est exclu ici que ce qui se reinstalle ou se reconstruit tout seul, et qui
+# n a donc rien a faire dans un depot.
+
+# Dependances
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# Sorties de construction
+.next/
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Artefacts de tests, regenerables
+**/test-results/
+**/playwright-report/
+**/blob-report/
+.coverage
+htmlcov/
+
+# Caches
+.cache/
+.npm/
+.parcel-cache/
+
+# Systeme et editeur
+.DS_Store
+Thumbs.db
+*.log
+
+# Backstage
+oscar_backstage/node_modules/
+oscar_backstage/**/dist/
+oscar_backstage/**/dist-types/
+oscar_backstage/.yarn/cache/
+oscar_backstage/.yarn/install-state.gz
