@@ -37,7 +37,9 @@ services:
   # ---------------------------------------------------------------------------
   portail:
     build:
-      context: ./oscar_backstage
+      # Le contexte est ce dossier : tout ce qui concerne Backstage y vit,
+      # ce qui permet a Coolify de cibler ce seul sous-dossier au deploiement.
+      context: .
       dockerfile: Dockerfile
     image: oscar-portail:latest
     container_name: oscar-portail
@@ -67,7 +69,7 @@ services:
       # La cle privee de la GitHub App, en lecture seule. Le chemin est
       # RELATIF au projet : deplacer OSCAR-PROJECT ne le casse pas, alors
       # qu un chemin absolu casserait en silence.
-      - ../../secret_root/github-token/application-github/backstage-tech-oscar/oscar-portail-technique.2026-09-24.private-key.pem:/secrets/github-app.pem:ro
+      - ../../../secret_root/github-token/application-github/backstage-tech-oscar/oscar-portail-technique.2026-09-24.private-key.pem:/secrets/github-app.pem:ro
     restart: unless-stopped
 
     # ------------------------------------------------------------------------

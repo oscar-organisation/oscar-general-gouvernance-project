@@ -7,31 +7,23 @@ sert, comment c'est relié, et où aller.
 ## Ce que ça contient
 
 ```
-oscar_backstage/    le portail, construit avec Backstage
+oscar_backstage/    le portail, et TOUT ce qui le concerne
 ```
 
-## Pourquoi un portail plutôt qu'une page de liens
-
-Un tableau de liens vieillit mal : il faut le tenir à jour à la main, et
-personne ne le fait. Un portail **lit les dépôts eux-mêmes** et se met à jour
-tout seul.
-
-Ce qu'on veut y voir :
-
-| Question | Ce que le portail répond |
-|---|---|
-| Qu'est-ce qui existe ? | tous les dépôts, applications et services, avec ce qu'ils font |
-| Qui s'en occupe ? | l'équipe responsable de chaque chose |
-| Comment ça se relie ? | qui appelle quoi, quelles dépendances |
-| Où est la documentation ? | lue directement depuis les dépôts, jamais recopiée |
-| Comment je démarre ? | des modèles prêts à l'emploi pour créer un nouveau composant |
-| Où sont les environnements ? | développement, production, et leurs adresses |
+**Tout est dans ce sous-dossier**, y compris son `compose.yaml` et ses réglages.
+Rien à la racine. C'est ce qui permet à Coolify de déployer depuis ce dépôt en
+ne visant que ce dossier, sans rien savoir du reste.
 
 ## L'adresse
 
 ```
 tech.oscar-bot.com
 ```
+
+## Comment il est déployé
+
+**Par Coolify, depuis ce dépôt GitHub.** Pas à la main sur le serveur : une
+poussée sur `main` déclenche le déploiement.
 
 ## Qui y a accès
 
