@@ -1,0 +1,115 @@
+# La structure d accueil du catalogue.
+#
+# Les fiches des depots renvoient a un systeme et a un proprietaire. S ils
+# n existent pas, le portail affiche les composants avec un lien casse et
+# personne ne comprend pourquoi. Ce fichier les declare.
+
+# --- Le domaine : tout le projet ---
+apiVersion: backstage.io/v1alpha1
+kind: Domain
+metadata:
+  name: oscar
+  title: OSCAR
+  description: >-
+    La plateforme robotique OSCAR, vendue a des entreprises. Elle permet de
+    piloter des robots a distance, depuis un ecran ou un casque, et de suivre
+    leur exploitation.
+spec:
+  owner: group:default/equipe-oscar
+
+---
+# --- Les systemes : les grandes familles ---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: plateforme
+  title: Plateforme
+  description: >-
+    Ce qui appartient a OSCAR et n est jamais installe chez un client : le
+    portail ou le client suit son dossier, et celui ou l equipe emet les
+    licences.
+spec:
+  owner: group:default/equipe-oscar
+  domain: oscar
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: console
+  title: Console du client
+  description: >-
+    L outil de travail quotidien du client, installable chez lui. Il porte la
+    teleoperation, le studio et l administration.
+spec:
+  owner: group:default/equipe-oscar
+  domain: oscar
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: infrastructure
+  title: Infrastructure
+  description: >-
+    Les briques techniques partagees : les noms de domaine, le deploiement, et
+    le transport de la video en temps reel.
+spec:
+  owner: group:default/equipe-oscar
+  domain: oscar
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: outillage
+  title: Outillage
+  description: >-
+    Ce qui sert a construire et a faire tourner le reste, y compris ce qu on
+    remet aux integrateurs.
+spec:
+  owner: group:default/equipe-oscar
+  domain: oscar
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: verification
+  title: Verification
+  description: >-
+    De quoi simuler un robot et verifier que les applications fonctionnent,
+    sans machine physique.
+spec:
+  owner: group:default/equipe-oscar
+  domain: oscar
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: gouvernance
+  title: Gouvernance
+  description: >-
+    La documentation, les incidents, et la facon dont on fait travailler les
+    agents de developpement.
+spec:
+  owner: group:default/equipe-oscar
+  domain: oscar
+
+---
+# --- Le proprietaire par defaut ---
+#
+# Les personnes viennent de l organisation GitHub et arrivent toutes seules.
+# Cette equipe existe pour que chaque composant ait un proprietaire des le
+# premier jour : un composant sans proprietaire est un composant que personne
+# ne reclame, et c est ce qu on veut eviter.
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: equipe-oscar
+  title: Equipe OSCAR
+  description: Le proprietaire par defaut, en attendant des equipes plus fines.
+spec:
+  type: team
+  children: []

@@ -1,0 +1,136 @@
+# Portail de gouvernance OSCAR - reglages de service.
+#
+# Ce fichier se superpose a app-config.yaml. Aucune valeur sensible n y est
+# ecrite : tout vient de l environnement, donc le meme fichier vaut sur
+# n importe quelle machine.
+
+app:
+  title: OSCAR - portail technique
+  baseUrl: ${OSCAR_PORTAIL_URL}
+
+organization:
+  name: OSCAR
+
+backend:
+  baseUrl: ${OSCAR_PORTAIL_URL}
+  listen:
+    port: 7007
+    # On ecoute sur toutes les interfaces DU CONTENEUR, pas de la machine :
+    # aucun port n est publie, c est le proxy qui fait entrer les visiteurs.
+    host: 0.0.0.0
+  csp:
+    connect-src: ["'self'", 'http:', 'https:']
+  cors:
+    origin: ${OSCAR_PORTAIL_URL}
+    credentials: true
+  auth:
+    keys:
+      - secret: ${BACKEND_SECRET}
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+
+integrations:
+  github:
+    - host: github.com
+      # Une GitHub App plutot qu un jeton personnel : ses droits sont choisis
+      # un par un, son acces se renouvelle tout seul, et elle ne meurt pas
+      # avec le compte de qui l a creee.
+      apps:
+        - appId: ${GITHUB_APP_ID}
+          clientId: ${GITHUB_CLIENT_ID}
+          clientSecret: ${GITHUB_CLIENT_SECRET}
+          # Lue dans le fichier monte, jamais recopiee dans une variable :
+          # une cle privee sur plusieurs lignes passe mal dans un
+          # environnement, et elle finit tronquee sans message clair.
+          privateKey:
+            $file: /secrets/github-app.pem
+
+# -----------------------------------------------------------------------------
+# QUI PEUT ENTRER
+#
+# Connexion par GitHub uniquement. Une personne qui n est pas dans
+# l organisation oscar-organisation ne peut pas se connecter du tout.
+# -----------------------------------------------------------------------------
+auth:
+  environment: production
+  providers:
+    github:
+      production:
+        clientId: ${GITHUB_CLIENT_ID}
+        clientSecret: ${GITHUB_CLIENT_SECRET}
+        signIn:
+          resolvers:
+            # Le compte GitHub doit correspondre a un utilisateur du catalogue,
+            # lui-meme importe depuis l organisation. C est ce lien qui permet
+            # ensuite de savoir a quelles equipes la personne appartient, donc
+            # a quels depots elle a droit.
+            - resolver: usernameMatchingUserEntityName
+
+# -----------------------------------------------------------------------------
+# CE QUI REMPLIT LE CATALOGUE
+#
+# Deux sources qui se completent :
+#   - les personnes et les equipes, lues dans l organisation GitHub
+#   - les composants, decouverts dans les depots qui portent un catalog-info.yaml
+#
+# Rien n est saisi a la main. Un depot cree demain apparait tout seul.
+# -----------------------------------------------------------------------------
+catalog:
+  import:
+    entityFilename: catalog-info.yaml
+  rules:
+    - allow: [Component, System, Domain, API, Resource, Location, Group, User, Template]
+
+  # La structure d accueil : le domaine, les familles et le proprietaire par
+  # defaut. Lue au demarrage, avant toute decouverte.
+  locations:
+    - type: file
+      target: ./catalogue/organisation.yaml
+      rules:
+        - allow: [Domain, System, Group]
+
+  providers:
+    github:
+      oscarOrganisation:
+        organization: 'oscar-organisation'
+        catalogPath: '/catalog-info.yaml'
+        filters:
+          branch: 'main'
+        schedule:
+          frequency: { minutes: 30 }
+          timeout: { minutes: 3 }
+
+    githubOrg:
+      - id: oscar
+        githubUrl: 'https://github.com'
+        orgs: ['oscar-organisation']
+        schedule:
+          frequency: { hours: 1 }
+          timeout: { minutes: 5 }
+
+# -----------------------------------------------------------------------------
+# LA DOCUMENTATION
+#
+# Elle est lue dans les depots, jamais recopiee ici. Une page corrigee dans son
+# depot est a jour dans le portail sans que personne n intervienne.
+# -----------------------------------------------------------------------------
+techdocs:
+  builder: 'local'
+  generator:
+    runIn: 'local'
+  publisher:
+    type: 'local'
+
+# -----------------------------------------------------------------------------
+# LES DROITS
+#
+# Active le controle d acces. La regle elle-meme vit dans le code du backend,
+# parce qu elle depend des equipes GitHub et ne peut pas s ecrire ici.
+# -----------------------------------------------------------------------------
+permission:
+  enabled: true

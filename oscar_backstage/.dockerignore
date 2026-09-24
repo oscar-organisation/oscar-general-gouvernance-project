@@ -1,0 +1,36 @@
+# Ce qui ne doit PAS entrer dans le contexte de construction.
+#
+# ATTENTION, LE FICHIER FOURNI PAR BACKSTAGE FAISAIT L INVERSE
+#
+# Il excluait packages/*/src et plugins, c est-a-dire LE CODE SOURCE. Ce n est
+# pas une erreur de leur part : leur Dockerfile attend qu on ait deja construit
+# sur la machine, il ne ramasse que le resultat, et le source n a donc rien a
+# faire dans le contexte.
+#
+# Notre Dockerfile construit dans le conteneur. Il lui faut le source. Sans
+# cette correction, la compilation echoue sur :
+#   TS18003: No inputs were found in config file '/app/tsconfig.json'
+#
+# L original est garde en .dockerignore.origine.
+
+# Historique git : lourd et inutile pour construire.
+.git
+
+# Caches : ils se refont, et ils pesent des centaines de mega-octets.
+.yarn/cache
+.yarn/install-state.gz
+node_modules
+packages/*/node_modules
+plugins/*/node_modules
+
+# Reglages locaux d un poste, qui n ont rien a faire dans une image.
+*.local.yaml
+.env
+
+# Sorties de construction precedentes : l image refait les siennes.
+packages/*/dist
+packages/*/dist-types
+plugins/*/dist
+
+# Copies de sauvegarde faites pendant la mise en place.
+*.origine

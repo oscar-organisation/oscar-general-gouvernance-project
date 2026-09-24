@@ -1,0 +1,81 @@
+# Le portail de gouvernance OSCAR.
+#
+# CE QUE CETTE COMPOSITION NE FAIT PAS, ET POURQUOI
+#
+# Elle ne monte aucun proxy. Le projet en a deja un, partage, qui tient les
+# ports 80 et 443. Le portail s y raccorde par le reseau proxy-network et
+# n expose aucun port sur la machine : un panneau de gouvernance ne se met pas
+# sur internet par accident.
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # La base. Backstage y range son catalogue, ses sessions et ses permissions.
+  # Sans elle il retombe sur SQLite en memoire, et tout disparait au
+  # redemarrage : le catalogue se reconstruit, mais pas ce que les gens ont
+  # fait dessus.
+  # ---------------------------------------------------------------------------
+  base:
+    image: postgres:16-alpine
+    container_name: oscar-portail-base
+    environment:
+      POSTGRES_USER: "${POSTGRES_UTILISATEUR:-backstage}"
+      POSTGRES_PASSWORD: "${POSTGRES_MOT_DE_PASSE:?il faut un mot de passe, voir .env.exemple}"
+      POSTGRES_DB: backstage
+    volumes:
+      - portail-base:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_UTILISATEUR:-backstage}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks: [portail]
+
+  # ---------------------------------------------------------------------------
+  # Le portail lui-meme.
+  # ---------------------------------------------------------------------------
+  portail:
+    build:
+      context: ./oscar_backstage
+      dockerfile: Dockerfile
+    image: oscar-portail:latest
+    container_name: oscar-portail
+    depends_on:
+      base:
+        condition: service_healthy
+    environment:
+      # L adresse publique. Elle sert a fabriquer les liens et le retour de
+      # connexion GitHub : une valeur fausse donne une connexion qui tourne en
+      # rond sans message clair.
+      OSCAR_PORTAIL_URL: "${OSCAR_PORTAIL_URL:-http://localhost:7007}"
+
+      POSTGRES_HOST: base
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: "${POSTGRES_UTILISATEUR:-backstage}"
+      POSTGRES_PASSWORD: "${POSTGRES_MOT_DE_PASSE:?il faut un mot de passe}"
+
+      # Lecture de l organisation GitHub : c est ce qui remplit le catalogue
+      # tout seul et ce qui fait respecter les droits par depot.
+      GITHUB_APP_ID: "${GITHUB_APP_ID:?il faut l identifiant de la GitHub App}"
+      GITHUB_CLIENT_ID: "${GITHUB_CLIENT_ID:?il faut le Client ID}"
+      GITHUB_CLIENT_SECRET: "${GITHUB_CLIENT_SECRET:?il faut le Client secret}"
+
+      # Signe les sessions. Si elle change, tout le monde est deconnecte.
+      BACKEND_SECRET: "${BACKEND_SECRET:?il faut un secret, voir .env.exemple}"
+    volumes:
+      # La cle privee de la GitHub App, en lecture seule. Le chemin est
+      # RELATIF au projet : deplacer OSCAR-PROJECT ne le casse pas, alors
+      # qu un chemin absolu casserait en silence.
+      - ../../secret_root/github-token/application-github/backstage-tech-oscar/oscar-portail-technique.2026-09-24.private-key.pem:/secrets/github-app.pem:ro
+    restart: unless-stopped
+    networks: [portail, proxy-network]
+
+volumes:
+  portail-base:
+
+networks:
+  portail:
+  # Reseau partage, cree et tenu par le proxy central. Il doit exister avant.
+  proxy-network:
+    external: true
