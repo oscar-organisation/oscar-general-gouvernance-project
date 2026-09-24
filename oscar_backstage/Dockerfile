@@ -62,6 +62,10 @@ RUN tar xzf skeleton.tar.gz && rm skeleton.tar.gz
 RUN yarn workspaces focus --all --production && yarn cache clean
 
 COPY --from=construction --chown=node:node /app/examples ./examples
+# La structure d accueil du catalogue : le domaine, les familles et le
+# proprietaire par defaut. Oubliee ici, le portail demarre sans erreur mais
+# les composants renvoient a des systemes qui n existent pas.
+COPY --from=construction --chown=node:node /app/catalogue ./catalogue
 COPY --from=construction --chown=node:node \
      /app/packages/backend/dist/bundle.tar.gz /app/app-config*.yaml ./
 RUN tar xzf bundle.tar.gz && rm bundle.tar.gz

@@ -46,3 +46,8 @@ oscar_backstage/**/dist/
 oscar_backstage/**/dist-types/
 oscar_backstage/.yarn/cache/
 oscar_backstage/.yarn/install-state.gz
+
+# Cache de construction npm et yarn. Ce n est ni du code ni de la configuration:
+# il se reconstruit a chaque build. Il representait 316 des 380 fichiers suivis
+# de ce depot, soit 83 pour cent de son contenu pour zero valeur.
+.docker-cache/

@@ -69,13 +69,41 @@ services:
       # qu un chemin absolu casserait en silence.
       - ../../secret_root/github-token/application-github/backstage-tech-oscar/oscar-portail-technique.2026-09-24.private-key.pem:/secrets/github-app.pem:ro
     restart: unless-stopped
-    networks: [portail, proxy-network]
+
+    # ------------------------------------------------------------------------
+    # L exposition passe par le Traefik de Coolify, qui tient deja les ports
+    # 80 et 443. Un second proxy creerait un conflit de ports et deux endroits
+    # ou chercher une regle.
+    #
+    # Le nom d hote vient de l environnement : il n est ecrit nulle part ici,
+    # donc changer de domaine ne demande pas de toucher a ce fichier.
+    # ------------------------------------------------------------------------
+    labels:
+      traefik.enable: "true"
+      # Sur quel reseau Traefik doit joindre ce conteneur. Sans cette ligne il
+      # prend le premier qu il trouve, qui n est pas toujours le bon.
+      traefik.docker.network: coolify
+
+      # En clair : on ne sert rien, on renvoie vers le chiffre.
+      traefik.http.routers.portail-http.rule: "Host(`${OSCAR_PORTAIL_HOTE}`)"
+      traefik.http.routers.portail-http.entrypoints: http
+      traefik.http.routers.portail-http.middlewares: portail-vers-https
+      traefik.http.middlewares.portail-vers-https.redirectscheme.scheme: https
+
+      # En chiffre : le vrai service, avec son certificat obtenu tout seul.
+      traefik.http.routers.portail.rule: "Host(`${OSCAR_PORTAIL_HOTE}`)"
+      traefik.http.routers.portail.entrypoints: https
+      traefik.http.routers.portail.tls: "true"
+      traefik.http.routers.portail.tls.certresolver: letsencrypt
+      traefik.http.services.portail.loadbalancer.server.port: "7007"
+
+    networks: [portail, coolify]
 
 volumes:
   portail-base:
 
 networks:
   portail:
-  # Reseau partage, cree et tenu par le proxy central. Il doit exister avant.
-  proxy-network:
+  # Le reseau de Coolify, ou vit son Traefik. Cree par Coolify, pas par nous.
+  coolify:
     external: true
