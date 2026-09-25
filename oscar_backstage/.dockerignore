@@ -11,7 +11,8 @@
 # cette correction, la compilation echoue sur :
 #   TS18003: No inputs were found in config file '/app/tsconfig.json'
 #
-# L original est garde en .dockerignore.origine.
+# Le fichier d origine fourni par Backstage reste lisible dans l historique
+# git, au commit f1f25ee.
 
 # Historique git : lourd et inutile pour construire.
 .git
@@ -31,6 +32,3 @@ plugins/*/node_modules
 packages/*/dist
 packages/*/dist-types
 plugins/*/dist
-
-# Copies de sauvegarde faites pendant la mise en place.
-*.origine
