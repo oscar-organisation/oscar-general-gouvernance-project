@@ -1,0 +1,218 @@
+# La chaîne du dépôt oscar-general-gouvernance-project, au patron commun des
+# trois dépôts (guide: docs/05-la-chaine.md).
+#
+#   controles    lignes d'attribution, secrets, typographie, YAML, compositions
+#   verifs       le portail (image, tests, contenu de l'image), le guide
+#                (construction stricte, schémas), les images de marque
+#   deploiement  seulement sur test et main, après tout le reste: le workflow
+#                commun du dépôt oscar-infrastructure
+#   recette      pas encore branchée (A17), voir la fin du fichier
+#
+# Chaque tâche attend la précédente: une tâche rouge arrête la chaîne, et rien
+# n'est déployé. Une PR ne déploie jamais.
+name: Chaîne
+
+on:
+  push:
+    branches: [test, main]
+  pull_request:
+    branches: [test, main]
+  # Une passe à la main: redéployer ce qui est déjà vérifié, ou demander à
+  # blanc ce que ferait un déploiement. Visible dans l'onglet Actions une fois
+  # ce fichier sur main. Même entrée que la chaîne de l'outil DNS.
+  workflow_dispatch:
+    inputs:
+      a_blanc:
+        description: Tout évaluer et le dire, sans rien déployer
+        type: boolean
+        default: true
+      environnement:
+        description: L'environnement visé; autre que celui de la branche, seulement à blanc
+        type: choice
+        options: [de-la-branche, test, production]
+        default: de-la-branche
+
+# Par défaut, la passe ne fait que lire. La tâche de déploiement demande en plus
+# le droit de déclarer ses déploiements, et rien d'autre.
+permissions:
+  contents: read
+
+env:
+  # Le dossier du portail dans le dépôt. Tout le portail y vit (décision 62).
+  # Son nom n'est écrit qu'ici: le jour où il bouge, c'est la seule ligne à
+  # changer.
+  PORTAIL: oscar_backstage
+
+jobs:
+
+  controles:
+    name: Contrôles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # L'historique complet: le contrôle des messages de commit doit
+          # pouvoir dire quels commits la passe apporte.
+          fetch-depth: 0
+
+      - name: Aucune ligne d'attribution dans les commits
+        # La règle A18, écrite une fois dans la chaîne commune du dépôt
+        # oscar-infrastructure, avec ses tests.
+        uses: oscar-organisation/oscar-infrastructure/.github/actions/controler-les-commits@main
+
+      - name: Chercher des motifs de secrets
+        run: |
+          set -u
+          motifs='github_pat_[A-Za-z0-9_]{20,}|ghp_[A-Za-z0-9]{30,}|gho_[A-Za-z0-9]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----'
+          if grep -rInE "$motifs" . --exclude-dir=.git --exclude-dir=node_modules ; then
+            echo "::error::Un secret semble présent dans le dépôt."
+            exit 1
+          fi
+          echo "Aucun motif de secret trouvé."
+
+      - name: Chaque fichier d'environnement a son exemple, identique
+        run: |
+          # Décision 46: les fichiers .env sont versionnés pendant le
+          # développement. Celui du portail est une copie à l'identique de son
+          # .env.exemple, qui explique chaque réglage.
+          set -u
+          manque=0
+          for f in $(git ls-files | grep -E '(^|/)\.env$') ; do
+            d=$(dirname "$f")
+            if [ ! -f "$d/.env.exemple" ] ; then
+              echo "::error::$f n'a pas de fichier d'exemple à côté."
+              manque=1
+            fi
+          done
+          cmp "$PORTAIL/.env" "$PORTAIL/.env.exemple" || { echo "::error::$PORTAIL/.env n'est plus la copie de .env.exemple."; manque=1; }
+          [ "$manque" = "0" ]
+
+      - name: Typographie, pas de caractère interdit
+        run: |
+          set -u
+          # Les motifs sont écrits en hexadécimal pour que ce fichier ne
+          # contienne pas lui-même les caractères qu'il interdit.
+          if grep -rInP '\x{2014}|\x{2026}' \
+               --include='*.md' --include='*.ts' --include='*.tsx' --include='*.js' \
+               --include='*.css' --include='*.yml' --include='*.yaml' --include='*.json' \
+               --include='*.py' --include='*.sh' --include='*.mmd' --include='Dockerfile' \
+               --exclude-dir=node_modules --exclude-dir=.git --exclude=yarn.lock . ; then
+            echo "::error::Caractère interdit trouvé. Utiliser le tiret simple et trois points."
+            exit 1
+          fi
+          echo "Typographie conforme."
+
+      - name: Les fichiers de la chaîne sont valides
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color
+
+      - name: Les compositions sont valides
+        run: |
+          set -eu
+          # Le portail, tel que Coolify le lit (-f, sans le complément) et tel
+          # qu'on le lance en local (avec le complément).
+          ( cd "$PORTAIL" && docker compose -f compose.yaml config --quiet && docker compose config --quiet )
+          # Coolify ne doit voir aucun port publié.
+          if ( cd "$PORTAIL" && docker compose -f compose.yaml config ) | grep -q 'published:' ; then
+            echo "::error::$PORTAIL/compose.yaml publie un port: il va dans compose.override.yaml."
+            exit 1
+          fi
+          docker compose -f docs/outils/compose.yaml config --quiet
+          docker compose -f "$PORTAIL/marque/compose.yaml" config --quiet
+          echo "Compositions valides."
+
+  verifs:
+    name: Vérifications
+    needs: controles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Les constructions passent par BuildKit, avec le cache de GitHub
+      # Actions: tant que yarn.lock ne change pas, l'installation des
+      # dépendances, de loin l'étape la plus longue, est reprise d'une passe à
+      # l'autre au lieu d'être refaite.
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Les tests du portail
+        # L'étape « verifications » du Dockerfile: compilation, construction du
+        # paquet, puis tous les tests. Elle échoue si un test échoue. Rien
+        # n'est exporté: seul compte le verdict.
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.PORTAIL }}
+          target: verifications
+          outputs: type=cacheonly
+          cache-from: type=gha,scope=portail
+          cache-to: type=gha,scope=portail,mode=max
+
+      - name: L'image du portail se construit
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.PORTAIL }}
+          target: execution
+          tags: oscar-portail:execution
+          load: true
+          cache-from: type=gha,scope=portail
+
+      - name: L'image contient ce qu'il faut, et rien de plus
+        run: |
+          set -u
+          # Les réglages du poste ouvrent l'accès invité: ils ne doivent jamais
+          # entrer dans l'image (leçon 3.4: vérifier le contenu, pas seulement
+          # que l'image démarre).
+          if docker run --rm oscar-portail:execution test -e app-config.poste.yaml ; then
+            echo "::error::app-config.poste.yaml est dans l'image."
+            exit 1
+          fi
+          docker run --rm oscar-portail:execution sh -c 'test -f app-config.production.yaml && test -f catalogue/organisation.yaml && mkdocs --version'
+          echo "Contenu de l'image conforme."
+
+      - name: Le guide se construit, sans aucun avertissement
+        run: docker compose -f docs/outils/compose.yaml run --rm construire
+
+      - name: Les schémas du guide correspondent à leurs sources
+        run: docker compose -f docs/outils/compose.yaml run --rm verifier-schemas
+
+      - name: Les images de marque correspondent au symbole officiel
+        run: docker compose -f "$PORTAIL/marque/compose.yaml" run --rm verifier
+
+  deploiement:
+    name: Déploiement
+    # Après tout le reste (leçon 5.1): une vérification rouge ne déploie rien.
+    needs: [controles, verifs]
+    # Un envoi sur test ou main (les seules branches de « push » ci-dessus), ou
+    # une passe à la main. Jamais une PR.
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      deployments: write
+    uses: oscar-organisation/oscar-infrastructure/.github/workflows/deployer.yml@main
+    with:
+      application: portail
+      dossier: oscar_backstage
+      # Les identifiants Coolify ne sont pas ici: chacun vit dans son
+      # environnement GitHub, portail-test et portail-production, sous la
+      # variable COOLIFY_APPLICATION (A21).
+      site_test: https://test-tech.oscar-bot.com
+      site_production: https://tech.oscar-bot.com
+      # La route de disponibilité de Backstage: 200 seulement quand tous ses
+      # modules sont prêts (leçon 3.7).
+      sante_test: https://test-tech.oscar-bot.com/.backstage/health/v1/readiness
+      sante_production: https://tech.oscar-bot.com/.backstage/health/v1/readiness
+      # Ce qui ne change rien à l'image: la documentation, la fabrication des
+      # images de marque (seul son résultat, dans packages/, compte) et la
+      # vérification à l'écran.
+      ignorer: |
+        *.md
+        */marque/*
+        */verifications-ecran/*
+      a_blanc: ${{ github.event_name == 'workflow_dispatch' && inputs.a_blanc }}
+      environnement: ${{ github.event_name == 'workflow_dispatch' && inputs.environnement != 'de-la-branche' && inputs.environnement || '' }}
+      # Une passe à la main qui n'est pas à blanc veut redéployer: on redéploie
+      # même un contenu déjà en service.
+      forcer: ${{ github.event_name == 'workflow_dispatch' }}
+    secrets:
+      coolify_jeton: ${{ secrets.COOLIFY_JETON }}
+
+  # recette:
+  #   La place de la recette par le laboratoire (A17), branchée au lot 3b.

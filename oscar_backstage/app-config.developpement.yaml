@@ -1,0 +1,35 @@
+# Le mode developpement, sur le poste: le code est monte dans le conteneur, et
+# chaque modification se voit tout de suite.
+#
+# Lu apres app-config.yaml, et avec app-config.poste.yaml, par la commande du
+# conteneur de developpement (Dockerfile, etape developpement). Jamais en test
+# ni en production.
+#
+# Deux serveurs tournent dans le conteneur: celui de l interface, qui recharge
+# la page a chaque modification, et celui du portail. Le navigateur parle aux
+# deux, par les ports publies de compose.override.yaml. Leurs numeros viennent
+# du fichier .env, ecrits une seule fois.
+
+app:
+  baseUrl: http://127.0.0.1:${OSCAR_PORT_PUBLIE_INTERFACE_DEVELOPPEMENT}
+  # Dans le conteneur, le serveur de l interface ecoute sur toutes ses
+  # interfaces: sinon le port publie ne le joindrait pas.
+  listen:
+    host: 0.0.0.0
+    port: 3000
+
+backend:
+  baseUrl: http://127.0.0.1:${OSCAR_PORT_PUBLIE_SERVEUR_DEVELOPPEMENT}
+  listen:
+    host: 0.0.0.0
+  # L interface et le serveur ont deux adresses differentes: le serveur doit
+  # accepter les appels venus de l interface.
+  cors:
+    origin: http://127.0.0.1:${OSCAR_PORT_PUBLIE_INTERFACE_DEVELOPPEMENT}
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  # Une base en memoire: rien a lancer a cote, et tout repart propre a chaque
+  # demarrage. Le mode service, lui, a la vraie base PostgreSQL.
+  database:
+    client: better-sqlite3
+    connection: ':memory:'

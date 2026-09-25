@@ -15,9 +15,9 @@ Le même patron dans les trois dépôts, dans le fichier
 
 | Tâche | Ce qu'elle fait | Durée |
 |---|---|---|
-| `controles` | cherche des secrets, vérifie la typographie (ni tiret long, ni caractère points de suspension), relit chaque fichier YAML et valide le fichier de composition | moins d'une minute |
+| `controles` | refuse un commit qui porte une ligne d'attribution (décision A18), cherche des secrets, vérifie la typographie (ni tiret long, ni caractère points de suspension), relit chaque fichier YAML et valide le fichier de composition | moins d'une minute |
 | `verifs` | lance les tests propres à l'application, par exemple les tests du code, la construction des images, la charte graphique | selon l'application |
-| `deploiement` | seulement après une fusion dans `test` ou dans `main`, et après toutes les autres: demande le déploiement à Coolify et le suit jusqu'au bout | quelques minutes |
+| `deploiement` | seulement après une fusion dans `test` ou dans `main`, et après toutes les autres, et seulement si le contenu à déployer a changé: demande le déploiement à Coolify et le suit jusqu'au bout | de quelques minutes à trois quarts d'heure, selon l'application |
 | `recette` | joue les scénarios du laboratoire contre ce qui vient d'être déployé | selon l'application |
 
 Chaque tâche attend la précédente. **Une tâche rouge arrête la chaîne**: les
@@ -28,12 +28,18 @@ suivantes ne partent pas, et rien n'est déployé.
 | Événement | `controles` | `verifs` | `deploiement` | `recette` |
 |---|---|---|---|---|
 | PR vers `test`, ouverte ou mise à jour | oui | oui | non | non |
-| Fusion dans `test` | oui | oui | en test | tous les scénarios, contre `test-<nom>` |
+| Fusion dans `test` | oui | oui | en test, si le contenu à déployer a changé | tous les scénarios, contre `test-<nom>` |
 | PR de `test` vers `main` | oui | oui | non | non |
-| Fusion dans `main` | oui | oui | contrôle de passage par `test`, puis en production | scénarios non destructifs, contre `<nom>` |
+| Fusion dans `main` | oui | oui | contrôle de passage par `test`, puis en production, si le contenu à déployer a changé | scénarios non destructifs, contre `<nom>` |
 
 Une PR ne déploie jamais rien: elle montre seulement, sur sa page, si le
 changement passe les vérifications.
+
+**Le contenu à déployer**, c'est le dossier de l'application dans le dépôt
+(décision 62), sans les fichiers qui ne changent rien à ce qui tourne: la
+documentation (`*.md`) par défaut, et ce que chaque chaîne ajoute. Une fusion
+qui ne touche que la documentation ne redéploie rien: le contenu est déjà en
+service.
 
 Contre la production, la recette ne joue que des scénarios **non destructifs**:
 des scénarios qui lisent et vérifient, sans créer, modifier ni supprimer de
@@ -48,10 +54,10 @@ l'instant: passer par `test` avant `main` est **une règle de conduite de
 l'équipe** (décision 63).
 
 La chaîne vérifie que cette règle a été suivie. Avant de déployer en
-production, elle regarde si le contenu du commit de `main` est exactement celui
-d'un commit de `test` déployé avec succès en test. Le contenu, ce sont les
-fichiers, pas l'identifiant du commit: la fusion d'une PR de `test` vers `main`
-crée un commit nouveau, avec les mêmes fichiers.
+production, elle compare le contenu à déployer, le dossier de l'application
+hors documentation, à celui qui est en service en test, déployé avec succès. Le
+contenu, ce sont les fichiers, pas l'identifiant du commit: la fusion d'une PR
+de `test` vers `main` crée un commit nouveau, avec les mêmes fichiers.
 
 Si ce n'est pas le cas, **la chaîne ne bloque pas le déploiement: elle le
 signale, en clair, dans le résumé de la passe**, pour que l'écart se voie. Un
@@ -66,17 +72,30 @@ l'équipe le décide.
 ## Le déploiement, écrit une seule fois
 
 La tâche `deploiement` n'est pas écrite trois fois. C'est **un seul workflow
-réutilisable** (un morceau de chaîne qu'un autre dépôt appelle), rangé dans le
-dépôt `oscar-infrastructure` et appelé par les trois dépôts. Il:
+réutilisable** (un morceau de chaîne qu'un autre dépôt appelle),
+`.github/workflows/deployer.yml`, rangé dans le dépôt `oscar-infrastructure`
+et appelé par chaque chaîne (lot 2). Il tient en deux tâches:
 
-- choisit l'application Coolify selon la branche: `<application>-test` pour
-  `test`, `<application>-production` pour `main`;
-- ne lance jamais deux déploiements en même temps sur un même environnement;
-- suit **le** déploiement qu'il a demandé, et vérifie que le commit déployé est
-  bien celui qui a été vérifié;
-- déclare le déploiement à GitHub, avec l'adresse du site, pour qu'on le voie
-  dans la page Deployments du dépôt;
-- fait le contrôle de passage par `test` avant tout déploiement en production.
+- **`preparer`** choisit l'environnement selon la branche (`test` pour `test`,
+  `production` pour `main`), regarde si le contenu à déployer a changé depuis
+  le dernier déploiement réussi, et, en production, fait le contrôle de passage
+  par `test`. Elle ne déclare rien, et s'arrête là si rien n'a changé.
+- **`deployer`**, seulement s'il faut déployer: elle attend que la machine
+  n'ait **aucun** autre déploiement en cours, toutes applications confondues;
+  demande le déploiement à Coolify et suit **celui-là**; vérifie que Coolify
+  construit bien le commit vérifié, et annule sinon (la passe du nouvel envoi
+  déploiera); puis vérifie que le site répond sur sa route de santé.
+
+Le déploiement est déclaré à GitHub dans l'environnement
+`<application>-<environnement>` du dépôt (`outil-dns-test`,
+`portail-production`...), avec l'adresse du site: on le voit dans la page
+Deployments du dépôt. Chaque environnement porte la variable
+`COOLIFY_APPLICATION`, l'identifiant de l'application Coolify du même nom
+(décision A21): aucun identifiant n'est écrit dans une chaîne.
+
+Une **passe à la main** existe, depuis l'onglet Actions (« Run workflow »),
+**à blanc par défaut**: elle dit ce que ferait un déploiement, sans rien
+déployer. Décochée, elle redéploie ce qui est déjà vérifié sur la branche.
 
 Le déclenchement automatique de Coolify, qui déploierait à chaque envoi sur une
 branche, est **coupé** pour chaque application: c'est la règle. Coolify ne
@@ -98,15 +117,10 @@ que la chaîne **tourne** réellement, pas seulement que son fichier existe. Un
 fichier de chaîne n'est lu qu'à la racine du dépôt, dans `.github/workflows/`
 (leçon 4.3).
 
-## État au 25 septembre 2026
+## État au 25 septembre 2026, en fin de journée
 
-| Dépôt | Chaîne | Ce qu'elle fait |
+| Dépôt | Chaîne | État |
 |---|---|---|
-| `oscar-infrastructure` (outil DNS) | `.github/workflows/verifications.yml` | sur chaque PR vers `main` et chaque envoi sur `main`: secrets, documentation, tests Python, charte graphique, construction des images. Après un envoi sur `main`, et seulement si tout est vert, déploie `outil-dns-production`. Prouvée par un envoi rouge retenu |
-| `oscar-test` (laboratoire) | aucune | |
-| `oscar-general-gouvernance-project` (portail) | aucune | |
-
-Le workflow réutilisable de déploiement, la branche `test` et le contrôle de
-passage par `test` naissent au lot 2, avec l'outil DNS, première application à
-s'en servir. Le laboratoire et le portail les reprennent tels quels, aux lots 3
-et 4.
+| `oscar-infrastructure` (outil DNS) | `.github/workflows/chaine.yml` | au patron commun, déploiement par le workflow commun, en test puis en production. Prouvée par la PR 4 vers `test` et la PR 5 vers `main` |
+| `oscar-test` (laboratoire) | `.github/workflows/chaine.yml` | lot 3b, en cours |
+| `oscar-general-gouvernance-project` (portail) | `.github/workflows/chaine.yml` | au patron commun, lot 4 |

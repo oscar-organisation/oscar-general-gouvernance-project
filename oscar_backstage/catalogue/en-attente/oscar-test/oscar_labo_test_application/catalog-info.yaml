@@ -1,0 +1,47 @@
+# La fiche du laboratoire de tests, lue par le portail technique.
+#
+# Place définitive: oscar-test/oscar_labo_test_application/catalog-info.yaml,
+# dans le dossier du laboratoire (décision 62). Le fichier catalog-info.yaml à
+# la racine du dépôt y renvoie.
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: labo
+  title: Laboratoire de tests
+  description: >-
+    Rejoue les parcours d'utilisation des interfaces OSCAR dans un vrai
+    navigateur, sur trois tailles d'écran, et garde pour chaque scénario un
+    résultat, des captures et une vidéo. C'est lui qui fait la recette de
+    chaque application. Son visualiseur de rapports se déploie en test et en
+    production.
+  annotations:
+    github.com/project-slug: oscar-organisation/oscar-test
+    backstage.io/source-location: url:https://github.com/oscar-organisation/oscar-test/tree/main/oscar_labo_test_application/
+  tags:
+    - tests
+    - playwright
+    - recette
+  links:
+    - url: https://labo.oscar-bot.com
+      title: Production, les rapports
+    - url: https://test-labo.oscar-bot.com
+      title: Test, les rapports
+    - url: https://deploy.oscar-bot.com/project/fik9htmcro59pcry7rrod8bi/environment/6tiugjkbkadntamloercofqf
+      title: Coolify, la production
+    - url: https://deploy.oscar-bot.com/project/fik9htmcro59pcry7rrod8bi/environment/rj6kstn1phvacdrkvfrwyhvq
+      title: Coolify, le test
+    - url: https://github.com/oscar-organisation/oscar-test/tree/main/oscar_labo_test_application
+      title: Le code
+      icon: github
+    - url: https://github.com/oscar-organisation/oscar-test/actions
+      title: La chaîne
+      icon: github
+spec:
+  type: tool
+  lifecycle: experimental
+  owner: group:default/equipe-oscar
+  system: verification
+  dependsOn:
+    - resource:default/coolify
+    - resource:default/proxy

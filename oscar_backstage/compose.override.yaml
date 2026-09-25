@@ -1,0 +1,86 @@
+# Ce qui s ajoute quand on travaille en local, et seulement en local.
+#
+# POURQUOI CE FICHIER EXISTE
+#
+# En local, on ouvre le portail dans un navigateur, sans nom de domaine: il faut
+# donc publier un port sur le poste. En deploiement, on n en veut surtout pas:
+# le proxy joint le portail par le reseau de Docker, et un port publie est
+# unique sur une machine, ce qui empecherait le test et la production de
+# tourner cote a cote (lecon 5.4).
+#
+# En local toujours, personne n a les identifiants de l application GitHub, et
+# personne ne doit en avoir besoin: le portail s ouvre en invite, et lit le
+# catalogue et la documentation dans le depot, sur le poste.
+#
+# COMMENT IL EST PRIS EN COMPTE, ET COMMENT IL NE L EST PAS
+#
+# En local, « docker compose up » lit compose.yaml PUIS ce fichier, et les
+# fusionne, sans rien demander. Coolify, lui, designe un fichier precis
+# (-f compose.yaml): ce fichier-ci lui est invisible. Rien de ce qui suit ne
+# peut donc atteindre le test ou la production.
+#
+# LES DEUX FACONS DE TRAVAILLER
+#
+#   docker compose up --build -d
+#       le mode service, proche de la production: la meme image, la meme base
+#       PostgreSQL, sur http://127.0.0.1:18500
+#
+#   docker compose up --build developpement
+#       le mode developpement: le code du poste est monte dans le conteneur, et
+#       chaque modification se voit tout de suite, sur http://127.0.0.1:18501
+#       (le serveur repond sur 18502)
+#
+# LES NUMEROS
+#
+# Le bloc 185xx du portail, toujours sur la boucle locale 127.0.0.1, pour que
+# rien ne sorte du poste. Voir _pilotage/09-CONVENTION-des-ports.md.
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Le mode service: la meme image qu en production, avec l acces invite et le
+  # depot du poste a la place de GitHub.
+  # ---------------------------------------------------------------------------
+  portail:
+    ports:
+      - "127.0.0.1:${OSCAR_PORT_PUBLIE_PORTAIL:-18500}:7007"
+    # Les reglages du poste a la place de ceux de la production: l invite au
+    # lieu de GitHub. Les reglages du service, eux, sont les memes.
+    command: ["node", "packages/backend", "--config", "app-config.yaml", "--config", "app-config.service.yaml", "--config", "app-config.poste.yaml"]
+    volumes:
+      # Monte depuis le poste, jamais recopie dans l image.
+      - ./app-config.poste.yaml:/app/app-config.poste.yaml:ro
+      # Le depot entier, en lecture seule: le portail y lit sa propre fiche et
+      # le guide du cycle, comme il les lit sur GitHub en production.
+      - ..:/depot:ro
+
+  # ---------------------------------------------------------------------------
+  # Le mode developpement, avec rechargement a chaud. Il ne part qu a la
+  # demande: « docker compose up developpement ».
+  # ---------------------------------------------------------------------------
+  developpement:
+    profiles: [developpement]
+    build:
+      context: .
+      target: developpement
+    environment:
+      # Les deux numeros servent aussi a fabriquer les adresses que le
+      # navigateur appelle: app-config.developpement.yaml les lit ici.
+      OSCAR_PORT_PUBLIE_INTERFACE_DEVELOPPEMENT: "${OSCAR_PORT_PUBLIE_INTERFACE_DEVELOPPEMENT:-18501}"
+      OSCAR_PORT_PUBLIE_SERVEUR_DEVELOPPEMENT: "${OSCAR_PORT_PUBLIE_SERVEUR_DEVELOPPEMENT:-18502}"
+    ports:
+      # L interface, servie par le serveur de developpement de Backstage.
+      - "127.0.0.1:${OSCAR_PORT_PUBLIE_INTERFACE_DEVELOPPEMENT:-18501}:3000"
+      # Le serveur du portail, que l interface appelle depuis le navigateur.
+      - "127.0.0.1:${OSCAR_PORT_PUBLIE_SERVEUR_DEVELOPPEMENT:-18502}:7007"
+    volumes:
+      # Le code et les reglages du poste, en lecture seule: le conteneur ne
+      # peut rien ecrire dans le depot. Les dependances restent dans l image.
+      - ./packages/app/src:/app/packages/app/src:ro
+      - ./packages/app/public:/app/packages/app/public:ro
+      - ./packages/backend/src:/app/packages/backend/src:ro
+      - ./catalogue:/app/catalogue:ro
+      - ./app-config.yaml:/app/app-config.yaml:ro
+      - ./app-config.developpement.yaml:/app/app-config.developpement.yaml:ro
+      - ./app-config.poste.yaml:/app/app-config.poste.yaml:ro
+      - ..:/depot:ro

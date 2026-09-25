@@ -1,13 +1,48 @@
+# La fiche du portail technique, lue par le portail lui-même.
+#
+# Elle vit dans le dossier du portail, qui le contient tout entier
+# (décision 62). Le fichier catalog-info.yaml à la racine du dépôt y renvoie.
+
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: oscar-backstage
-  description: An example of a Backstage application.
-  # Example for optional annotations
-  # annotations:
-  #   github.com/project-slug: backstage/backstage
-  #   backstage.io/techdocs-ref: dir:.
+  name: portail
+  title: Portail technique
+  description: >-
+    Ce portail. Il rassemble au même endroit les applications et les dépôts
+    d'OSCAR: pour chacun, l'état de sa chaîne et ses liens vers le test, la
+    production, Coolify, le code et les rapports. Il affiche aussi le guide du
+    cycle de développement. On s'y connecte par GitHub.
+  annotations:
+    github.com/project-slug: oscar-organisation/oscar-general-gouvernance-project
+    backstage.io/source-location: url:https://github.com/oscar-organisation/oscar-general-gouvernance-project/tree/main/oscar_backstage/
+  tags:
+    - backstage
+    - portail
+  links:
+    - url: https://tech.oscar-bot.com
+      title: Production
+    - url: https://test-tech.oscar-bot.com
+      title: Test
+    - url: https://deploy.oscar-bot.com/project/dxy1wqzsijm6ab7qfab3tuaj/environment/z5illwbbkucjj7flrojdnenq
+      title: Coolify, la production
+    - url: https://deploy.oscar-bot.com/project/dxy1wqzsijm6ab7qfab3tuaj/environment/pjoituj5zgtje0stfj16enpt
+      title: Coolify, le test
+    - url: https://github.com/oscar-organisation/oscar-general-gouvernance-project/tree/main/oscar_backstage
+      title: Le code
+      icon: github
+    - url: https://github.com/oscar-organisation/oscar-general-gouvernance-project/actions
+      title: La chaîne
+      icon: github
+    - url: https://labo.oscar-bot.com
+      title: Les rapports du laboratoire, production
+    - url: https://test-labo.oscar-bot.com
+      title: Les rapports du laboratoire, test
 spec:
   type: website
-  owner: john@example.com
-  lifecycle: experimental
+  lifecycle: production
+  owner: group:default/equipe-oscar
+  system: gouvernance
+  dependsOn:
+    - resource:default/coolify
+    - resource:default/proxy

@@ -1,83 +1,65 @@
 /*
- * Hi!
+ * Le serveur du portail technique OSCAR.
  *
- * Note that this is an EXAMPLE Backstage backend. Please check the README.
- *
- * Happy hacking!
+ * Chaque ligne ajoute un module de Backstage. Un module ne sert que si sa
+ * configuration le demande: la connexion invitee, par exemple, n existe que
+ * sur le poste du developpeur, ou app-config.poste.yaml la configure.
  */
 
 import { createBackend } from '@backstage/backend-defaults';
 
 const backend = createBackend();
 
+// Sert l interface du portail.
 backend.add(import('@backstage/plugin-app-backend'));
 backend.add(import('@backstage/plugin-proxy-backend'));
 
-// scaffolder plugin
+// Le createur de projets. Aucun modele de projet n est ecrit aujourd hui, et
+// sa page est fermee (app-config.yaml); le catalogue s en sert pour lire les
+// fiches de sorte Template le jour ou il y en aura.
 backend.add(import('@backstage/plugin-scaffolder-backend'));
 backend.add(import('@backstage/plugin-scaffolder-backend-module-github'));
-backend.add(
-  import('@backstage/plugin-scaffolder-backend-module-notifications'),
-);
 
-// techdocs plugin
+// La documentation des depots, construite par le portail avec le MkDocs de
+// son image.
 backend.add(import('@backstage/plugin-techdocs-backend'));
 
-// auth plugin
+// La connexion. Par GitHub en test et en production; en invite sur le poste.
 backend.add(import('@backstage/plugin-auth-backend'));
-// See https://backstage.io/docs/backend-system/building-backends/migrating#the-auth-plugin
-backend.add(import('@backstage/plugin-auth-backend-module-guest-provider'));
-// Connexion par GitHub. C est le seul moyen d entrer en service : le mode
-// invite ne sert qu en developpement local.
 backend.add(import('@backstage/plugin-auth-backend-module-github-provider'));
-// See https://backstage.io/docs/auth/guest/provider
+backend.add(import('@backstage/plugin-auth-backend-module-guest-provider'));
 
-// catalog plugin
+// Le catalogue.
 backend.add(import('@backstage/plugin-catalog-backend'));
 backend.add(
   import('@backstage/plugin-catalog-backend-module-scaffolder-entity-model'),
 );
-
-// See https://backstage.io/docs/features/software-catalog/configuration#subscribing-to-catalog-errors
+// Ecrit dans le journal les fiches que le catalogue n arrive pas a lire, pour
+// qu une erreur dans un catalog-info.yaml se voie.
 backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
-// Decouvre les depots de l organisation qui portent un catalog-info.yaml.
-// C est ce qui evite de tenir une liste a la main : un depot cree demain
-// apparait tout seul a la prochaine lecture.
+// Trouve les depots de l organisation qui portent un catalog-info.yaml: un
+// depot cree demain apparait tout seul a la prochaine lecture.
 backend.add(import('@backstage/plugin-catalog-backend-module-github'));
 // Importe les personnes et les equipes de l organisation GitHub. Sans lui,
-// personne ne peut se connecter : le resolveur cherche un utilisateur du
-// catalogue qui n existerait pas.
+// personne ne peut se connecter en production: la connexion cherche une
+// personne du catalogue qui porte le nom du compte GitHub.
 backend.add(import('@backstage/plugin-catalog-backend-module-github-org'));
 
-// permission plugin
+// Les droits. Tout est permis a qui est connecte; et n est connecte qu un
+// membre de l organisation GitHub, ou l invite sur le poste.
 backend.add(import('@backstage/plugin-permission-backend'));
-// See https://backstage.io/docs/permissions/getting-started for how to create your own permission policy
 backend.add(
   import('@backstage/plugin-permission-backend-module-allow-all-policy'),
 );
 
-// search plugin
+// La recherche, rangee dans la base PostgreSQL, sur le catalogue et la
+// documentation.
 backend.add(import('@backstage/plugin-search-backend'));
-
-// search engine
-// See https://backstage.io/docs/features/search/search-engines
 backend.add(import('@backstage/plugin-search-backend-module-pg'));
-
-// search collators
 backend.add(import('@backstage/plugin-search-backend-module-catalog'));
 backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
 
-// kubernetes plugin
-backend.add(import('@backstage/plugin-kubernetes-backend'));
-
-// user settings plugin
+// Les reglages de chaque personne: son theme, ses favoris.
 backend.add(import('@backstage/plugin-user-settings-backend'));
-
-// notifications and signals plugins
-backend.add(import('@backstage/plugin-notifications-backend'));
-backend.add(import('@backstage/plugin-signals-backend'));
-
-// mcp actions plugin
-backend.add(import('@backstage/plugin-mcp-actions-backend'));
 
 backend.start();

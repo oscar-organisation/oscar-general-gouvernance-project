@@ -1,0 +1,29 @@
+# La verification a l ecran du portail, dans un conteneur avec un vrai
+# navigateur. A lancer depuis le dossier oscar_backstage/.
+#
+#   ADRESSE=http://127.0.0.1:18500 MODE=invite docker compose -f verifications-ecran/compose.yaml run --rm verifier
+#   ADRESSE=https://test-tech.oscar-bot.com docker compose -f verifications-ecran/compose.yaml run --rm verifier
+#
+# Les captures et le releve vont dans verifications-ecran/resultats/, que git
+# ne suit pas. Le detail: le commentaire de verifier-l-ecran.mjs.
+
+name: oscar-verification-ecran-du-portail
+
+services:
+  verifier:
+    # La meme version de Playwright que celle du depot (yarn.lock): le
+    # navigateur de l image et la bibliotheque vont ensemble.
+    image: mcr.microsoft.com/playwright:v1.63.0-noble
+    # Le reseau de la machine: le portail du poste, publie sur 127.0.0.1, se
+    # joint alors a la meme adresse que depuis un navigateur du poste. Ce
+    # reglage n existe que sous Linux; sous macOS et Windows, non verifie.
+    network_mode: host
+    working_dir: /outil
+    entrypoint: ["sh", "-c", "npm install --silent --no-save --prefix /tmp/outil playwright@1.63.0 && exec node verifier-l-ecran.mjs \"$$@\"", "verifier"]
+    command: ["${ADRESSE:-http://127.0.0.1:18500}", "/outil/resultats", "${MODE:-}"]
+    user: "${OSCAR_UID:-1000}:${OSCAR_GID:-1000}"
+    environment:
+      HOME: /tmp
+    volumes:
+      - .:/outil
+      - ..:/portail:ro

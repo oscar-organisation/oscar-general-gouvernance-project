@@ -1,31 +1,47 @@
-# Fiche d identite de ce depot, lue par le portail technique.
+# Les fiches de ce dépôt, lues par le portail technique.
 #
-# Elle repond a quatre questions, dans l ordre ou on se les pose :
-#   qu est-ce que c est, a quoi ca sert, qui s en occupe, ou est sa doc.
-#
-# Ecrite en francais simple : le portail doit etre comprehensible par
-# quelqu un qui n a jamais code.
+# Le portail cherche un fichier catalog-info.yaml à la racine de chaque dépôt
+# de l'organisation, sur main. Celui-ci en porte deux choses:
+#   - le guide commun du cycle de développement, dont la documentation est le
+#     dossier docs/, décrit par mkdocs.yml, à la racine;
+#   - un renvoi vers la fiche du portail, dans son propre dossier
+#     oscar_backstage/ (décision 62).
 
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: oscar-general-gouvernance-project
-  title: General gouvernance project
+  title: Le guide du cycle de développement
   description: >-
-    Ce portail. Le point d entree unique : ce qui existe, a quoi ca sert, qui s en occupe, et ou aller.
+    Le point d'entrée du projet: comment une modification va du poste du
+    développeur jusqu'à la production, en passant par le test, les règles de
+    l'équipe, et une page par application. Onglet « Docs ».
   annotations:
     github.com/project-slug: oscar-organisation/oscar-general-gouvernance-project
+    # La documentation est à côté de ce fichier: mkdocs.yml et docs/.
     backstage.io/techdocs-ref: dir:.
   tags:
-    - portail
-    - backstage
-    - gouvernance
+    - guide
+    - cycle
   links:
-    - url: https://github.com/oscar-organisation/oscar-general-gouvernance-project
-      title: Le depot sur GitHub
+    - url: https://github.com/oscar-organisation/oscar-general-gouvernance-project/tree/main/docs
+      title: Le guide sur GitHub
+      icon: github
+    - url: https://github.com/oscar-organisation/oscar-general-gouvernance-project/actions
+      title: La chaîne
       icon: github
 spec:
-  type: website
-  lifecycle: experimental
+  type: documentation
+  lifecycle: production
   owner: group:default/equipe-oscar
   system: gouvernance
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: oscar-general-gouvernance-project
+  description: Les unités du dépôt, chacune dans son dossier.
+spec:
+  targets:
+    - ./oscar_backstage/catalog-info.yaml

@@ -1,3 +1,12 @@
+/*
+ * Le menu de gauche du portail.
+ *
+ * Les entrees viennent des pages installees; leurs titres en francais sont
+ * dans app-config.yaml (config.title de chaque page). On les place ici dans
+ * l ordre ou un nouveau venu en a besoin: l accueil, le catalogue, la
+ * documentation, les API.
+ */
+
 import {
   Sidebar,
   SidebarDivider,
@@ -7,12 +16,11 @@ import {
   SidebarSpace,
 } from '@backstage/core-components';
 import { NavContentBlueprint } from '@backstage/plugin-app-react';
-import { SidebarLogo } from './SidebarLogo';
-import MenuIcon from '@material-ui/icons/Menu';
-import SearchIcon from '@material-ui/icons/Search';
 import { SidebarSearchModal } from '@backstage/plugin-search';
 import { UserSettingsSignInAvatar } from '@backstage/plugin-user-settings';
-import { NotificationsSidebarItem } from '@backstage/plugin-notifications';
+import MenuIcon from '@material-ui/icons/Menu';
+import SearchIcon from '@material-ui/icons/Search';
+import { SidebarLogo } from './SidebarLogo';
 
 export const SidebarContent = NavContentBlueprint.make({
   params: {
@@ -21,21 +29,22 @@ export const SidebarContent = NavContentBlueprint.make({
         <SidebarItem icon={() => item.icon} to={item.href} text={item.title} />
       ));
 
-      // Skipped items
-      nav.take('page:search'); // Using search modal instead
-      nav.take('page:notifications'); // Using NotificationsSidebarItem manually instead
+      // La recherche s ouvre en fenetre, depuis le menu: sa page n y figure
+      // pas en plus.
+      nav.take('page:search');
 
       return (
         <Sidebar>
           <SidebarLogo />
-          <SidebarGroup label="Search" icon={<SearchIcon />} to="/search">
+          <SidebarGroup label="Rechercher" icon={<SearchIcon />} to="/search">
             <SidebarSearchModal />
           </SidebarGroup>
           <SidebarDivider />
           <SidebarGroup label="Menu" icon={<MenuIcon />}>
             {nav.take('page:home')}
             {nav.take('page:catalog')}
-            {nav.take('page:scaffolder')}
+            {nav.take('page:techdocs')}
+            {nav.take('page:api-docs')}
             <SidebarDivider />
             <SidebarScrollWrapper>
               {nav.rest({ sortBy: 'title' })}
@@ -43,14 +52,11 @@ export const SidebarContent = NavContentBlueprint.make({
           </SidebarGroup>
           <SidebarSpace />
           <SidebarDivider />
-          <NotificationsSidebarItem />
-          <SidebarDivider />
           <SidebarGroup
-            label="Settings"
+            label="Réglages"
             icon={<UserSettingsSignInAvatar />}
             to="/settings"
           >
-            {nav.take('page:app-visualizer')}
             {nav.take('page:user-settings')}
           </SidebarGroup>
         </Sidebar>

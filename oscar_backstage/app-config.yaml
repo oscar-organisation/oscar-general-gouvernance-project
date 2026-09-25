@@ -1,230 +1,111 @@
-app:
-  title: Scaffolded Backstage App
-  baseUrl: http://localhost:3000
+# Les reglages communs du portail technique OSCAR.
+#
+# Backstage lit plusieurs fichiers de reglages l un apres l autre: chacun
+# complete le precedent, et une valeur ecrite plus loin remplace celle d avant.
+# Une liste, elle, est remplacee en entier, jamais completee.
+#
+#   app-config.yaml               ce fichier: ce qui vaut partout
+#   app-config.developpement.yaml le mode developpement, sur le poste
+#   app-config.service.yaml       le portail tel qu il tourne dans son image
+#   app-config.production.yaml    en test et en production: GitHub
+#   app-config.poste.yaml         sur le poste: l acces invite, le depot local
+#
+# Qui lit quoi:
+#   test et production    app-config.yaml + service + production
+#   mode service local    app-config.yaml + service + poste
+#   mode developpement    app-config.yaml + developpement + poste
+#
+# Aucun secret n est ecrit dans ces fichiers: ce qui en est un vient d une
+# variable d environnement, notee ${NOM}.
 
-  # Enable all packages by default, this will discover packages from packages/app/package.json
+app:
+  # Le nom qu on voit dans l onglet du navigateur et en tete des pages: celui
+  # de la charte, et lui seul.
+  title: OSCAR
+
+  # Toutes les extensions des paquets de l interface sont chargees, sauf
+  # celles qu on ferme ci-dessous.
   packages: all
 
   extensions:
-    # Default landing page configuration.
-    # The catalog is mounted at /catalog by default but is overridden here to
-    # serve as the root page. To switch to the Home page, comment out the
-    # catalog path override and uncomment the home path override.
-    - page:catalog:
-        config:
-          path: /
-    # - page:home:
-    #     config:
-    #       path: /
-
-    # Visit tracking records which pages users navigate to and is disabled by default.
-    # Enable it to populate the Most Visited and Recently Visited widgets on the Home page.
-    # Visit data is stored via UserSettings storage if available, otherwise browser localStorage.
-    # - api:home/visits: true
-    # - app-root-element:home/visit-listener: true
-    - home-page-widget:home/toolkit:
-        config:
-          tools:
-            - url: https://backstage.io/docs
-              label: Docs
-              icon: docs
-            - url: https://github.com/backstage/backstage
-              label: GitHub
-              icon: github
-            - url: https://github.com/backstage/backstage/blob/master/CONTRIBUTING.md
-              label: Contributing
-              icon: docs
-            - url: https://backstage.io/plugins
-              label: Plugins Directory
-              icon: kind:component
-            - url: https://github.com/backstage/backstage/issues/new/choose
-              label: Submit New Issue
-              icon: github
-    - home-page-widget:home/world-clock:
-        config:
-          clockConfigs:
-            - label: NYC
-              timeZone: America/New_York
-            - label: UTC
-              timeZone: UTC
-            - label: STO
-              timeZone: Europe/Stockholm
-            - label: TYO
-              timeZone: Asia/Tokyo
+    # La page d accueil, « Commencer ici », a la racine du portail. Ses
+    # fiches: le guide du cycle, les applications qui suivent le cycle, et les
+    # outils de l equipe. Une application de plus: une ligne de plus ici.
     - page:home:
         config:
-          defaultConfig:
-            - component: HomePageSearchBar
-              column: 0
-              row: 0
-              width: 12
-              height: 2
-              deletable: false
-            - component: GettingStarted
-              column: 0
-              row: 1
-              width: 4
-              height: 11
-            - component: HomePageStarredEntities
-              column: 4
-              row: 2
-              width: 4
-              height: 4
-            - component: HomePageRandomJoke
-              column: 8
-              row: 2
-              width: 4
-              height: 4
-            - component: HomePageToolkit
-              column: 4
-              row: 6
-              width: 4
-              height: 3
-            - component: HomePageWorldClock
-              column: 8
-              row: 6
-              width: 4
-              height: 3
-            - component: HomePageMostVisited
-              column: 4
-              row: 9
-              width: 4
-              height: 4
-            - component: HomePageRecentlyVisited
-              column: 8
-              row: 9
-              width: 4
-              height: 4
+          path: /
+          title: Accueil
+    - home-page-layout:home/commencer-ici:
+        config:
+          guide: component:default/oscar-general-gouvernance-project
+          applications:
+            - component:default/outil-dns
+            - component:default/labo
+            - component:default/portail
+          outils:
+            - domain:default/oscar
+            - resource:default/coolify
+            - component:default/labo
+
+    # Les titres du menu, en francais.
+    - page:catalog:
+        config:
+          title: Catalogue
+    - page:techdocs:
+        config:
+          title: Documentation
+    - page:api-docs:
+        config:
+          title: API
+    - page:search:
+        config:
+          title: Rechercher
+    - page:user-settings:
+        config:
+          title: Réglages
+
+    # Ferme: ces pages n ont rien a montrer pour OSCAR aujourd hui. Un
+    # element qui n apporte rien n a pas sa place a l ecran.
+    #   le createur de projets: aucun modele de projet n est ecrit
+    #   l import a la main: les fiches se trouvent seules, dans les depots
+    #   la vue des extensions: un outil pour qui developpe le portail
+    - page:scaffolder: false
+    - page:catalog-import: false
+    - page:app-visualizer: false
 
 organization:
-  name: My Company
+  name: OSCAR
 
 backend:
-  # Used for enabling authentication, secret is shared by all backend plugins
-  # See https://backstage.io/docs/auth/service-to-service-auth for
-  # information on the format
-  # auth:
-  #   keys:
-  #     - secret: ${BACKEND_SECRET}
-  baseUrl: http://localhost:7007
   listen:
     port: 7007
-    # Uncomment the following host directive to bind to specific interfaces
-    # host: 127.0.0.1
   csp:
     connect-src: ["'self'", 'http:', 'https:']
-    # Content-Security-Policy directives follow the Helmet format: https://helmetjs.github.io/#reference
-    # Default Helmet Content-Security-Policy values can be removed by setting the key to false
-  cors:
-    origin: http://localhost:3000
-    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
-    credentials: true
-  # This is for local development only, it is not recommended to use this in production
-  # The production database configuration is stored in app-config.production.yaml
-  database:
-    client: better-sqlite3
-    connection: ':memory:'
-  # see https://backstage.io/docs/ai/mcp-actions#actions-configuration for more details
-  actions:
-    pluginSources:
-      - auth
-      - catalog
-      - scaffolder
-  # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
+  # Les adresses que le portail a le droit de lire en dehors de GitHub: les
+  # descriptions d API publiees par les applications elles-memes.
+  reading:
+    allow:
+      - host: api-dns.oscar-bot.com
 
-integrations:
-  github:
-    - host: github.com
-      # This is a Personal Access Token or PAT from GitHub. You can find out how to generate this token, and more information
-      # about setting up the GitHub integration here: https://backstage.io/docs/integrations/github/locations#configuration
-      token: ${GITHUB_TOKEN}
-    ### Example for how to add your GitHub Enterprise instance using the API:
-    # - host: ghe.example.net
-    #   apiBaseUrl: https://ghe.example.net/api/v3
-    #   token: ${GHE_TOKEN}
-
-proxy:
-  ### Example for how to add a proxy endpoint for the frontend.
-  ### A typical reason to do this is to handle HTTPS and CORS for internal services.
-  # endpoints:
-  #   '/test':
-  #     target: 'https://example.com'
-  #     changeOrigin: true
-
-# Reference documentation http://backstage.io/docs/features/techdocs/configuration
-# Note: After experimenting with basic setup, use CI/CD to generate docs
-# and an external cloud storage when deploying TechDocs for production use-case.
-# https://backstage.io/docs/features/techdocs/how-to-guides#how-to-migrate-from-techdocs-basic-to-recommended-deployment-approach
+# La documentation des depots, construite par le portail lui-meme, avec le
+# MkDocs de son image (techdocs/requirements.txt), puis gardee sur place.
 techdocs:
-  builder: 'local' # Alternatives - 'external'
+  builder: 'local'
   generator:
-    runIn: 'docker' # Alternatives - 'local'
+    runIn: 'local'
   publisher:
-    type: 'local' # Alternatives - 'googleGcs' or 'awsS3'. Read documentation for using alternatives.
-
-auth:
-  # see https://backstage.io/docs/auth/ to learn about auth providers
-  providers:
-    # See https://backstage.io/docs/auth/guest/provider
-    guest: {}
-  # see https://backstage.io/docs/ai/mcp-actions#client-id-metadata-documents
-  # to learn more about client id metadata documents
-  clientIdMetadataDocuments:
-    enabled: false
-    # Optional: restrict which `client_id` URLs are allowed (defaults to ['*'])
-    # allowedClientIdPatterns:
-    #   - 'https://example.com/*'
-    #   - 'https://*.trusted-domain.com/*'
-    # Optional: restrict which redirect URIs are allowed (defaults to ['*'])
-    # allowedRedirectUriPatterns:
-    #   - 'http://localhost:*'
-    #   - 'https://*.example.com/*'
-
-scaffolder:
-  # see https://backstage.io/docs/features/software-templates/configuration for software template options
+    type: 'local'
 
 catalog:
-  import:
-    entityFilename: catalog-info.yaml
-    pullRequestBranchName: backstage-integration
+  # Les sortes de fiches acceptees. Les personnes et les equipes viennent de
+  # l organisation GitHub (app-config.production.yaml).
   rules:
-    - allow: [Component, System, API, Resource, Location]
-  locations:
-    # Local example data, file locations are relative to the backend process, typically `packages/backend`
-    - type: file
-      target: ../../examples/entities.yaml
+    - allow: [Component, System, Domain, API, Resource, Location, Group, User]
+  # Une fiche qui n est plus lue nulle part disparait du catalogue, au lieu d y
+  # rester comme une page morte. C est ce qui permet a une fiche de passer de
+  # ce depot au depot de son composant sans doublon: voir
+  # catalogue/en-attente/LISEZ-MOI.md.
+  orphanStrategy: delete
 
-    # Local example template
-    - type: file
-      target: ../../examples/template/template.yaml
-      rules:
-        - allow: [Template]
-
-    # Local example organizational data
-    - type: file
-      target: ../../examples/org.yaml
-      rules:
-        - allow: [User, Group]
-
-    ## Uncomment these lines to add more example data
-    # - type: url
-    #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all.yaml
-
-    ## Uncomment these lines to add an example org
-    # - type: url
-    #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/acme-corp.yaml
-    #   rules:
-    #     - allow: [User, Group]
-
-kubernetes:
-  # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options
-
-# see https://backstage.io/docs/permissions/getting-started for more on the permission framework
 permission:
-  # setting this to `false` will disable permissions
   enabled: true
-
-# see https://backstage.io/docs/ai/mcp-actions for more details
-mcpActions:
-  name: 'My Company Backstage' # defaults to "backstage"
-  description: 'Tools for managing your software catalog, creating new services from templates, and exploring your developer portal' # optional
