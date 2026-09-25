@@ -75,6 +75,9 @@ describe.each([
     const employees = [
       ...chaines(v4(theme).palette),
       ...chaines((v4(theme) as any).page),
+      // Les reglages de composants: une couleur ecrite dans une surcharge
+      // (alertes, boutons, filet du menu) doit aussi venir des jetons.
+      ...chaines((v4(theme) as any).overrides),
       ...Object.values(variables),
     ].flatMap(couleurs);
     expect(employees.length).toBeGreaterThan(50);

@@ -23,10 +23,14 @@ https://github.com/oscar-organisation/<dépôt>/actions
 
 Chaque passe de la chaîne, tâche par tâche, avec son journal. Une passe se
 retrouve par sa branche et par le message du commit qui l'a lancée. En bas
-d'une passe, un résumé donne les liens utiles (prévu avec la chaîne commune).
+d'une passe qui déploie, un résumé donne les liens utiles: application,
+environnement, commit, site, déploiement dans Coolify. C'est le déploiement
+commun qui l'écrit.
 
-**État au 25 septembre 2026**: seul `oscar-infrastructure` a une chaîne,
-`Vérifications`, active.
+**État au 25 septembre 2026, 21h56 UTC**: chaque dépôt du cycle a sa chaîne,
+nommée « Chaîne »: `oscar-infrastructure` sur `test` et `main`, `oscar-test`
+sur `test` (lot 3b, en cours), `oscar-general-gouvernance-project` par la PR 2
+vers `test` (lot 4, en cours).
 
 ## GitHub, les déploiements
 
@@ -38,8 +42,10 @@ Ce qui est en test et ce qui est en production, à quel commit, depuis quand,
 avec l'adresse du site. C'est la chaîne qui y déclare chacun de ses
 déploiements.
 
-**État au 25 septembre 2026**: pas encore alimenté. La déclaration des
-déploiements arrive avec le workflow réutilisable, au lot 2.
+**État au 25 septembre 2026, 21h56 UTC**: alimenté par le workflow commun
+depuis le lot 2. `oscar-infrastructure` montre `outil-dns-test` et
+`outil-dns-production`, `oscar-test` montre `labo-test`. Le portail y
+apparaîtra à son premier déploiement (lot 4).
 
 ## Coolify
 
@@ -53,11 +59,13 @@ y trouve **un projet par application**, chacun avec **deux environnements**,
 
 | Projet | Environnements | Applications |
 |---|---|---|
-| `outil-dns` | `production`, `test` | `outil-dns-production`; `outil-dns-test` au lot 2 |
-| `labo` | `production`, `test` | `labo-production` et `labo-test` au lot 3 |
-| `portail` | `production`, `test` | `portail-production` et `portail-test` au lot 4 |
+| `outil-dns` | `production`, `test` | `outil-dns-production`, `outil-dns-test` |
+| `labo` | `production`, `test` | `labo-production`, `labo-test` |
+| `portail` | `production`, `test` | `portail-production`, `portail-test` |
 
-Relevé par l'API de Coolify le 25 septembre 2026.
+Relevé par l'API de Coolify le 25 septembre 2026 à 21h53 UTC. Les six
+applications existent; `labo-production`, `portail-test` et
+`portail-production` n'avaient pas encore été déployées par leur chaîne.
 
 Sur une application: son état, la liste de ses déploiements, et pour chacun le
 journal de construction. C'est là qu'on lit pourquoi une image ne s'est pas
@@ -98,8 +106,9 @@ Le visualiseur montre les rapports de la dernière passe de tests du niveau
 correspondant: chaque scénario, son résultat, ses captures d'écran et ses
 vidéos. L'accès est protégé.
 
-**État au 25 septembre 2026**: pas encore déployé. Le visualiseur, sa mise en
-ligne et son accès protégé arrivent au lot 3.
+**État au 25 septembre 2026, 21h56 UTC**: `https://test-labo.oscar-bot.com`
+est en service, et répond `401` sans identifiants (mesuré).
+`https://labo.oscar-bot.com` ne répond pas encore: lot 3b.
 
 ## Le site lui-même
 

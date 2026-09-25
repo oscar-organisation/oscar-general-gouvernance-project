@@ -5,8 +5,8 @@ entier dans le dossier `oscar_infra_dns/` (décision 62). Il suit le cycle
 depuis le lot 2 du plan: branche `test`, chaîne au patron commun, déploiement
 en test puis en production par le workflow commun, contrôle de passage par
 `test`. Le cycle a été prouvé par la PR 4 vers `test` et la PR 5 vers `main`
-du dépôt `oscar-infrastructure`. La recette par le laboratoire arrive au lot
-3b.
+du dépôt `oscar-infrastructure`. La recette par le laboratoire n'est pas
+encore branchée dans sa chaîne (lot 3b).
 
 ## En bref
 
@@ -105,7 +105,7 @@ commande de l'[étape 13 du cycle](../02-le-cycle-pas-a-pas.md).
 | La chaîne | `https://github.com/oscar-organisation/oscar-infrastructure/actions` |
 | Les déploiements déclarés | `https://github.com/oscar-organisation/oscar-infrastructure/deployments`, environnements `outil-dns-test` et `outil-dns-production` |
 | Coolify | `https://deploy.oscar-bot.com`, projet `outil-dns` |
-| Les rapports du laboratoire | `https://test-labo.oscar-bot.com` et `https://labo.oscar-bot.com`, **lot 3b** |
+| Les rapports du laboratoire | `https://test-labo.oscar-bot.com`, en service, accès protégé; `https://labo.oscar-bot.com`, **lot 3b** (relevé le 25 septembre 2026 à 21h56 UTC) |
 
 ## Ce qui reste à faire
 

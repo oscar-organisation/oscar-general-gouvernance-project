@@ -201,11 +201,13 @@ jobs:
       sante_production: https://tech.oscar-bot.com/.backstage/health/v1/readiness
       # Ce qui ne change rien à l'image: la documentation, la fabrication des
       # images de marque (seul son résultat, dans packages/, compte) et la
-      # vérification à l'écran.
+      # vérification à l'écran. Les motifs se comparent aux chemins pris
+      # depuis le dossier du portail (marque/fabriquer.py), et * y couvre
+      # aussi les sous-dossiers.
       ignorer: |
         *.md
-        */marque/*
-        */verifications-ecran/*
+        marque/*
+        verifications-ecran/*
       a_blanc: ${{ github.event_name == 'workflow_dispatch' && inputs.a_blanc }}
       environnement: ${{ github.event_name == 'workflow_dispatch' && inputs.environnement != 'de-la-branche' && inputs.environnement || '' }}
       # Une passe à la main qui n'est pas à blanc veut redéployer: on redéploie

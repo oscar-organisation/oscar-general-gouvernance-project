@@ -1,9 +1,11 @@
 # Portail Backstage
 
-**État au 25 septembre 2026.** Le portail est mis en route par le lot 4 du
-plan: connexion par GitHub, charte OSCAR, page « Commencer ici », catalogue
-rangé, ce guide lisible dans le portail, deux façons de travailler en local,
-et sa chaîne. Ce qui n'est pas encore en place est dit comme tel, plus bas.
+**État au 25 septembre 2026, 21h56 UTC.** Le portail est mis en route par le
+lot 4 du plan: connexion par GitHub, charte OSCAR, page « Commencer ici »,
+catalogue rangé, ce guide lisible dans le portail, deux façons de travailler
+en local, et sa chaîne. Ses deux applications Coolify existent; son premier
+déploiement, en test, part à la fusion de la PR 2 vers `test`. Ce qui n'est
+pas encore en place est dit comme tel, plus bas.
 
 ## En bref
 
@@ -77,9 +79,16 @@ des dépendances (`package.json`) demande `docker compose build developpement`.
 
 Sans accès à GitHub, le portail lit le catalogue et la documentation **sur le
 poste**: la structure du catalogue (`oscar_backstage/catalogue/`), les fiches en
-attente, et le dépôt monté en entier, avec sa fiche et ce guide, tels qu'ils
-sont en train d'être modifiés. Les fiches des autres dépôts n'y sont pas: le
-portail ne les lit que sur GitHub, en test et en production.
+attente, et la fiche du dépôt avec ce guide, tels qu'ils sont au lancement. Les
+fiches des autres dépôts n'y sont pas: le portail ne les lit que sur GitHub, en
+test et en production.
+
+La fiche et le guide sont **copiés** à chaque lancement, par le service
+`copie-du-depot`: TechDocs réécrit `mkdocs.yml` avant chaque construction, et ne
+doit pas toucher au dépôt du poste. Après une modification du guide,
+`docker compose up -d` refait la copie; pour relire le guide pendant qu'on
+l'écrit, sa construction en conteneur est plus directe (partie « Construire ce
+guide en local », plus bas).
 
 Les réglages du poste sont dans `oscar_backstage/app-config.poste.yaml`. Ils
 n'entrent jamais dans l'image, et Coolify ne les lit pas.
@@ -128,8 +137,14 @@ Dans le portail, un clic sur un schéma l'ouvre en grand: c'est l'extension
 Les tests du portail tournent dans l'image, depuis `oscar_backstage/`:
 
 ```
-docker build --target verifications .
+docker build --target verifications --output type=cacheonly .
 ```
+
+`--output type=cacheonly` garde le verdict sans enregistrer d'image: seul
+compte que la construction aille au bout. Sans lui, Docker enregistre une
+image de tests de plusieurs gigaoctets, ce qui a pris 19 minutes de plus le
+25 septembre 2026 (mesuré sur le serveur du projet). Une seconde passe sans
+changement prend une dizaine de secondes: tout est repris du cache.
 
 **Ce qu'on doit voir**: la construction va au bout, sans erreur. Elle compile le
 code, construit le portail, puis lance tous ses tests: la page de connexion
@@ -152,7 +167,7 @@ docker compose -f marque/compose.yaml run --rm verifier
 |---|---|
 | `controles` | aucun secret, `.env` copie de `.env.exemple`, typographie, fichiers de chaîne, compositions valides, aucun port publié par `compose.yaml` |
 | `verifs` | les tests du portail, l'image d'exécution et son contenu (les réglages du poste n'y sont pas, MkDocs y est), la construction stricte du guide, les schémas, les images de marque |
-| `deploiement` | par le workflow commun du dépôt `oscar-infrastructure`, après une fusion dans `test` ou `main`: **branché à la livraison de ce workflow** |
+| `deploiement` | par le workflow commun du dépôt `oscar-infrastructure`, après une fusion dans `test` ou `main`, si le contenu de `oscar_backstage/` a changé, hors documentation (`*.md`), fabrication des images de marque (`marque/`) et vérification à l'écran (`verifications-ecran/`) |
 
 ## Le déploiement
 
@@ -188,7 +203,8 @@ docker run --rm curlimages/curl:8.22.0 -fsS https://tech.oscar-bot.com/.backstag
 
 ## Ce qui reste à faire
 
-- le déploiement par la chaîne, dès que le workflow commun est livré (lot 2);
+- le premier déploiement par la chaîne, en test puis en production (lot 4,
+  en cours);
 - la recette par le laboratoire (lot 3b);
 - la traduction en français des écrans internes de Backstage: la connexion,
   le menu, l'accueil et les messages d'erreur le sont; les pages du catalogue,

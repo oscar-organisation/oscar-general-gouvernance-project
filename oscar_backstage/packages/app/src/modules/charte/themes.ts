@@ -19,6 +19,7 @@
 
 import {
   createUnifiedTheme,
+  defaultComponentThemes,
   PageTheme,
   palettes,
   UnifiedTheme,
@@ -115,14 +116,96 @@ const titres = (couleur: string) => ({
   h6: { fontSize: 16, fontWeight: 600, marginBottom: 2 },
 });
 
+/** Les teintes d un theme dont les reglages de composants ont besoin. */
+type Teintes = {
+  /** Les filets et bordures. */
+  filet: string;
+  /** Le texte courant. */
+  texte: string;
+  /** Le texte secondaire, et le contour des boutons. */
+  secondaire: string;
+  /** Le fond d un encart pose sur la page. */
+  encart: string;
+  /** La poignee de la barre de defilement, au repos et sous la souris. */
+  poignee: string;
+  poigneeActive: string;
+};
+
+/**
+ * La base de la page: celle de Backstage, qu il exporte pour qu on la
+ * compose (defaultComponentThemes), avec les teintes de la poignee de la
+ * barre de defilement. Backstage les calcule en foncant ou en eclaircissant
+ * de 20 % une couleur du theme, ce qui sort de la charte (le test de la charte
+ * les a vues); on les remplace, et on garde tout le reste.
+ */
+const baseDeLaPage = (t: Teintes) => ({
+  // Le theme est passe tel quel a la base de Backstage, qui le lit.
+  styleOverrides: (theme: unknown) => {
+    const deBackstage = defaultComponentThemes?.MuiCssBaseline?.styleOverrides;
+    const base: Record<string, any> =
+      typeof deBackstage === 'function'
+        ? (deBackstage as (theme: unknown) => Record<string, any>)(theme)
+        : {};
+    return {
+      ...base,
+      body: {
+        ...base.body,
+        '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
+          ...base.body?.['&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb'],
+          backgroundColor: t.poignee,
+        },
+        '&::-webkit-scrollbar-thumb:active, & *::-webkit-scrollbar-thumb:active': {
+          backgroundColor: t.poigneeActive,
+        },
+        '&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover': {
+          backgroundColor: t.poigneeActive,
+        },
+      },
+    };
+  },
+});
+
+/**
+ * Une alerte dans la charte: le texte a l encre, sur un encart, l icone et le
+ * contour a l orange pour l erreur et l avertissement. Sans ce reglage,
+ * Material UI fonce et eclaircit la couleur de l etat (un brun #562306 sur un
+ * rose #FBEEE7 pour l orange), deux teintes hors de la charte que le releve a
+ * l ecran a trouvees.
+ */
+const alerte = (t: Teintes) => {
+  const standard = { color: t.texte, backgroundColor: t.encart };
+  const contour = { color: t.texte };
+  return {
+    standardError: standard,
+    standardWarning: standard,
+    standardInfo: standard,
+    standardSuccess: standard,
+    outlinedError: contour,
+    outlinedWarning: contour,
+    outlinedInfo: contour,
+    outlinedSuccess: contour,
+  };
+};
+
 /**
  * Les reglages de composants communs aux deux themes: les formes de la
  * charte (cartes arrondies a filet fin, pastilles) et ses polices.
  */
-const composants = (filet: string) => ({
+const composants = (t: Teintes) => ({
+  MuiCssBaseline: baseDeLaPage(t),
+  // Le filet qui separe les groupes du menu: Backstage le peint en gris fixe
+  // (#383838), hors charte. Il lui donne un nom de style,
+  // BackstageSidebarDivider, par lequel on le surcharge. Le menu est Noir
+  // OSCAR dans les deux themes: le filet est celui des fonds sombres.
+  BackstageSidebarDivider: {
+    styleOverrides: { root: { background: derives.filetSombre } },
+  },
+  MuiAlert: { styleOverrides: alerte(t) },
   MuiButton: {
     styleOverrides: {
       root: { textTransform: 'none' as const, borderRadius: 8, fontWeight: 600 },
+      // Material UI trace ce contour en noir pur a 23 %, hors charte.
+      outlined: { borderColor: t.secondaire },
     },
   },
   MuiChip: {
@@ -132,7 +215,7 @@ const composants = (filet: string) => ({
   },
   MuiCard: {
     styleOverrides: {
-      root: { borderRadius: 18, border: `1px solid ${filet}` },
+      root: { borderRadius: 18, border: `1px solid ${t.filet}` },
     },
   },
   MuiTab: {
@@ -151,7 +234,14 @@ export const themeClair: UnifiedTheme = createUnifiedTheme({
   typography: titres(palette.noir),
   defaultPageTheme: 'home',
   pageTheme,
-  components: composants(derives.filetClair),
+  components: composants({
+    filet: derives.filetClair,
+    texte: palette.noir,
+    secondaire: palette.gris,
+    encart: nuances.papierSoutenu,
+    poignee: nuances.papierSoutenu,
+    poigneeActive: palette.gris,
+  }),
   palette: {
     ...palettes.light,
     type: 'light',
@@ -230,7 +320,14 @@ export const themeSombre: UnifiedTheme = createUnifiedTheme({
   typography: titres(palette.papier),
   defaultPageTheme: 'home',
   pageTheme,
-  components: composants(derives.filetSombre),
+  components: composants({
+    filet: derives.filetSombre,
+    texte: palette.papier,
+    secondaire: derives.texteSecondaireSombre,
+    encart: nuances.sombreSurface,
+    poignee: palette.gris,
+    poigneeActive: derives.texteSecondaireSombre,
+  }),
   palette: {
     ...palettes.dark,
     type: 'dark',

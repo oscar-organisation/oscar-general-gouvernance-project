@@ -26,9 +26,10 @@ auth:
 # CE QUI REMPLIT LE CATALOGUE
 #
 # Les memes fiches qu en production, dans le meme ordre, plus le depot du
-# portail tel qu il est sur le poste, monte sur /depot par
-# compose.override.yaml. Sans acces a GitHub, c est de la que viennent la fiche
-# du portail et le guide du cycle, avec les modifications en cours.
+# portail tel qu il est sur le poste: sa fiche et le guide du cycle, copies
+# sur /depot a chaque lancement par le service copie-du-depot de
+# compose.override.yaml (la raison de la copie y est ecrite). Sans acces a
+# GitHub, c est de la qu ils viennent.
 # -----------------------------------------------------------------------------
 catalog:
   locations:

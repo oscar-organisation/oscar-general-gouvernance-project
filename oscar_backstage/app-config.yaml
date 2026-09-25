@@ -63,6 +63,9 @@ app:
     - page:user-settings:
         config:
           title: Réglages
+    - page:catalog-graph:
+        config:
+          title: Graphe du catalogue
 
     # Ferme: ces pages n ont rien a montrer pour OSCAR aujourd hui. Un
     # element qui n apporte rien n a pas sa place a l ecran.

@@ -15,7 +15,7 @@ Le même patron dans les trois dépôts, dans le fichier
 
 | Tâche | Ce qu'elle fait | Durée |
 |---|---|---|
-| `controles` | refuse un commit qui porte une ligne d'attribution (décision A18), cherche des secrets, vérifie la typographie (ni tiret long, ni caractère points de suspension), relit chaque fichier YAML et valide le fichier de composition | moins d'une minute |
+| `controles` | refuse un commit qui porte une ligne d'attribution (décision A18), cherche des secrets, vérifie la typographie (ni tiret long, ni caractère points de suspension), valide les fichiers de la chaîne et la composition, telle que Coolify la lit et telle qu'on la lance en local | moins d'une minute |
 | `verifs` | lance les tests propres à l'application, par exemple les tests du code, la construction des images, la charte graphique | selon l'application |
 | `deploiement` | seulement après une fusion dans `test` ou dans `main`, et après toutes les autres, et seulement si le contenu à déployer a changé: demande le déploiement à Coolify et le suit jusqu'au bout | de quelques minutes à trois quarts d'heure, selon l'application |
 | `recette` | joue les scénarios du laboratoire contre ce qui vient d'être déployé | selon l'application |
@@ -117,10 +117,12 @@ que la chaîne **tourne** réellement, pas seulement que son fichier existe. Un
 fichier de chaîne n'est lu qu'à la racine du dépôt, dans `.github/workflows/`
 (leçon 4.3).
 
-## État au 25 septembre 2026, en fin de journée
+## État au 25 septembre 2026, 21h56 UTC
+
+Relevé sur GitHub à cette heure-là, dépôt par dépôt.
 
 | Dépôt | Chaîne | État |
 |---|---|---|
-| `oscar-infrastructure` (outil DNS) | `.github/workflows/chaine.yml` | au patron commun, déploiement par le workflow commun, en test puis en production. Prouvée par la PR 4 vers `test` et la PR 5 vers `main` |
-| `oscar-test` (laboratoire) | `.github/workflows/chaine.yml` | lot 3b, en cours |
-| `oscar-general-gouvernance-project` (portail) | `.github/workflows/chaine.yml` | au patron commun, lot 4 |
+| `oscar-infrastructure` (outil DNS) | `.github/workflows/chaine.yml`, sur `test` et `main` | au patron commun, déploiement par le workflow commun en test puis en production, prouvé par la PR 4 vers `test` et la PR 5 vers `main`. La recette n'y est pas encore branchée (lot 3b) |
+| `oscar-test` (laboratoire) | `.github/workflows/chaine.yml`, sur `test` seulement | déploie `labo-test` par le workflow commun, puis joue la recette. Pas encore sur `main`: `labo-production` n'a jamais été déployée par la chaîne (lot 3b, en cours) |
+| `oscar-general-gouvernance-project` (portail) | `.github/workflows/chaine.yml`, arrivée par la PR 2 vers `test` | au patron commun; son premier déploiement, en test, part à la fusion de la PR 2 (lot 4, en cours) |

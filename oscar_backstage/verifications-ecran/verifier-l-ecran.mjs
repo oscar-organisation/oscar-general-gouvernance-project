@@ -9,7 +9,16 @@
  *     contour, remplissage et trait des dessins), et compte celles qui ne sont
  *     pas de la charte;
  *   - mesure le contraste de chaque texte sur son fond reel, et garde le plus
- *     faible.
+ *     faible;
+ *   - sur une page du guide, clique sur un schema et verifie qu il s ouvre en
+ *     grand (l extension LightBox de TechDocs).
+ *
+ * La couleur du texte ne compte que la ou un texte est peint: la propriete
+ * color d un element sans texte (html, un filet hr) ne se voit pas. Un fond
+ * peint par un degrade d une seule couleur (l en-tete des pages) compte pour
+ * cette couleur.
+ *
+ * Code de sortie: 0 si aucune couleur hors charte n a ete vue, 1 sinon.
  *
  * Les couleurs de la charte sont lues dans jetons.ts, jamais recopiees ici.
  * Une couleur transparente compte pour sa teinte: la charte trace elle-meme ses
@@ -45,15 +54,17 @@ const ECRANS = {
   telephone: { width: 390, height: 844 },
 };
 const THEMES = { clair: 'light', sombre: 'dark' };
+// Chaque page, et ce qui dit qu elle a fini de s afficher. Le guide se
+// construit a la premiere visite: il a droit a plus de temps.
 const PAGES = mode === 'invite'
   ? {
-      accueil: '/',
-      catalogue: '/catalog',
-      fiche: '/catalog/default/component/portail',
-      guide: '/docs/default/component/oscar-general-gouvernance-project/',
-      cycle: '/docs/default/component/oscar-general-gouvernance-project/02-le-cycle-pas-a-pas/',
+      accueil: { chemin: '/', pret: 'text=Commencer ici' },
+      catalogue: { chemin: '/catalog', pret: 'table tbody tr' },
+      fiche: { chemin: '/catalog/default/component/portail', pret: 'text=Portail technique' },
+      guide: { chemin: '/docs/default/component/oscar-general-gouvernance-project/', pret: '.md-content h1', attente: 120000 },
+      cycle: { chemin: '/docs/default/component/oscar-general-gouvernance-project/02-le-cycle-pas-a-pas/', pret: '.md-content h1', attente: 120000 },
     }
-  : { connexion: '/' };
+  : {};
 
 // Ce qui tourne dans la page: le releve des couleurs et des contrastes. Il
 // traverse aussi les racines fantomes, ou TechDocs range la documentation.
@@ -105,15 +116,29 @@ function releverDansLaPage(permises) {
     if (!hors.has(cle)) hors.set(cle, { couleur: '#' + h, propriete, exemples: [], nombre: 0 });
     const n = hors.get(cle);
     n.nombre += 1;
-    if (n.exemples.length < 3) n.exemples.push(decrire(e));
+    if (n.exemples.length < 3) n.exemples.push(`${decrire(e)} « ${(e.textContent || '').trim().slice(0, 40)} »`);
   };
+
+  // Un fond peint par un degrade d une seule couleur: cette couleur.
+  const fondPeint = s => {
+    const b = rgba(s.backgroundColor);
+    if (b && b[3] > 0) return b;
+    const d = s.backgroundImage.match(/^linear-gradient\((rgba?\([^)]*\)), (rgba?\([^)]*\))\)$/);
+    if (d && d[1] === d[2]) return rgba(d[1]);
+    return b;
+  };
+  const texteDe = e => [...e.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent.trim()).join('');
 
   let plusFaible = null;
   for (const e of elements) {
     if (!visible(e)) continue;
     const s = getComputedStyle(e);
-    noter(e, 'color', s.color);
+    const texte = texteDe(e);
+    if (texte) noter(e, 'color', s.color);
     noter(e, 'background-color', s.backgroundColor);
+    if (s.backgroundImage !== 'none') {
+      for (const c of s.backgroundImage.match(/rgba?\([^)]*\)/g) ?? []) noter(e, 'background-image', c);
+    }
     for (const cote of ['Top', 'Right', 'Bottom', 'Left']) {
       if (parseFloat(s[`border${cote}Width`]) > 0 && s[`border${cote}Style`] !== 'none') {
         noter(e, 'border-color', s[`border${cote}Color`]);
@@ -125,12 +150,11 @@ function releverDansLaPage(permises) {
       noter(e, 'stroke', s.stroke);
     }
     // Le contraste: seulement les elements qui portent eux-memes du texte.
-    const texte = [...e.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent.trim()).join('');
     if (!texte) continue;
     let fond = [255, 255, 255, 0];
     const couches = [];
     for (let a = e; a; a = a.parentElement || (a.getRootNode() && a.getRootNode().host)) {
-      const b = rgba(getComputedStyle(a).backgroundColor);
+      const b = fondPeint(getComputedStyle(a));
       if (b && b[3] > 0) couches.push(b);
       if (b && b[3] === 1) break;
     }
@@ -145,6 +169,27 @@ function releverDansLaPage(permises) {
   return { elements: elements.length, horsCharte: [...hors.values()].sort((a, b) => b.nombre - a.nombre), plusFaible };
 }
 
+/** Mesure la page ouverte, garde sa capture, et l ajoute au bilan. */
+async function mesurer(page, nom, extra = {}) {
+  await page.screenshot({ path: join(sortie, `${nom}.png`), fullPage: true });
+  const releve = await page.evaluate(releverDansLaPage, PERMISES);
+  const titre = await page.title();
+  const hors = releve.horsCharte.reduce((n, h) => n + h.nombre, 0);
+  bilan.push({ nom, titre, horsCharteTotal: hors, ...extra, ...releve });
+  const suite = Object.entries(extra).map(([k, v]) => `  ${k}: ${v}`).join('');
+  console.log(`${nom.padEnd(34)} titre « ${titre} »  couleurs hors charte: ${hors}  contraste minimal: ${releve.plusFaible ? releve.plusFaible.rapport : '-'}${suite}`);
+}
+
+/** Clique sur le premier schema du guide et dit s il s ouvre en grand. */
+async function essayerLightBox(page) {
+  const image = page.locator('.md-content img').first();
+  if (!(await image.count())) return 'aucune image';
+  await image.click();
+  const ouverte = await page.locator('.pswp').first().waitFor({ state: 'visible', timeout: 10000 }).then(() => true, () => false);
+  if (ouverte) await page.keyboard.press('Escape');
+  return ouverte ? 'oui' : 'non';
+}
+
 const navigateur = await chromium.launch();
 const bilan = [];
 for (const [nomEcran, taille] of Object.entries(ECRANS)) {
@@ -153,29 +198,43 @@ for (const [nomEcran, taille] of Object.entries(ECRANS)) {
     // Le theme choisi, tel que Backstage le garde dans le navigateur.
     await contexte.addInitScript(t => window.localStorage.setItem('theme', t), theme);
     const page = await contexte.newPage();
-    for (const [nomPage, chemin] of Object.entries(PAGES)) {
+
+    // La page de connexion, toujours: c est la seule qu on voit sans compte.
+    await page.goto(adresse + '/', { waitUntil: 'networkidle' });
+    // Ce qui dit que la page de connexion est la: le bouton de l invite sur
+    // le poste, le nom de GitHub en test et en production.
+    const repere = mode === 'invite' ? page.getByRole('button', { name: 'Entrer' }) : page.getByText('GitHub');
+    await repere.first().waitFor({ state: 'visible', timeout: 60000 }).catch(() => {});
+    await mesurer(page, `connexion-${nomTheme}-${nomEcran}`);
+
+    if (mode === 'invite') {
+      // Entrer en invite une fois: la session vaut pour tout le contexte.
+      await page.getByRole('button', { name: 'Entrer' }).click();
+      await page.getByText('Commencer ici').first().waitFor({ timeout: 60000 });
+    }
+
+    for (const [nomPage, { chemin, pret, attente }] of Object.entries(PAGES)) {
       await page.goto(adresse + chemin, { waitUntil: 'networkidle' });
-      if (mode === 'invite') {
-        const entrer = page.getByRole('button', { name: 'Entrer' });
-        if (await entrer.isVisible().catch(() => false)) {
-          await entrer.click();
-          await page.waitForLoadState('networkidle');
-        }
+      const affichee = await page.locator(pret).first()
+        .waitFor({ state: 'visible', timeout: attente ?? 60000 })
+        .then(() => 'oui', () => 'non');
+      // Le temps que les polices et les images finissent de s afficher.
+      await page.waitForTimeout(1500);
+      const extra = { affichee };
+      await mesurer(page, `${nomPage}-${nomTheme}-${nomEcran}`, extra);
+      if (nomPage === 'cycle') {
+        const lightbox = await essayerLightBox(page);
+        bilan[bilan.length - 1].lightbox = lightbox;
+        console.log(`${''.padEnd(34)} un clic sur le schema l ouvre en grand (LightBox): ${lightbox}`);
       }
-      // TechDocs construit la documentation a la premiere visite: on attend
-      // que le contenu soit la avant de mesurer.
-      await page.waitForTimeout(nomPage === 'guide' || nomPage === 'cycle' ? 8000 : 2000);
-      const nom = `${nomPage}-${nomTheme}-${nomEcran}`;
-      await page.screenshot({ path: join(sortie, `${nom}.png`), fullPage: true });
-      const releve = await page.evaluate(releverDansLaPage, PERMISES);
-      const titre = await page.title();
-      bilan.push({ page: nomPage, theme: nomTheme, ecran: nomEcran, titre, ...releve });
-      const hors = releve.horsCharte.reduce((n, h) => n + h.nombre, 0);
-      console.log(`${nom.padEnd(34)} titre « ${titre} »  couleurs hors charte: ${hors}  contraste minimal: ${releve.plusFaible ? releve.plusFaible.rapport : '-'}`);
     }
     await contexte.close();
   }
 }
 await navigateur.close();
 writeFileSync(join(sortie, 'releve.json'), JSON.stringify(bilan, null, 2));
+const total = bilan.reduce((n, b) => n + b.horsCharteTotal, 0);
+const nonAffichees = bilan.filter(b => b.affichee === 'non').map(b => b.nom);
 console.log(`Releve complet: ${join(sortie, 'releve.json')}`);
+console.log(`BILAN  pages: ${bilan.length}  couleurs hors charte: ${total}  pages non affichees: ${nonAffichees.length ? nonAffichees.join(', ') : 'aucune'}`);
+process.exit(total === 0 && nonAffichees.length === 0 ? 0 : 1);

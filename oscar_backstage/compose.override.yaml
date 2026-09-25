@@ -50,9 +50,12 @@ services:
     volumes:
       # Monte depuis le poste, jamais recopie dans l image.
       - ./app-config.poste.yaml:/app/app-config.poste.yaml:ro
-      # Le depot entier, en lecture seule: le portail y lit sa propre fiche et
-      # le guide du cycle, comme il les lit sur GitHub en production.
-      - ..:/depot:ro
+      # La fiche du depot et le guide du cycle, copies par copie-du-depot:
+      # le portail les y lit comme il les lit sur GitHub en production.
+      - copie-du-depot:/depot
+    depends_on:
+      copie-du-depot:
+        condition: service_completed_successfully
 
   # ---------------------------------------------------------------------------
   # Le mode developpement, avec rechargement a chaud. Il ne part qu a la
@@ -83,4 +86,49 @@ services:
       - ./app-config.yaml:/app/app-config.yaml:ro
       - ./app-config.developpement.yaml:/app/app-config.developpement.yaml:ro
       - ./app-config.poste.yaml:/app/app-config.poste.yaml:ro
-      - ..:/depot:ro
+      - copie-du-depot:/depot
+    depends_on:
+      copie-du-depot:
+        condition: service_completed_successfully
+
+  # ---------------------------------------------------------------------------
+  # Une copie de la fiche du depot et du guide, refaite a chaque lancement.
+  #
+  # POURQUOI UNE COPIE. Pour une fiche lue sur le disque, TechDocs construit la
+  # documentation dans le dossier meme de la fiche, et commence toujours par
+  # reecrire mkdocs.yml, sans ses commentaires, pour n y garder que les
+  # reglages qu il accepte (mesure le 25/09/2026 dans le code de TechDocs,
+  # version 2.0.0 de @backstage/plugin-techdocs-node). Le depot du poste
+  # monte en lecture seule, la construction echoue; monte en ecriture, le
+  # portail abimerait le mkdocs.yml du developpeur. En test et en production,
+  # la question ne se pose pas: TechDocs telecharge le depot depuis GitHub
+  # dans un dossier a lui.
+  #
+  # Le depot reste en lecture seule; seule la copie s ecrit. Une modification
+  # du guide ou de la fiche se voit dans le portail apres
+  # « docker compose up -d », qui refait la copie. Pour relire le guide en
+  # cours d ecriture, l outil du guide est plus direct:
+  # docker compose -f docs/outils/compose.yaml run --rm construire
+  # ---------------------------------------------------------------------------
+  copie-du-depot:
+    # Version figee, comme toutes les images du portail.
+    image: alpine:3.24.2
+    network_mode: none
+    volumes:
+      - ..:/source:ro
+      - copie-du-depot:/depot
+    # Seulement ce que le portail lit: la fiche de la racine, celle du
+    # portail, le guide et sa description. 1000 est l utilisateur « node » de
+    # l image du portail, qui doit pouvoir reecrire sa copie de mkdocs.yml.
+    command:
+      - sh
+      - -c
+      - >-
+        rm -rf /depot/* &&
+        mkdir -p /depot/oscar_backstage &&
+        cp -R /source/catalog-info.yaml /source/mkdocs.yml /source/docs /depot/ &&
+        cp /source/oscar_backstage/catalog-info.yaml /depot/oscar_backstage/ &&
+        chown -R 1000:1000 /depot
+
+volumes:
+  copie-du-depot:

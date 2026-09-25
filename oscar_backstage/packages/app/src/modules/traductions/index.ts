@@ -10,6 +10,8 @@
  */
 
 import { coreComponentsTranslationRef } from '@backstage/core-components';
+import { catalogGraphTranslationRef } from '@backstage/plugin-catalog-graph';
+import { searchTranslationRef } from '@backstage/plugin-search';
 import {
   createFrontendModule,
   createTranslationMessages,
@@ -76,7 +78,53 @@ const composantsDeBase = TranslationBlueprint.make({
   },
 });
 
+// La recherche, ouverte depuis le menu.
+const recherche = TranslationBlueprint.make({
+  name: 'recherche',
+  params: {
+    resource: createTranslationMessages({
+      ref: searchTranslationRef,
+      messages: {
+        'sidebarSearchModal.title': 'Rechercher',
+        'searchModal.viewFullResults': 'Voir tous les résultats',
+        'searchType.tabs.allTitle': 'Tout',
+        'searchType.allResults': 'Tous les résultats',
+        'searchType.accordion.collapse': 'Replier',
+        'searchType.accordion.numberOfResults': '{{number}} résultats',
+        'searchType.accordion.allTitle': 'Tout',
+      },
+    }),
+  },
+});
+
+// Le graphe des relations entre les fiches: sa page, et sa carte sur chaque
+// fiche.
+const grapheDuCatalogue = TranslationBlueprint.make({
+  name: 'graphe-du-catalogue',
+  params: {
+    resource: createTranslationMessages({
+      ref: catalogGraphTranslationRef,
+      messages: {
+        'catalogGraphCard.title': 'Relations',
+        'catalogGraphCard.deepLinkTitle': 'Voir le graphe',
+        'catalogGraphPage.title': 'Graphe du catalogue',
+        'catalogGraphPage.filterToggleButtonTitle': 'Filtres',
+        'catalogGraphPage.simplifiedSwitchLabel': 'Simplifié',
+        'catalogGraphPage.mergeRelationsSwitchLabel': 'Fusionner les relations',
+        'catalogGraphPage.directionFilter.title': 'Sens',
+        'catalogGraphPage.directionFilter.leftToRight': 'De gauche à droite',
+        'catalogGraphPage.directionFilter.rightToLeft': 'De droite à gauche',
+        'catalogGraphPage.directionFilter.topToBottom': 'De haut en bas',
+        'catalogGraphPage.directionFilter.bottomToTop': 'De bas en haut',
+        'catalogGraphPage.maxDepthFilter.title': 'Profondeur maximale',
+        'catalogGraphPage.selectedKindsFilter.title': 'Sortes',
+        'catalogGraphPage.selectedRelationsFilter.title': 'Relations',
+      },
+    }),
+  },
+});
+
 export const traductionsModule = createFrontendModule({
   pluginId: 'app',
-  extensions: [composantsDeBase],
+  extensions: [composantsDeBase, recherche, grapheDuCatalogue],
 });

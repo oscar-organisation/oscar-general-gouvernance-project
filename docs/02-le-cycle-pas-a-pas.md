@@ -35,16 +35,16 @@ dise.
 
 ## Où en est le cycle aujourd'hui
 
-**État au 25 septembre 2026, en fin de journée.** Le cycle décrit ici est
-celui du plan. Ses pièces se posent application par application:
+**État au 25 septembre 2026, 21h56 UTC**, relevé sur GitHub. Le cycle
+décrit ici est celui du plan. Ses pièces se posent application par application:
 
 | Pièce | Outil DNS | Laboratoire | Portail |
 |---|---|---|---|
-| La branche `test` | en place (lot 2) | en place (lot 3b, en cours) | en place (lot 4) |
-| La chaîne, `.github/workflows/chaine.yml` | en place, prouvée par la PR 4 vers `test` et la PR 5 vers `main` du dépôt `oscar-infrastructure` | lot 3b, en cours | lot 4 |
-| Le déploiement par la chaîne, en test puis en production | en place | lot 3b | lot 4 |
-| Le contrôle de passage par `test` | en place | lot 3b | lot 4 |
-| La recette par le laboratoire | lot 3b | lot 3b | lot 3b |
+| La branche `test` | en place | en place | en place |
+| La chaîne, `.github/workflows/chaine.yml` | en place sur `test` et `main` | sur `test` seulement (lot 3b, en cours) | arrive par la PR 2 vers `test` (lot 4, en cours) |
+| Le déploiement par la chaîne en test | en place, prouvé par la PR 4 du dépôt `oscar-infrastructure` | en place | à la fusion de la PR 2 (lot 4) |
+| Le déploiement par la chaîne en production, et le contrôle de passage par `test` | en place, prouvé par la PR 5 du dépôt `oscar-infrastructure` | lot 3b | lot 4 |
+| La recette par le laboratoire | pas encore branchée (lot 3b) | branchée sur `test` (lot 3b, en cours) | pas encore branchée |
 
 Le déploiement et le contrôle de passage par `test` sont écrits **une fois**,
 dans le workflow commun du dépôt `oscar-infrastructure`
@@ -249,8 +249,9 @@ commit déployé est bien celui qui a été vérifié. Personne ne déploie à l
 donne la réponse de Coolify. Le journal de construction est dans Coolify, sur
 le déploiement concerné.
 
-**État au 25 septembre 2026**: en place pour l'outil DNS (lot 2) et le portail
-(lot 4); le laboratoire suit au lot 3b.
+**État au 25 septembre 2026**: en place pour l'outil DNS (lot 2) et le
+laboratoire (lot 3b); le portail suit au lot 4. Voir le tableau du début de
+cette page.
 
 ## Étape 10. La recette par le laboratoire
 
@@ -264,7 +265,8 @@ le visualiseur du laboratoire, `https://test-labo.oscar-bot.com`.
 va pas plus loin: on corrige par une nouvelle branche `travail/<sujet>`, qui
 refait les étapes 2 à 10.
 
-**État au 25 septembre 2026**: pas encore en place, lot 3b.
+**État au 25 septembre 2026**: branchée seulement dans la chaîne du
+laboratoire, sur `test` (lot 3b, en cours).
 
 ## Étape 11. La PR de `test` vers `main`
 
@@ -299,8 +301,9 @@ déployée. On prévient Joel, et on rédige l'incident. Voir
 [comment se comporter](03-comment-se-comporter.md), règles 1 et 7.
 
 **État au 25 septembre 2026**: le contrôle est en place dans le workflow
-commun (lot 2), pour toute application dont la chaîne l'appelle: l'outil DNS,
-puis le portail (lot 4).
+commun (lot 2), pour toute application dont la chaîne l'appelle. Il a servi
+pour l'outil DNS; le laboratoire et le portail y passent à leur première
+fusion dans `main` (lots 3b et 4).
 
 ## Étape 13. Vérifier que le site est vivant
 
