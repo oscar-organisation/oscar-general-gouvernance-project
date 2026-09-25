@@ -1,0 +1,19 @@
+%% Les branches travail/*, test et main.
+%% Source de 03-les-branches.svg. L'image ne se retouche jamais à la main.
+%% Après une modification, depuis la racine du dépôt:
+%%   docker compose -f docs/outils/compose.yaml run --rm schemas
+gitGraph
+  commit id: "production"
+  branch test
+  checkout test
+  branch travail/ajouter-champ
+  checkout travail/ajouter-champ
+  commit id: "coder"
+  commit id: "tester"
+  checkout test
+  merge travail/ajouter-champ id: "PR vers test" tag: "PR fusionnée: déployé en test"
+  branch travail/corriger-lien
+  checkout travail/corriger-lien
+  commit id: "corriger"
+  checkout main
+  merge test id: "PR vers main" tag: "PR fusionnée: déployé en production"

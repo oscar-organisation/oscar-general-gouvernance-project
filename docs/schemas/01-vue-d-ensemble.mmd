@@ -1,0 +1,30 @@
+%% Vue d'ensemble: où vit quoi, et qui parle à qui.
+%% Source de 01-vue-d-ensemble.svg. L'image ne se retouche jamais à la main.
+%% Après une modification, depuis la racine du dépôt:
+%%   docker compose -f docs/outils/compose.yaml run --rm schemas
+flowchart TB
+  code["Le poste du développeur<br>code/: les dépôts clonés<br>git et Docker, rien d'autre"]
+
+  subgraph github["GitHub, organisation oscar-organisation"]
+    depot["Le dépôt de l'application<br>branches travail/#lt;sujet#gt;, test, main"]
+    chaine["La chaîne, dans GitHub Actions<br>contrôles, vérifications,<br>déploiement, recette"]
+  end
+
+  subgraph serveur["Le serveur OSCAR"]
+    exploitation["exploitation/<br>descriptions Coolify, procédures"]:::discret
+    coolify["Coolify<br>deploy.oscar-bot.com"]
+    secrets["secret_root/<br>les secrets"]:::discret
+    appt["Application en test<br>test-#lt;nom#gt;.oscar-bot.com"]
+    appp["Application en production<br>#lt;nom#gt;.oscar-bot.com"]
+  end
+
+  code -- "git push" --> depot
+  depot -- "chaque PR, chaque fusion" --> chaine
+  chaine -- "demande le déploiement" --> coolify
+  depot -. "Coolify lit le code sur GitHub" .-> coolify
+  exploitation -. "règle Coolify" .-> coolify
+  secrets -. "valeurs de production" .-> coolify
+  coolify -- "construit et lance" --> appt
+  coolify -- "construit et lance" --> appp
+  chaine ~~~ exploitation
+  chaine ~~~ secrets

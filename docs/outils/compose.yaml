@@ -1,0 +1,83 @@
+# Les outils du guide, dans des conteneurs.
+#
+# A lancer depuis la racine du depot. Ces commandes marchent sous Linux, macOS
+# et Windows, avec Docker et rien d autre:
+#
+#   docker compose -f docs/outils/compose.yaml run --rm schemas
+#   docker compose -f docs/outils/compose.yaml run --rm verifier-schemas
+#   docker compose -f docs/outils/compose.yaml run --rm construire
+#
+# schemas           refait chaque image SVG a cote de sa source Mermaid (.mmd)
+# verifier-schemas  ne touche a rien, et echoue si une image ne correspond plus
+#                   a sa source
+# construire        construit le guide comme le fait TechDocs, le lecteur de
+#                   documentation de Backstage, et echoue au moindre
+#                   avertissement: lien casse, page oubliee, ancre absente
+#
+# Pourquoi des images plutot que du Mermaid seul, et comment elles sont
+# faites: docs/schemas/README.md.
+
+name: oscar-outils-du-guide
+
+# L image de Mermaid, ecrite une seule fois pour les deux services qui
+# dessinent. Sa version est figee: une autre version dessinerait autrement, et
+# la verification signalerait des ecarts qui ne viennent pas des sources. Pour
+# en changer, on change ce numero, puis on refait toutes les images dans le
+# meme envoi.
+x-mermaid: &mermaid
+  image: minlag/mermaid-cli:11.17.1
+  # Aucun reseau: le dessin se fait entierement dans le conteneur. Sans cette
+  # ligne, docker compose cree un reseau qui reste apres la commande.
+  network_mode: none
+  # Le script des schemas, et non la commande de l image: il traite toutes les
+  # sources d un coup, et sait verifier sans rien ecrire.
+  entrypoint: ["sh", "/outils/schemas.sh"]
+
+services:
+
+  schemas:
+    <<: *mermaid
+    command: ["generer"]
+    # Le conteneur ecrit les images dans le dossier du depot. Sous Linux, il
+    # doit le faire avec l identite de la personne, sinon les images ne lui
+    # appartiendraient pas et elle ne pourrait plus les modifier. 1000 est
+    # l identite du premier compte d une machine Linux; une autre se donne par
+    # OSCAR_UID et OSCAR_GID. Sous macOS et Windows, Docker Desktop fait cette
+    # correspondance tout seul et la valeur n a pas d effet.
+    user: "${OSCAR_UID:-1000}:${OSCAR_GID:-1000}"
+    environment:
+      # Le navigateur qui dessine a besoin d un dossier personnel ou ecrire.
+      # Celui de l image appartient a son propre compte, pas a l identite
+      # ci-dessus.
+      HOME: /tmp
+    volumes:
+      # Chemins relatifs a ce fichier: la commande marche quel que soit
+      # l endroit ou le depot a ete clone.
+      - ../schemas:/schemas
+      - .:/outils:ro
+
+  verifier-schemas:
+    <<: *mermaid
+    command: ["verifier"]
+    # Tout en lecture seule: une verification ne doit rien pouvoir ecrire.
+    volumes:
+      - ../schemas:/schemas:ro
+      - .:/outils:ro
+
+  construire:
+    # L image officielle du generateur de TechDocs: MkDocs et son module
+    # techdocs-core. C est celle que Backstage 1.55 emploie par defaut quand il
+    # construit la documentation dans un conteneur (defaultDockerImage de
+    # @backstage/plugin-techdocs-node 2.0.0). Figee pour la meme raison que
+    # Mermaid; elle suit la version de Backstage du portail.
+    image: spotify/techdocs:v1.2.8
+    # Aucun reseau: la construction n a besoin de rien d exterieur, et ne doit
+    # pas en dependre.
+    network_mode: none
+    working_dir: /depot
+    # --strict transforme chaque avertissement en erreur. Le site produit reste
+    # dans le conteneur, qui disparait: seul compte le verdict.
+    command: ["build", "--strict", "--site-dir", "/tmp/site"]
+    volumes:
+      # La racine du depot, ou se trouve mkdocs.yml, en lecture seule.
+      - ../..:/depot:ro

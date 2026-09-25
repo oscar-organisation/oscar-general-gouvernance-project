@@ -1,0 +1,3 @@
+# Les images SVG de ce dossier sont fabriquees depuis leurs sources .mmd:
+# GitHub les replie dans les differences d une PR, pour qu on lise la source.
+*.svg linguist-generated=true

@@ -1,0 +1,46 @@
+%% Le trajet d'une modification, du poste jusqu'à la production.
+%% Source de 02-trajet-d-une-modification.svg. L'image ne se retouche jamais à la main.
+%% Après une modification, depuis la racine du dépôt:
+%%   docker compose -f docs/outils/compose.yaml run --rm schemas
+sequenceDiagram
+  autonumber
+  actor D as Développeur
+  participant G as GitHub
+  participant C as La chaîne
+  participant K as Coolify
+  participant T as Test
+  participant P as Production
+
+  rect rgb(243, 241, 236)
+    Note over D: En local, sur le poste
+    D->>D: branche travail/sujet, partie de test
+    D->>D: lancer, modifier, tester
+    D->>G: git push, puis PR vers test
+    G->>C: la PR lance la chaîne
+    C-->>G: contrôles et vérifications, vert ou rouge
+  end
+
+  rect rgb(234, 231, 223)
+    Note over D,T: Vers le test
+    D->>G: fusion de la PR dans test
+    G->>C: la fusion lance la chaîne
+    C->>C: contrôles et vérifications
+    C->>K: déployer l'application de test
+    K->>G: lire le code de la branche test
+    K->>T: construire et lancer
+    C->>K: suivre ce déploiement jusqu'au bout
+    C->>T: recette, tous les scénarios du laboratoire
+    C-->>G: déclarer le déploiement en test
+  end
+
+  rect rgb(243, 241, 236)
+    Note over D,P: Vers la production
+    D->>G: PR de test vers main, puis fusion
+    G->>C: la fusion lance la chaîne
+    C->>C: contrôles, vérifications, passage par test
+    C->>K: déployer l'application de production
+    K->>P: construire et lancer
+    C->>P: recette, scénarios non destructifs
+    C-->>G: déclarer le déploiement en production
+    D->>P: vérifier que le site est vivant
+  end

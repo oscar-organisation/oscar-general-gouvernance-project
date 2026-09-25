@@ -1,0 +1,26 @@
+%% Que faire quand la chaîne est rouge.
+%% Source de 06-quand-la-chaine-est-rouge.svg. L'image ne se retouche jamais à la main.
+%% Après une modification, depuis la racine du dépôt:
+%%   docker compose -f docs/outils/compose.yaml run --rm schemas
+flowchart TB
+  rouge(["La chaîne est rouge"]):::attention
+  ou{"Où ?"}
+  surpr["Sur une PR<br>rien n'est cassé"]
+  surtest["Après une fusion dans test<br>le test est touché"]
+  surmain["Après une fusion dans main<br>la production est concernée"]
+  prevenirt["Réparer en priorité<br>ou annuler le changement"]
+  prevenirp["Prévenir Joel<br>tout de suite"]
+  lire["Ouvrir la tâche rouge dans Actions<br>lire le premier message d'erreur"]
+  refaire["Refaire la même vérification<br>en local, en conteneur"]
+  corriger["Corriger sur une branche travail/#lt;sujet#gt;<br>pousser, suivre le cycle"]
+  incident["Rédiger l'incident<br>le jour même"]:::accent
+  jamais["Jamais: affaiblir un contrôle,<br>déployer à la main,<br>envoyer sur main"]:::attention
+
+  rouge --> ou
+  ou --> surpr --> lire
+  ou --> surtest --> prevenirt --> lire
+  ou --> surmain --> prevenirp --> lire
+  lire --> refaire --> corriger
+  prevenirt --> incident
+  prevenirp --> incident
+  corriger ~~~ jamais
