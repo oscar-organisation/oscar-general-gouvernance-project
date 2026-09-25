@@ -195,10 +195,30 @@ const composants = (t: Teintes) => ({
   MuiCssBaseline: baseDeLaPage(t),
   // Le filet qui separe les groupes du menu: Backstage le peint en gris fixe
   // (#383838), hors charte. Il lui donne un nom de style,
-  // BackstageSidebarDivider, par lequel on le surcharge. Le menu est Noir
+  // BackstageSidebarDivider, par lequel on le surcharge. Son style est une
+  // fonction, qui ne se fusionne pas avec une surcharge: la surcharge le
+  // remplace, et redit donc tout (mesure a l ecran: sans hauteur ni bordure
+  // nulle, le navigateur dessinait un filet gris a lui). Le menu est Noir
   // OSCAR dans les deux themes: le filet est celui des fonds sombres.
   BackstageSidebarDivider: {
-    styleOverrides: { root: { background: derives.filetSombre } },
+    styleOverrides: {
+      root: {
+        height: 1,
+        width: '100%',
+        background: derives.filetSombre,
+        border: 'none',
+        margin: '9.6px 0',
+      },
+    },
+  },
+  // Le panneau qui annonce une erreur ou un avertissement: Backstage fonce et
+  // eclaircit la couleur de l etat, hors charte. Meme regle que les alertes.
+  BackstageWarningPanel: {
+    styleOverrides: {
+      panel: { color: t.texte, backgroundColor: t.encart },
+      summaryText: { color: t.texte },
+      message: { color: t.texte, backgroundColor: t.encart },
+    },
   },
   MuiAlert: { styleOverrides: alerte(t) },
   MuiButton: {
@@ -311,7 +331,10 @@ export const themeClair: UnifiedTheme = createUnifiedTheme({
       warning: palette.noir,
       closeButtonColor: palette.papier,
     },
-    code: { background: nuances.papierSoutenu },
+    // Le fond des blocs de code du guide: la carte. Sur le papier soutenu, le
+    // gris des numeros de ligne n atteignait que 4,31 pour 1 (mesure a
+    // l ecran), sous le minimum de 4,5; sur la carte, 5,3.
+    code: { background: nuances.carte },
   },
 });
 

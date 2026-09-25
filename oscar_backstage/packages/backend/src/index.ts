@@ -62,4 +62,11 @@ backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
 // Les reglages de chaque personne: son theme, ses favoris.
 backend.add(import('@backstage/plugin-user-settings-backend'));
 
+// Les signaux: le serveur previent l interface d un changement. Le stockage
+// des reglages de l interface (module user-settings) en depend; sans eux,
+// le catalogue affichait « No API factory available for dependency
+// apiRef{plugin.signal.service} ». Present dans l application generee par
+// Backstage, retire puis remis au lot 4.
+backend.add(import('@backstage/plugin-signals-backend'));
+
 backend.start();

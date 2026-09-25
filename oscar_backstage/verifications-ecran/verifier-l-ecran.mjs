@@ -18,7 +18,9 @@
  * peint par un degrade d une seule couleur (l en-tete des pages) compte pour
  * cette couleur.
  *
- * Code de sortie: 0 si aucune couleur hors charte n a ete vue, 1 sinon.
+ * Code de sortie: 0 si aucune couleur hors charte n a ete vue, si chaque
+ * texte atteint le contraste AA de sa taille, et si chaque page s est
+ * affichee; 1 sinon.
  *
  * Les couleurs de la charte sont lues dans jetons.ts, jamais recopiees ici.
  * Une couleur transparente compte pour sa teinte: la charte trace elle-meme ses
@@ -127,9 +129,11 @@ function releverDansLaPage(permises) {
     if (d && d[1] === d[2]) return rgba(d[1]);
     return b;
   };
+  const FORMES = new Set(['path', 'circle', 'rect', 'ellipse', 'line', 'polyline', 'polygon', 'text', 'tspan']);
   const texteDe = e => [...e.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent.trim()).join('');
 
   let plusFaible = null;
+  const echecs = { nombre: 0, exemples: [] };
   for (const e of elements) {
     if (!visible(e)) continue;
     const s = getComputedStyle(e);
@@ -145,7 +149,9 @@ function releverDansLaPage(permises) {
       }
     }
     if (s.outlineStyle !== 'none' && parseFloat(s.outlineWidth) > 0) noter(e, 'outline-color', s.outlineColor);
-    if (e instanceof SVGElement) {
+    // Seules les formes se dessinent: un <svg> ou un <g> ne fait que
+    // transmettre son remplissage, qu il soit employe ou non.
+    if (e instanceof SVGElement && FORMES.has(e.tagName.toLowerCase())) {
       noter(e, 'fill', s.fill);
       noter(e, 'stroke', s.stroke);
     }
@@ -162,11 +168,18 @@ function releverDansLaPage(permises) {
     const couleur = rgba(s.color);
     if (!couleur) continue;
     const r = contraste(poser(couleur, fond), fond);
-    if (!plusFaible || r < plusFaible.rapport) {
-      plusFaible = { rapport: Math.round(r * 100) / 100, texte: texte.slice(0, 60), element: decrire(e), couleur: '#' + hexa(poser(couleur, fond)), fond: '#' + hexa(fond), taille: s.fontSize, graisse: s.fontWeight };
+    // Le seuil AA depend de la taille: 3 pour 1 pour un grand texte (24 px,
+    // ou 18,66 px en gras), 4,5 pour 1 sinon.
+    const taille = parseFloat(s.fontSize);
+    const seuil = taille >= 24 || (taille >= 18.66 && Number(s.fontWeight) >= 700) ? 3 : 4.5;
+    const mesure = { rapport: Math.round(r * 100) / 100, seuil, texte: texte.slice(0, 60), element: decrire(e), couleur: '#' + hexa(poser(couleur, fond)), fond: '#' + hexa(fond), taille: s.fontSize, graisse: s.fontWeight };
+    if (!plusFaible || r < plusFaible.rapport) plusFaible = mesure;
+    if (r < seuil) {
+      echecs.nombre += 1;
+      if (echecs.exemples.length < 5) echecs.exemples.push(mesure);
     }
   }
-  return { elements: elements.length, horsCharte: [...hors.values()].sort((a, b) => b.nombre - a.nombre), plusFaible };
+  return { elements: elements.length, horsCharte: [...hors.values()].sort((a, b) => b.nombre - a.nombre), plusFaible, contrastesSousAA: echecs };
 }
 
 /** Mesure la page ouverte, garde sa capture, et l ajoute au bilan. */
@@ -177,7 +190,8 @@ async function mesurer(page, nom, extra = {}) {
   const hors = releve.horsCharte.reduce((n, h) => n + h.nombre, 0);
   bilan.push({ nom, titre, horsCharteTotal: hors, ...extra, ...releve });
   const suite = Object.entries(extra).map(([k, v]) => `  ${k}: ${v}`).join('');
-  console.log(`${nom.padEnd(34)} titre « ${titre} »  couleurs hors charte: ${hors}  contraste minimal: ${releve.plusFaible ? releve.plusFaible.rapport : '-'}${suite}`);
+  const faible = releve.plusFaible ? `${releve.plusFaible.rapport} (seuil ${releve.plusFaible.seuil})` : '-';
+  console.log(`${nom.padEnd(34)} titre « ${titre} »  couleurs hors charte: ${hors}  contraste minimal: ${faible}  sous le seuil AA: ${releve.contrastesSousAA.nombre}${suite}`);
 }
 
 /** Clique sur le premier schema du guide et dit s il s ouvre en grand. */
@@ -235,6 +249,7 @@ await navigateur.close();
 writeFileSync(join(sortie, 'releve.json'), JSON.stringify(bilan, null, 2));
 const total = bilan.reduce((n, b) => n + b.horsCharteTotal, 0);
 const nonAffichees = bilan.filter(b => b.affichee === 'non').map(b => b.nom);
+const sousAA = bilan.reduce((n, b) => n + b.contrastesSousAA.nombre, 0);
 console.log(`Releve complet: ${join(sortie, 'releve.json')}`);
-console.log(`BILAN  pages: ${bilan.length}  couleurs hors charte: ${total}  pages non affichees: ${nonAffichees.length ? nonAffichees.join(', ') : 'aucune'}`);
-process.exit(total === 0 && nonAffichees.length === 0 ? 0 : 1);
+console.log(`BILAN  pages: ${bilan.length}  couleurs hors charte: ${total}  textes sous le seuil AA: ${sousAA}  pages non affichees: ${nonAffichees.length ? nonAffichees.join(', ') : 'aucune'}`);
+process.exit(total === 0 && sousAA === 0 && nonAffichees.length === 0 ? 0 : 1);
