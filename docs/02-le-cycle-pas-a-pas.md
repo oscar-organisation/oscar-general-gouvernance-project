@@ -130,6 +130,17 @@ terminal pendant que l'application tourne.
 (voir [les ports locaux](04-les-environnements.md#les-ports-locaux)).
 L'application s'ouvre à l'adresse donnée sur sa page.
 
+Pour la vérifier sans navigateur, depuis un conteneur jetable, par sa route
+de santé si elle en a une (sa page la donne):
+
+```
+docker run --rm --network host curlimages/curl:8.22.0 -fsS http://127.0.0.1:<port>/<route de santé>
+```
+
+**Sous Linux, `--network host` est nécessaire**: sans lui, le conteneur a sa
+propre adresse `127.0.0.1`, et répond `Could not connect to server` (mesuré le
+26 septembre 2026). Sous macOS et Windows: non vérifié.
+
 **Si ça ne va pas**:
 
 - `docker compose logs <service>` montre ce que le service a écrit. Le nom des
@@ -297,8 +308,9 @@ supprime jamais la branche `test`.
 ## Étape 12. Le déploiement automatique en production
 
 Sur `main`, la chaîne refait `controles` et `verifs`, puis contrôle le passage
-par `test`: le contenu de ce commit doit être exactement celui d'un commit de
-`test` déployé avec succès en test. Elle déploie ensuite
+par `test`: le contenu à déployer de ce commit doit être exactement celui que
+Coolify sert en test, c'est-à-dire celui de son dernier déploiement terminé en
+test. Elle déploie ensuite
 `<application>-production`, et joue les scénarios non destructifs du
 laboratoire contre `https://<nom>.oscar-bot.com`.
 
@@ -324,7 +336,8 @@ docker run --rm curlimages/curl:8.22.0 -fsSL -o /dev/null -w "%{http_code}\n" ht
 ```
 
 Cette commande appelle le site depuis un conteneur jetable et affiche le code
-de la réponse. Une application qui a une route de santé se vérifie aussi par
+de la réponse. Pour une application lancée sur le poste, voir l'étape 3: sous
+Linux, le conteneur a besoin de `--network host` pour joindre `127.0.0.1`. Une application qui a une route de santé se vérifie aussi par
 elle; sa page donne la commande.
 
 **Ce qu'on doit voir**: `200`.
@@ -367,13 +380,18 @@ défait le changement, par le même cycle:
 git fetch origin
 git switch --no-track -c travail/annuler-<sujet> origin/test
 git revert -m 1 <commit de fusion>
+git commit --amend -m "Annuler <ce que faisait la fusion>, parce que <pourquoi>"
 git push -u origin travail/annuler-<sujet>
 ```
 
 `<commit de fusion>` est le commit créé par la fusion de la PR, visible sur la
-PR elle-même. On ouvre ensuite une PR vers `test`, comme à l'étape 6.
+PR elle-même. `git revert` propose un message en anglais, « Revert "..." »:
+`git commit --amend` le remplace par un message en français, qui dit ce qu'on
+annule et pourquoi (règle des [messages de commit](03-comment-se-comporter.md#6-des-messages-de-commit-clairs)).
+On ouvre ensuite une PR vers `test`, comme à l'étape 6.
 
 Remettre en service une version précédente sans passer par le cycle est une
 procédure d'exploitation, écrite pour chaque application dans `exploitation/`
-(voir [le code et l'exploitation](06-le-code-et-l-exploitation.md)). Elle n'est
-pas entre les mains du développeur.
+(voir [le code et l'exploitation](06-le-code-et-l-exploitation.md)), dans le
+fichier `procedures/revenir-en-arriere.md` du dossier de l'application. Elle
+n'est pas entre les mains du développeur.
