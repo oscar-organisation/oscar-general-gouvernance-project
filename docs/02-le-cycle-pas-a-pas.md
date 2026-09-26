@@ -35,7 +35,7 @@ dise.
 
 ## Où en est le cycle aujourd'hui
 
-**État au 26 septembre 2026, 02h38 UTC**, relevé à cette heure-là par l'API de
+**État au 26 septembre 2026, 05h07 UTC**, relevé à cette heure-là par l'API de
 Coolify, l'API de GitHub et une requête à chaque site. C'est **le seul tableau
 d'état du guide**: les autres pages y renvoient au lieu de le recopier, pour
 qu'il ne se contredise jamais. Il se met à jour à chaque livraison, relevé et
@@ -44,12 +44,12 @@ non de mémoire.
 | Pièce | Outil DNS | Laboratoire | Portail |
 |---|---|---|---|
 | La branche `test` | en place | en place | en place |
-| La chaîne, `.github/workflows/chaine.yml` | sur `test` et `main` | sur `test` et `main` | sur `test`; sur `main` à la promotion de `test` (lot 4) |
-| Les applications Coolify | `outil-dns-test`, `outil-dns-production`, en service | `labo-test`, `labo-production`, en service | `portail-test` en service; `portail-production` créée, pas encore déployée |
-| Le déploiement par la chaîne en test | en place (dernier déclaré: `f2ddfcd`) | en place (dernier déclaré: `6e59377`, un déploiement en cours au relevé) | en place (dernier déclaré: `f7271e3`) |
-| Le déploiement par la chaîne en production, avec le contrôle de passage par `test` | en place (dernier déclaré: `fc9f669`) | en place (dernier déclaré: `c0f21cd`) | à la promotion de `test` vers `main` (lot 4) |
-| La recette par le laboratoire, après chaque déploiement | en place, verte à la dernière passe de production | en place, verte à la dernière passe de production | pas branchée: le laboratoire n'a pas encore de scénario du portail |
-| Les sites | `test-dns`, `dns` répondent | `labo` répond `401` sans identifiants; `test-labo` se déployait | `test-tech` répond, connexion par GitHub; `tech` répond `503` |
+| La chaîne, `.github/workflows/chaine.yml` | sur `test` et `main` | sur `test` et `main` | sur `test` et `main` |
+| Les applications Coolify | `outil-dns-test`, `outil-dns-production`, en service | `labo-test`, `labo-production`, en service | `portail-test`, `portail-production`, en service |
+| Le déploiement par la chaîne en test | en place (dernier déclaré: `d4eef46`) | en place (dernier déclaré: `c66c189`) | en place (dernier déclaré: `1cb9812`) |
+| Le déploiement par la chaîne en production, avec le contrôle de passage par `test` | en place (dernier déclaré: `fc9f669`) | en place (dernier déclaré: `dfe4244`) | en place (dernier déclaré: `471c0f0`) |
+| La recette par le laboratoire, après chaque déploiement | en place, verte à sa dernière exécution en production | en place, verte en test et en production | pas branchée: le laboratoire n'a pas encore de scénario du portail |
+| Les sites | `test-dns`, `dns` répondent | `test-labo`, `labo` répondent `401` sans identifiants | `test-tech`, `tech` répondent; connexion par GitHub |
 
 Le déploiement et le contrôle de passage par `test` sont écrits **une fois**,
 dans le workflow commun du dépôt `oscar-infrastructure`
