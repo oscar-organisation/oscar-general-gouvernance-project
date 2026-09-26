@@ -55,9 +55,10 @@ l'équipe** (décision 63).
 
 La chaîne vérifie que cette règle a été suivie. Avant de déployer en
 production, elle compare le contenu à déployer, le dossier de l'application
-hors documentation, à celui qui est en service en test, déployé avec succès. Le
-contenu, ce sont les fichiers, pas l'identifiant du commit: la fusion d'une PR
-de `test` vers `main` crée un commit nouveau, avec les mêmes fichiers.
+hors documentation, à celui que **Coolify sert en test**: le commit de son
+dernier déploiement terminé dans cet environnement. Le contenu, ce sont les
+fichiers, pas l'identifiant du commit: la fusion d'une PR de `test` vers `main`
+crée un commit nouveau, avec les mêmes fichiers.
 
 Si ce n'est pas le cas, **la chaîne ne bloque pas le déploiement: elle le
 signale, en clair, dans le résumé de la passe**, pour que l'écart se voie. Un
@@ -77,11 +78,19 @@ réutilisable** (un morceau de chaîne qu'un autre dépôt appelle),
 et appelé par chaque chaîne (lot 2). Il tient en deux tâches:
 
 - **`preparer`** choisit l'environnement selon la branche (`test` pour `test`,
-  `production` pour `main`), regarde si le contenu à déployer a changé depuis
-  le dernier déploiement réussi, et, en production, fait le contrôle de passage
-  par `test`. Elle ne déclare rien, et s'arrête là si rien n'a changé.
+  `production` pour `main`), regarde si le contenu à déployer est déjà celui
+  que Coolify sert dans cet environnement, et, en production, fait le contrôle
+  de passage par `test`. Elle ne déclare rien, et s'arrête là si rien n'a
+  changé. Si Coolify sert un autre contenu que celui que GitHub déclare, elle
+  le signale par un avertissement: un déploiement a eu lieu hors de la chaîne,
+  un retour d'urgence en général. Si le contenu servi n'est pas celui de la
+  branche, la chaîne déploie celui de la branche.
 - **`deployer`**, seulement s'il faut déployer: elle attend que la machine
-  n'ait **aucun** autre déploiement en cours, toutes applications confondues;
+  n'ait **aucun** autre déploiement en cours, toutes applications confondues,
+  une heure au plus par défaut (réglable de 1 à 120 minutes par l'entrée
+  `attente_file_minutes` du workflow commun). Une passe peut donc rester
+  longtemps sur « Déployer » quand une autre application se construit: la
+  construction à froid du portail a pris 41 minutes le 26 septembre 2026;
   demande le déploiement à Coolify et suit **celui-là**; vérifie que Coolify
   construit bien le commit vérifié, et annule sinon (la passe du nouvel envoi
   déploiera); puis vérifie que le site répond sur sa route de santé.
