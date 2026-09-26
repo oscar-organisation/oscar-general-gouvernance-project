@@ -26,6 +26,17 @@
 #
 # En local, le fichier .env d a cote donne des valeurs de poste, sans secret:
 # voir .env.exemple, qui explique chaque variable.
+#
+# AUCUNE VARIABLE N EST EXIGEE ICI: la forme « :- » avec une valeur par defaut,
+# jamais la forme « :? » qui arrete tout si la variable manque
+#
+# Coolify construit l image avec un fichier d environnement de construction
+# qui ne porte pas les secrets, poses pour l execution seulement: une
+# variable exigee ici ferait echouer la construction (mesure le 26/09/2026,
+# premier deploiement de portail-test). L exigence est la ou elle sert, au
+# demarrage: PostgreSQL refuse de s initialiser sans mot de passe, et
+# Backstage refuse de demarrer sans son adresse publique, chacun avec un
+# message clair dans son journal. L outil DNS et le laboratoire font de meme.
 
 # Le nom du deploiement. Il prefixe les conteneurs, le reseau et le volume, ce
 # qui permet de lancer deux copies sur un meme poste sans qu elles se melent.
@@ -45,7 +56,7 @@ services:
     image: postgres:16.15-alpine
     environment:
       POSTGRES_USER: "${POSTGRES_UTILISATEUR:-backstage}"
-      POSTGRES_PASSWORD: "${POSTGRES_MOT_DE_PASSE:?le mot de passe de la base manque, voir .env.exemple}"
+      POSTGRES_PASSWORD: "${POSTGRES_MOT_DE_PASSE:-}"
       POSTGRES_DB: backstage
     volumes:
       # Un volume nomme, et pas un dossier de la machine: les donnees survivent
@@ -79,12 +90,12 @@ services:
       # L adresse publique. Elle fabrique les liens, et l adresse de retour de
       # la connexion GitHub: une valeur fausse donne une connexion qui tourne en
       # rond sans message clair.
-      OSCAR_PORTAIL_URL: "${SERVICE_URL_PORTAIL:?l adresse publique manque, voir .env.exemple}"
+      OSCAR_PORTAIL_URL: "${SERVICE_URL_PORTAIL:-}"
 
       POSTGRES_HOST: base
       POSTGRES_PORT: "5432"
       POSTGRES_USER: "${POSTGRES_UTILISATEUR:-backstage}"
-      POSTGRES_PASSWORD: "${POSTGRES_MOT_DE_PASSE:?le mot de passe de la base manque, voir .env.exemple}"
+      POSTGRES_PASSWORD: "${POSTGRES_MOT_DE_PASSE:-}"
 
       # L application GitHub du portail: la connexion des personnes, et la
       # lecture de l organisation. Vides en local, ou le portail s ouvre en
