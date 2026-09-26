@@ -1,9 +1,9 @@
 # Laboratoire de tests
 
-**État au 25 septembre 2026.** Le laboratoire tourne entièrement en
-conteneur, console comprise, et vise au choix le niveau local, test ou
-production: c'est le lot 3a du plan (commit `18bb6d6` du dépôt `oscar-test`).
-Sa chaîne et le déploiement de son visualiseur de rapports viennent au lot 3b.
+Où en est le laboratoire dans le cycle: le tableau
+d'[où en est le cycle](../02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui),
+tenu à un seul endroit. Cette page ne dit que ce qui ne change pas d'une
+livraison à l'autre: les noms, les adresses, les commandes.
 
 ## En bref
 
@@ -23,9 +23,9 @@ production ([la chaîne](../05-la-chaine.md)).
 |---|---|
 | Dépôt | [`oscar-test`](https://github.com/oscar-organisation/oscar-test) |
 | Dossier de l'application | `oscar_labo_test_application/` |
-| Ce qui se déploie | le visualiseur de rapports, **lot 3b** |
-| Production | `https://labo.oscar-bot.com`, **lot 3b** |
-| Test | `https://test-labo.oscar-bot.com`, **lot 3b** |
+| Ce qui se déploie | le visualiseur de rapports, derrière un accès protégé |
+| Production | `https://labo.oscar-bot.com` |
+| Test | `https://test-labo.oscar-bot.com` |
 | En local | le visualiseur sur `http://127.0.0.1:18400` |
 
 Les scénarios eux-mêmes ne se déploient pas: ils se lancent, en conteneur,
@@ -53,16 +53,17 @@ Trois niveaux: `local` (les applications lancées sur le poste, jointes par
 adresse manquante, ou une application sans environnement au niveau choisi, est
 refusée avant le lancement, avec ce qu'il faut faire.
 
-**Ce qu'on doit voir**: `lister --app outil-dns` annonce `Scénarios (10)` et
-`Tests : 30`; la passe en production se termine par `Niveau production : 30
-réussis sur 30.` (mesuré le 25 septembre 2026, en un peu plus de dix minutes);
-le visualiseur montre une ligne par niveau, avec le bilan de sa dernière passe.
+**Ce qu'on doit voir**: `lister --app outil-dns` annonce le nombre de
+scénarios et de tests de l'outil DNS; la passe se termine par
+`Niveau production : <n> réussis sur <n>.`, tous réussis; le visualiseur montre
+une ligne par niveau, avec le bilan de sa dernière passe.
 
-Sous Linux, le niveau local demande deux lignes dans le fichier `.env` du
-laboratoire: `host.docker.internal` seul ne joint pas un port publié sur
-`127.0.0.1` (incident `INC-2026-09-25-13`). Sous macOS et Windows: non vérifié.
-Le guide du laboratoire donne ce réglage, les filtres, les identifiants et le
-dépannage:
+Sous Linux, le niveau local demande deux variables du terminal,
+`LABO_MODE_RESEAU=host` et `LABO_HOTE_LOCAL=127.0.0.1`:
+`host.docker.internal` seul ne joint pas un port publié sur `127.0.0.1`
+(incident `INC-2026-09-25-13`). Sous macOS et Windows: non vérifié. Le guide du
+laboratoire donne ce réglage (partie « Le niveau local sous Linux »), les
+filtres, les identifiants et le dépannage:
 [`oscar_labo_test_application/README.md`](https://github.com/oscar-organisation/oscar-test/blob/main/oscar_labo_test_application/README.md).
 
 ## Tester en local
@@ -72,24 +73,30 @@ cd oscar_labo_test_application
 docker compose run --rm labo verifier
 ```
 
-**Ce qu'on doit voir**: `== Bilan : 116 réussis, 0 échoués ==`, puis `Suite de
-la console : réussie` et `Vérification des types : réussie`. Le test cassé le 25
-septembre 2026 par un ménage incomplet (incident `INC-2026-09-25-08`, 59 sur 60)
-est de nouveau vert.
+**Ce qu'on doit voir**: `== Bilan : <n> réussis, 0 échoués ==`, puis `Suite de
+la console : réussie` et `Vérification des types : réussie`.
 
 Pour jouer les scénarios contre une application lancée sur le poste:
 `docker compose run --rm labo lancer --niveau local --app <application>`.
 
 ## La chaîne
 
-**Aucune aujourd'hui.** Au lot 3b: `docker compose run --rm labo verifier` à
-chaque envoi, et la recette complète contre le niveau de la branche, sur le
-patron commun ([la chaîne](../05-la-chaine.md)). Les commandes existent déjà:
-`lancer` sort avec le code `0` si tout est vert, `1` si des tests échouent, `2`
-s'il refuse de lancer.
+`.github/workflows/chaine.yml`, à la racine du dépôt `oscar-test`, au patron
+commun ([la chaîne](../05-la-chaine.md)):
 
-Les chaînes des autres dépôts liront le laboratoire pour leur recette, par une
-clé en lecture seule: **lot 3b**.
+| Tâche | Ce qu'elle fait |
+|---|---|
+| `controles` | lignes d'attribution, secrets, un modèle à côté de chaque fichier d'environnement, typographie, fichiers de chaîne, composition |
+| `verifs` | l'image du laboratoire, `docker compose run --rm -T labo verifier`, les tests de l'action de recette, les images du serveur, l'épreuve du visualiseur |
+| `deploiement` | après une fusion dans `test` ou `main`: le visualiseur, par le déploiement commun (`labo-test`, `labo-production`) |
+| `recette` | si le déploiement a eu lieu: les scénarios du laboratoire contre le niveau de la branche |
+
+**La recette des autres applications.** Le laboratoire porte aussi le workflow
+réutilisable `.github/workflows/recette.yml`, que la chaîne de chaque
+application appelle après son déploiement, avec le niveau et le nom de
+l'application. Il joue ses scénarios, publie le rapport, que le visualiseur va
+chercher, et échoue si des tests échouent. En production, les scénarios qui
+écrivent sont écartés. Le détail: partie 7 du guide du laboratoire.
 
 ## Le déploiement
 
@@ -97,33 +104,24 @@ clé en lecture seule: **lot 3b**.
 |---|---|---|
 | Projet Coolify | `labo` | `labo` |
 | Environnement Coolify | `production` | `test` |
-| Application Coolify | `labo-production`, **lot 3b** | `labo-test`, **lot 3b** |
-| Branche | `main` | `test`, **lot 3b** |
+| Application Coolify | `labo-production` | `labo-test` |
+| Branche | `main` | `test` |
+| Environnement GitHub | `labo-production` | `labo-test` |
 
-Les projets et les environnements Coolify existent (relevé par l'API le 25
-septembre 2026); aucune application n'y est encore créée. Le visualiseur
-montrera les rapports de la dernière passe du niveau correspondant, derrière un
-accès protégé.
+Le visualiseur montre les rapports de la dernière recette de chaque
+application au niveau correspondant. Son accès est protégé par un identifiant
+et un mot de passe, un par environnement.
 
 ## Surveiller
 
 | Où | Adresse |
 |---|---|
 | Le dépôt | `https://github.com/oscar-organisation/oscar-test` |
-| La chaîne | `https://github.com/oscar-organisation/oscar-test/actions`, **lot 3b** |
+| La chaîne | `https://github.com/oscar-organisation/oscar-test/actions` |
 | Coolify | `https://deploy.oscar-bot.com`, projet `labo` |
-| Les rapports | `https://test-labo.oscar-bot.com` et `https://labo.oscar-bot.com`, **lot 3b**; en local, `http://127.0.0.1:18400` |
+| Les rapports | `https://test-labo.oscar-bot.com` et `https://labo.oscar-bot.com`; en local, `http://127.0.0.1:18400` |
 
 ## Ce qui reste à faire
 
-Au lot 3b du plan:
-
-- la chaîne du dépôt `oscar-test`;
-- le visualiseur de rapports déployé en test et en production, avec accès
-  protégé;
-- l'accès en lecture des autres dépôts au laboratoire, pour leur recette;
-- la preuve: un développeur clone, configure son local, lance une application
-  précise, vise le test par une commande, ajoute un scénario, pousse; la chaîne
-  tourne et le rapport apparaît.
-
-Cette page sera complétée avec les commandes que le lot 3b aura éprouvées.
+Ce qui reste à faire pour le laboratoire se lit dans le tableau
+d'[où en est le cycle](../02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui).

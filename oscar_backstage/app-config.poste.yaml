@@ -1,0 +1,47 @@
+# Sur le poste du developpeur: l acces invite, et le depot du poste a la place
+# de GitHub. Aucun secret n est necessaire pour travailler.
+#
+# Lu par les deux modes locaux, en dernier. Il n entre jamais dans l image: le
+# fichier .dockerignore ne le laisse pas passer, et compose.override.yaml le
+# monte depuis le poste. Coolify ne lit pas ce fichier-la: le test et la
+# production ne peuvent donc pas l employer.
+
+# -----------------------------------------------------------------------------
+# QUI PEUT ENTRER
+#
+# N importe qui, en invite, sans compte: le portail ne tourne que sur la boucle
+# locale du poste. La page de connexion propose alors l invite, et rien d autre.
+# -----------------------------------------------------------------------------
+auth:
+  environment: development
+  providers:
+    guest:
+      # Le mode service tourne avec l image de production, reglee pour la
+      # production (NODE_ENV=production). Backstage y refuse l invite, sauf si
+      # on le lui demande en clair, comme ici. Ce reglage ne vit que dans ce
+      # fichier, qui ne quitte jamais le poste.
+      dangerouslyAllowOutsideDevelopment: true
+
+# -----------------------------------------------------------------------------
+# CE QUI REMPLIT LE CATALOGUE
+#
+# Les memes fiches qu en production, dans le meme ordre, plus le depot du
+# portail tel qu il est sur le poste: sa fiche et le guide du cycle, copies
+# sur /depot a chaque lancement par le service copie-du-depot de
+# compose.override.yaml (la raison de la copie y est ecrite). Sans acces a
+# GitHub, c est de la qu ils viennent.
+# -----------------------------------------------------------------------------
+catalog:
+  locations:
+    - type: file
+      target: /app/catalogue/organisation.yaml
+      rules:
+        - allow: [Domain, System, Group, Resource]
+    - type: file
+      target: /app/catalogue/en-attente/*/catalog-info.yaml
+      rules:
+        - allow: [Component, API, Location]
+    - type: file
+      target: /depot/catalog-info.yaml
+      rules:
+        - allow: [Component, API, Location]

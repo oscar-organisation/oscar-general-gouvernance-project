@@ -1,9 +1,9 @@
 # Outil DNS
 
-**État au 25 septembre 2026.** L'outil est rassemblé tout entier dans le
-dossier `oscar_infra_dns/` depuis le 25 septembre 2026 (décision 62). Il est
-déployé en production. Le reste du cycle, test compris, arrive au lot 2 du
-plan.
+L'outil est rassemblé tout entier dans le dossier `oscar_infra_dns/`
+(décision 62). Où il en est dans le cycle: le tableau
+d'[où en est le cycle](../02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui),
+tenu à un seul endroit.
 
 ## En bref
 
@@ -20,8 +20,9 @@ demande à blanc, ou répond qu'elle n'est pas encore faite.
 | Dossier de l'application | [`oscar_infra_dns/`](https://github.com/oscar-organisation/oscar-infrastructure/tree/main/oscar_infra_dns), à la racine du dépôt |
 | Services | `api`, en Python, port interne 8000; `interface`, en Next.js, port interne 3000 |
 | Production | interface `https://dns.oscar-bot.com`, API `https://api-dns.oscar-bot.com` |
-| Test | interface `https://test-dns.oscar-bot.com`, API `https://test-api-dns.oscar-bot.com`: **lot 2** |
+| Test | interface `https://test-dns.oscar-bot.com`, API `https://test-api-dns.oscar-bot.com` |
 | Documentation de l'outil | `oscar_infra_dns/docs/README.md`, qui nomme la version en vigueur de chaque document |
+| Guide de développement local | `oscar_infra_dns/docs/GUIDE-developpement-local-v1.0.md` |
 
 ## Lancer en local
 
@@ -46,38 +47,30 @@ et aucun n'est obligatoire.
 **Ce qu'on doit voir**: les services `api` et `interface` `Up` et `(healthy)`
 dans `docker compose ps`, et la route de santé qui répond `"etat":"pret"`.
 
-Vérifié le 25 septembre 2026 par `docker compose config`, qui montre la
-composition telle que Docker la lira: les ports 18100 et 18101 sont publiés sur
-`127.0.0.1`, et `compose.yaml` seul n'en publie aucun. **À compléter au lot
-2**: le lancement complet, éprouvé depuis un clone neuf au lot 2, puis au lot
-5.
+Le détail, de la récupération du dépôt jusqu'à la production, est dans le
+guide de développement local de l'outil:
+`oscar_infra_dns/docs/GUIDE-developpement-local-v1.0.md`.
 
 ## Tester en local
 
-**À compléter au lot 2.** La commande qui lance les tests de l'outil en
-conteneur, et celle qui joue les scénarios du laboratoire contre l'outil lancé
-en local, n'existent pas encore sous leur forme finale.
+Les tests de l'outil tournent en conteneur. Les commandes exactes, et celle
+qui vérifie la charte graphique de l'interface, sont dans le guide de
+développement local de l'outil, parties « Tester » et « La charte graphique ».
 
-Aujourd'hui, les tests Python et la vérification de la charte graphique tournent
-dans la chaîne, sur GitHub.
+Le laboratoire se lance contre l'outil lancé en local: voir
+[sa page](laboratoire.md).
 
 ## La chaîne
 
-Aujourd'hui: `.github/workflows/verifications.yml`, à la racine du dépôt. Sur
-chaque PR vers `main` et chaque envoi sur `main`, elle vérifie:
+`.github/workflows/chaine.yml`, à la racine du dépôt, au patron commun
+([la chaîne](../05-la-chaine.md)):
 
 | Tâche | Ce qu'elle vérifie |
 |---|---|
-| Aucun secret dans le dépôt | les motifs de jetons et de clés; un `.env.exemple` à côté de chaque `.env` |
-| La documentation est cohérente | les documents annoncés par le README de la documentation existent; la typographie |
-| Python | les tests de l'outil |
-| La charte graphique de l'interface | les couleurs de l'interface respectent la charte OSCAR |
-| Les deux images se construisent | l'API et l'interface |
-| Déployer, si tout le reste est vert | après un envoi sur `main` seulement: demande le déploiement de `outil-dns-production` à Coolify, et attend qu'il aboutisse |
-
-**Au lot 2**, elle passe au patron commun, `chaine.yml`: branches `test` et
-`main`, déploiement par le workflow réutilisable, recette par le laboratoire.
-Voir [la chaîne](../05-la-chaine.md).
+| `controles` | aucune ligne d'attribution dans les commits, aucun secret, la documentation cohérente, la typographie, les fichiers de chaîne, la composition dans ses deux lectures |
+| `verifs` | les tests de l'outil DNS et ceux de la chaîne commune, la charte graphique de l'interface, la construction des deux images |
+| `deploiement` | par le workflow commun, après une fusion dans `test` ou `main`, si le contenu de `oscar_infra_dns/` a changé (hors `*.md`) |
+| `recette` | si le déploiement a eu lieu: les scénarios de l'outil DNS au laboratoire, contre ce qui vient d'être déployé, par le workflow de recette du dépôt `oscar-test` |
 
 ## Le déploiement
 
@@ -85,11 +78,12 @@ Voir [la chaîne](../05-la-chaine.md).
 |---|---|---|
 | Projet Coolify | `outil-dns` | `outil-dns` |
 | Environnement Coolify | `production` | `test` |
-| Application Coolify | `outil-dns-production` | `outil-dns-test`, **lot 2** |
-| Branche | `main` | `test`, **lot 2** |
+| Application Coolify | `outil-dns-production` | `outil-dns-test` |
+| Branche | `main` | `test` |
 
-L'environnement de test ne recevra **jamais** d'identifiants OVH. Un garde-fou,
-testé, refusera de démarrer un test qui en recevrait: **lot 2**.
+L'environnement de test ne reçoit **jamais** d'identifiants OVH. Un garde-fou,
+testé (`oscar_infra_dns/tests/test_garde_fou_ovh.py`), refuse de démarrer un
+test qui en recevrait (lot 2).
 
 Vérifier la production:
 
@@ -106,20 +100,11 @@ commande de l'[étape 13 du cycle](../02-le-cycle-pas-a-pas.md).
 | Où | Adresse |
 |---|---|
 | La chaîne | `https://github.com/oscar-organisation/oscar-infrastructure/actions` |
-| Les déploiements déclarés | `https://github.com/oscar-organisation/oscar-infrastructure/deployments`, **lot 2** |
+| Les déploiements déclarés | `https://github.com/oscar-organisation/oscar-infrastructure/deployments`, environnements `outil-dns-test` et `outil-dns-production` |
 | Coolify | `https://deploy.oscar-bot.com`, projet `outil-dns` |
-| Les rapports du laboratoire | `https://test-labo.oscar-bot.com` et `https://labo.oscar-bot.com`, **lot 3** |
+| Les rapports du laboratoire | `https://test-labo.oscar-bot.com` et `https://labo.oscar-bot.com`, accès protégé |
 
 ## Ce qui reste à faire
 
-Au lot 2 du plan:
-
-- l'application `outil-dns-test`, sans aucune variable OVH, déclenchement
-  automatique coupé;
-- la chaîne au patron commun: test, production, recette par le laboratoire;
-- le garde-fou qui refuse un test recevant des identifiants OVH, testé;
-- le guide de développement local à jour: le dossier, les ports 18100 et 18101,
-  les tests en conteneur, la charte;
-- la preuve du cycle complet, d'une branche de travail jusqu'à la production.
-
-Cette page sera complétée avec les commandes que le lot 2 aura éprouvées.
+Ce qui reste à faire pour l'outil DNS se lit dans le tableau
+d'[où en est le cycle](../02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui).

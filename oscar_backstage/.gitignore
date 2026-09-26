@@ -26,9 +26,9 @@ node_modules/
 # Node version directives
 .nvmrc
 
-# dotenv environment variables file
-.env
-.env.test
+# Le fichier .env est versionne (decisions 46 et A26): c est la copie de
+# .env.exemple, avec les valeurs du poste et aucun secret des environnements
+# deployes. Un clone neuf demarre donc en local sans rien creer a la main.
 
 # Build output
 dist

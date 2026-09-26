@@ -60,8 +60,8 @@ chaîne de ce dépôt, quand elle existera (lot 4).
 
 ## Refaire les images
 
-Depuis la racine du dépôt, avec Docker et rien d'autre, sous Linux, macOS ou
-Windows:
+Depuis la racine du dépôt, avec Docker et rien d'autre (éprouvé sous Linux;
+macOS et Windows: non vérifié):
 
 ```
 docker compose -f docs/outils/compose.yaml run --rm schemas

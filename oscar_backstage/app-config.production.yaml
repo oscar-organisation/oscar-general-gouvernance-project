@@ -1,60 +1,19 @@
-# Portail de gouvernance OSCAR - reglages de service.
+# En test et en production: la connexion par GitHub, et le catalogue lu dans
+# l organisation GitHub.
 #
-# Ce fichier se superpose a app-config.yaml. Aucune valeur sensible n y est
-# ecrite : tout vient de l environnement, donc le meme fichier vaut sur
-# n importe quelle machine.
-
-app:
-  title: OSCAR - portail technique
-  baseUrl: ${OSCAR_PORTAIL_URL}
-
-organization:
-  name: OSCAR
-
-backend:
-  baseUrl: ${OSCAR_PORTAIL_URL}
-  listen:
-    port: 7007
-    # On ecoute sur toutes les interfaces DU CONTENEUR, pas de la machine :
-    # aucun port n est publie, c est le proxy qui fait entrer les visiteurs.
-    host: 0.0.0.0
-  csp:
-    connect-src: ["'self'", 'http:', 'https:']
-  cors:
-    origin: ${OSCAR_PORTAIL_URL}
-    credentials: true
-  auth:
-    keys:
-      - secret: ${BACKEND_SECRET}
-  database:
-    client: pg
-    connection:
-      host: ${POSTGRES_HOST}
-      port: ${POSTGRES_PORT}
-      user: ${POSTGRES_USER}
-      password: ${POSTGRES_PASSWORD}
-
-integrations:
-  github:
-    - host: github.com
-      # Une GitHub App plutot qu un jeton personnel : ses droits sont choisis
-      # un par un, son acces se renouvelle tout seul, et elle ne meurt pas
-      # avec le compte de qui l a creee.
-      apps:
-        - appId: ${GITHUB_APP_ID}
-          clientId: ${GITHUB_CLIENT_ID}
-          clientSecret: ${GITHUB_CLIENT_SECRET}
-          # Lue dans le fichier monte, jamais recopiee dans une variable :
-          # une cle privee sur plusieurs lignes passe mal dans un
-          # environnement, et elle finit tronquee sans message clair.
-          privateKey:
-            $file: /secrets/github-app.pem
+# Lu apres app-config.yaml et app-config.service.yaml, par la commande de
+# l image (Dockerfile). Les identifiants de l application GitHub viennent des
+# variables de l application Coolify, posees depuis secret_root/; aucun n est
+# ecrit ici. S il en manque un, Backstage refuse de demarrer en le nommant.
 
 # -----------------------------------------------------------------------------
 # QUI PEUT ENTRER
 #
-# Connexion par GitHub uniquement. Une personne qui n est pas dans
-# l organisation oscar-organisation ne peut pas se connecter du tout.
+# Par GitHub, et seulement par GitHub: la page de connexion ne propose rien
+# d autre, et l acces invite n est pas configure. Le compte GitHub doit
+# correspondre a une personne du catalogue, c est-a-dire a un membre de
+# l organisation oscar-organisation, importe plus bas. Un compte GitHub hors de
+# l organisation est refuse.
 # -----------------------------------------------------------------------------
 auth:
   environment: production
@@ -65,72 +24,65 @@ auth:
         clientSecret: ${GITHUB_CLIENT_SECRET}
         signIn:
           resolvers:
-            # Le compte GitHub doit correspondre a un utilisateur du catalogue,
-            # lui-meme importe depuis l organisation. C est ce lien qui permet
-            # ensuite de savoir a quelles equipes la personne appartient, donc
-            # a quels depots elle a droit.
+            # Le nom du compte GitHub doit etre celui d une personne du
+            # catalogue: c est l import de l organisation qui les cree, une par
+            # membre, sous leur nom GitHub.
             - resolver: usernameMatchingUserEntityName
+
+# -----------------------------------------------------------------------------
+# L ACCES A GITHUB
+#
+# Une application GitHub plutot qu un jeton personnel: ses droits sont choisis
+# un par un, son acces se renouvelle tout seul, et elle ne depend du compte de
+# personne. La meme sert en test et en production (decision 64).
+# -----------------------------------------------------------------------------
+integrations:
+  github:
+    - host: github.com
+      apps:
+        - appId: ${GITHUB_APP_ID}
+          clientId: ${GITHUB_CLIENT_ID}
+          clientSecret: ${GITHUB_CLIENT_SECRET}
+          privateKey: ${GITHUB_APP_PRIVATE_KEY}
 
 # -----------------------------------------------------------------------------
 # CE QUI REMPLIT LE CATALOGUE
 #
-# Deux sources qui se completent :
-#   - les personnes et les equipes, lues dans l organisation GitHub
-#   - les composants, decouverts dans les depots qui portent un catalog-info.yaml
-#
-# Rien n est saisi a la main. Un depot cree demain apparait tout seul.
+#   la structure (domaine, familles, ressources, equipe), et les fiches des
+#   depots qui ne portent pas encore la leur: dans l image, dossier catalogue/
+#   les fiches catalog-info.yaml que les depots portent eux-memes, sur main:
+#   trouvees seules, un depot cree demain apparait sans rien changer ici
+#   les personnes et les equipes de l organisation GitHub
 # -----------------------------------------------------------------------------
 catalog:
-  import:
-    entityFilename: catalog-info.yaml
-  rules:
-    - allow: [Component, System, Domain, API, Resource, Location, Group, User, Template]
-
-  # La structure d accueil : le domaine, les familles et le proprietaire par
-  # defaut. Lue au demarrage, avant toute decouverte.
+  # Cette liste est aussi dans app-config.poste.yaml, avec en plus le depot du
+  # poste: une liste ne se complete pas d un fichier a l autre, elle se
+  # remplace. Un test verifie que les deux commencent par les memes lignes.
   locations:
     - type: file
-      target: ./catalogue/organisation.yaml
+      target: /app/catalogue/organisation.yaml
       rules:
-        - allow: [Domain, System, Group]
+        - allow: [Domain, System, Group, Resource]
+    - type: file
+      target: /app/catalogue/en-attente/*/catalog-info.yaml
+      rules:
+        - allow: [Component, API, Location]
 
   providers:
     github:
       oscarOrganisation:
-        organization: 'oscar-organisation'
-        catalogPath: '/catalog-info.yaml'
+        organization: oscar-organisation
+        catalogPath: /catalog-info.yaml
         filters:
-          branch: 'main'
+          branch: main
         schedule:
           frequency: { minutes: 30 }
           timeout: { minutes: 3 }
 
     githubOrg:
       - id: oscar
-        githubUrl: 'https://github.com'
-        orgs: ['oscar-organisation']
+        githubUrl: https://github.com
+        orgs: [oscar-organisation]
         schedule:
           frequency: { hours: 1 }
           timeout: { minutes: 5 }
-
-# -----------------------------------------------------------------------------
-# LA DOCUMENTATION
-#
-# Elle est lue dans les depots, jamais recopiee ici. Une page corrigee dans son
-# depot est a jour dans le portail sans que personne n intervienne.
-# -----------------------------------------------------------------------------
-techdocs:
-  builder: 'local'
-  generator:
-    runIn: 'local'
-  publisher:
-    type: 'local'
-
-# -----------------------------------------------------------------------------
-# LES DROITS
-#
-# Active le controle d acces. La regle elle-meme vit dans le code du backend,
-# parce qu elle depend des equipes GitHub et ne peut pas s ecrire ici.
-# -----------------------------------------------------------------------------
-permission:
-  enabled: true

@@ -4,15 +4,15 @@
 %%   docker compose -f docs/outils/compose.yaml run --rm schemas
 flowchart TB
   evenement(["Un événement sur GitHub"])
-  controles["controles<br>secrets, typographie,<br>YAML, composition"]
+  controles["controles<br>lignes d'attribution, secrets,<br>typographie, YAML, composition"]
   verifs["verifs<br>les tests propres<br>à l'application"]
   quoi{"Qu'est-ce qui a<br>lancé la chaîne ?"}
   pr["Une PR ne déploie rien<br>le résultat s'affiche sur la PR"]:::discret
-  deptest["deploiement<br>#lt;application#gt;-test"]
+  deptest["deploiement<br>#lt;application#gt;-test<br>si le contenu a changé"]
   rectest["recette<br>tous les scénarios<br>contre test-#lt;nom#gt;"]
   passage{"Ce contenu est-il<br>passé par test ?"}:::accent
   avertissement["Avertissement<br>dans le résumé de la passe"]:::attention
-  depprod["deploiement<br>#lt;application#gt;-production"]
+  depprod["deploiement<br>#lt;application#gt;-production<br>si le contenu a changé"]
   recprod["recette<br>scénarios non destructifs<br>contre #lt;nom#gt;"]
   rouge["Une tâche rouge<br>arrête la chaîne"]:::attention
 
