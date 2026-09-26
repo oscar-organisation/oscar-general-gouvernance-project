@@ -35,7 +35,7 @@ dise.
 
 ## Où en est le cycle aujourd'hui
 
-**État au 26 septembre 2026, 02h38 UTC**, relevé à cette heure-là par l'API de
+**État au 26 septembre 2026, 05h07 UTC**, relevé à cette heure-là par l'API de
 Coolify, l'API de GitHub et une requête à chaque site. C'est **le seul tableau
 d'état du guide**: les autres pages y renvoient au lieu de le recopier, pour
 qu'il ne se contredise jamais. Il se met à jour à chaque livraison, relevé et
@@ -44,12 +44,12 @@ non de mémoire.
 | Pièce | Outil DNS | Laboratoire | Portail |
 |---|---|---|---|
 | La branche `test` | en place | en place | en place |
-| La chaîne, `.github/workflows/chaine.yml` | sur `test` et `main` | sur `test` et `main` | sur `test`; sur `main` à la promotion de `test` (lot 4) |
-| Les applications Coolify | `outil-dns-test`, `outil-dns-production`, en service | `labo-test`, `labo-production`, en service | `portail-test` en service; `portail-production` créée, pas encore déployée |
-| Le déploiement par la chaîne en test | en place (dernier déclaré: `f2ddfcd`) | en place (dernier déclaré: `6e59377`, un déploiement en cours au relevé) | en place (dernier déclaré: `f7271e3`) |
-| Le déploiement par la chaîne en production, avec le contrôle de passage par `test` | en place (dernier déclaré: `fc9f669`) | en place (dernier déclaré: `c0f21cd`) | à la promotion de `test` vers `main` (lot 4) |
-| La recette par le laboratoire, après chaque déploiement | en place, verte à la dernière passe de production | en place, verte à la dernière passe de production | pas branchée: le laboratoire n'a pas encore de scénario du portail |
-| Les sites | `test-dns`, `dns` répondent | `labo` répond `401` sans identifiants; `test-labo` se déployait | `test-tech` répond, connexion par GitHub; `tech` répond `503` |
+| La chaîne, `.github/workflows/chaine.yml` | sur `test` et `main` | sur `test` et `main` | sur `test` et `main` |
+| Les applications Coolify | `outil-dns-test`, `outil-dns-production`, en service | `labo-test`, `labo-production`, en service | `portail-test`, `portail-production`, en service |
+| Le déploiement par la chaîne en test | en place (dernier déclaré: `d4eef46`) | en place (dernier déclaré: `c66c189`) | en place (dernier déclaré: `1cb9812`) |
+| Le déploiement par la chaîne en production, avec le contrôle de passage par `test` | en place (dernier déclaré: `fc9f669`) | en place (dernier déclaré: `dfe4244`) | en place (dernier déclaré: `471c0f0`) |
+| La recette par le laboratoire, après chaque déploiement | en place, verte à sa dernière exécution en production | en place, verte en test et en production | pas branchée: le laboratoire n'a pas encore de scénario du portail |
+| Les sites | `test-dns`, `dns` répondent | `test-labo`, `labo` répondent `401` sans identifiants | `test-tech`, `tech` répondent; connexion par GitHub |
 
 Le déploiement et le contrôle de passage par `test` sont écrits **une fois**,
 dans le workflow commun du dépôt `oscar-infrastructure`
@@ -129,6 +129,17 @@ terminal pendant que l'application tourne.
 `PORTS` montre des ports publiés sur `127.0.0.1`, dans le bloc de l'application
 (voir [les ports locaux](04-les-environnements.md#les-ports-locaux)).
 L'application s'ouvre à l'adresse donnée sur sa page.
+
+Pour la vérifier sans navigateur, depuis un conteneur jetable, par sa route
+de santé si elle en a une (sa page la donne):
+
+```
+docker run --rm --network host curlimages/curl:8.22.0 -fsS http://127.0.0.1:<port>/<route de santé>
+```
+
+**Sous Linux, `--network host` est nécessaire**: sans lui, le conteneur a sa
+propre adresse `127.0.0.1`, et répond `Could not connect to server` (mesuré le
+26 septembre 2026). Sous macOS et Windows: non vérifié.
 
 **Si ça ne va pas**:
 
@@ -297,8 +308,9 @@ supprime jamais la branche `test`.
 ## Étape 12. Le déploiement automatique en production
 
 Sur `main`, la chaîne refait `controles` et `verifs`, puis contrôle le passage
-par `test`: le contenu de ce commit doit être exactement celui d'un commit de
-`test` déployé avec succès en test. Elle déploie ensuite
+par `test`: le contenu à déployer de ce commit doit être exactement celui que
+Coolify sert en test, c'est-à-dire celui de son dernier déploiement terminé en
+test. Elle déploie ensuite
 `<application>-production`, et joue les scénarios non destructifs du
 laboratoire contre `https://<nom>.oscar-bot.com`.
 
@@ -324,7 +336,8 @@ docker run --rm curlimages/curl:8.22.0 -fsSL -o /dev/null -w "%{http_code}\n" ht
 ```
 
 Cette commande appelle le site depuis un conteneur jetable et affiche le code
-de la réponse. Une application qui a une route de santé se vérifie aussi par
+de la réponse. Pour une application lancée sur le poste, voir l'étape 3: sous
+Linux, le conteneur a besoin de `--network host` pour joindre `127.0.0.1`. Une application qui a une route de santé se vérifie aussi par
 elle; sa page donne la commande.
 
 **Ce qu'on doit voir**: `200`.
@@ -367,13 +380,18 @@ défait le changement, par le même cycle:
 git fetch origin
 git switch --no-track -c travail/annuler-<sujet> origin/test
 git revert -m 1 <commit de fusion>
+git commit --amend -m "Annuler <ce que faisait la fusion>, parce que <pourquoi>"
 git push -u origin travail/annuler-<sujet>
 ```
 
 `<commit de fusion>` est le commit créé par la fusion de la PR, visible sur la
-PR elle-même. On ouvre ensuite une PR vers `test`, comme à l'étape 6.
+PR elle-même. `git revert` propose un message en anglais, « Revert "..." »:
+`git commit --amend` le remplace par un message en français, qui dit ce qu'on
+annule et pourquoi (règle des [messages de commit](03-comment-se-comporter.md#6-des-messages-de-commit-clairs)).
+On ouvre ensuite une PR vers `test`, comme à l'étape 6.
 
 Remettre en service une version précédente sans passer par le cycle est une
 procédure d'exploitation, écrite pour chaque application dans `exploitation/`
-(voir [le code et l'exploitation](06-le-code-et-l-exploitation.md)). Elle n'est
-pas entre les mains du développeur.
+(voir [le code et l'exploitation](06-le-code-et-l-exploitation.md)), dans le
+fichier `procedures/revenir-en-arriere.md` du dossier de l'application. Elle
+n'est pas entre les mains du développeur.
