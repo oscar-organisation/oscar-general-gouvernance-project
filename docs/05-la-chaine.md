@@ -20,8 +20,14 @@ Le même patron dans les trois dépôts, dans le fichier
 | `deploiement` | seulement après une fusion dans `test` ou dans `main`, et après toutes les autres, et seulement si le contenu à déployer a changé: demande le déploiement à Coolify et le suit jusqu'au bout | de quelques minutes à trois quarts d'heure, selon l'application |
 | `recette` | joue les scénarios du laboratoire contre ce qui vient d'être déployé | selon l'application |
 
-Chaque tâche attend la précédente. **Une tâche rouge arrête la chaîne**: les
-suivantes ne partent pas, et rien n'est déployé.
+**Un échec de `controles` ou de `verifs` empêche le déploiement.** La
+`recette` intervient après celui-ci : si elle échoue, la version est déjà
+déployée. La chaîne signale l’échec et il faut corriger ou suivre la procédure
+de retour arrière ; elle n’annule pas automatiquement le déploiement.
+
+Le portail n’a pas encore de recette par le laboratoire. Le tableau
+[d’état du cycle](02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui)
+distingue ce qui est branché pour chaque application.
 
 ## Ce qui se passe à chaque événement
 
@@ -38,8 +44,10 @@ changement passe les vérifications.
 **Le contenu à déployer**, c'est le dossier de l'application dans le dépôt
 (décision 62), sans les fichiers qui ne changent rien à ce qui tourne: la
 documentation (`*.md`) par défaut, et ce que chaque chaîne ajoute. Une fusion
-qui ne touche que la documentation ne redéploie rien: le contenu est déjà en
-service.
+qui ne touche que la documentation ne redéploie normalement rien si le contenu
+est déjà en service. Un retour arrière effectué dans Coolify peut créer un
+écart avec la branche : la chaîne le détecte et peut alors redéployer, même
+sans nouvelle modification applicative. Une passe forcée redéploie également.
 
 Contre la production, la recette ne joue que des scénarios **non destructifs**:
 des scénarios qui lisent et vérifient, sans créer, modifier ni supprimer de
