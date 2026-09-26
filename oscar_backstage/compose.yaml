@@ -46,9 +46,9 @@ name: ${OSCAR_NOM_DU_DEPLOIEMENT:-portail}
 services:
 
   # ---------------------------------------------------------------------------
-  # La base. Backstage y range son catalogue, les sessions et les cles qui les
-  # signent, et la documentation deja construite. Sans elle, tout repart de
-  # zero a chaque redemarrage, et tout le monde est deconnecte.
+  # La base. Backstage y range les donnees de ses modules, dont le catalogue
+  # et les cles de signature. Les pages TechDocs construites restent sur le
+  # disque du conteneur du portail (publisher local), hors de cette base.
   # ---------------------------------------------------------------------------
   base:
     # Version figee: une nouvelle version majeure de PostgreSQL ne relit pas les
