@@ -20,7 +20,7 @@
  *
  * Code de sortie: 0 si aucune couleur hors charte n a ete vue, si chaque
  * texte atteint le contraste AA de sa taille, et si chaque page s est
- * affichee; 1 sinon.
+ * affichee, et si LightBox s ouvre sur chaque page du cycle; 1 sinon.
  *
  * Les couleurs de la charte sont lues dans jetons.ts, jamais recopiees ici.
  * Une couleur transparente compte pour sa teinte: la charte trace elle-meme ses
@@ -208,13 +208,16 @@ function releverDansLaPage({ permises, ecartsConnus }) {
   return { elements: elements.length, horsCharte: [...hors.values()].sort((a, b) => b.nombre - a.nombre), ecartsConnus: Object.fromEntries(connus), plusFaible, contrastesSousAA: echecs };
 }
 
+// Les traces permettent de distinguer une erreur d application d une ressource indisponible.
+const tracesPages = new WeakMap();
+
 /** Mesure la page ouverte, garde sa capture, et l ajoute au bilan. */
 async function mesurer(page, nom, extra = {}) {
   await page.screenshot({ path: join(sortie, `${nom}.png`), fullPage: true });
   const releve = await page.evaluate(releverDansLaPage, { permises: PERMISES, ecartsConnus: ECARTS_CONNUS });
   const titre = await page.title();
   const hors = releve.horsCharte.reduce((n, h) => n + h.nombre, 0);
-  bilan.push({ nom, titre, horsCharteTotal: hors, ...extra, ...releve });
+  bilan.push({ nom, titre, horsCharteTotal: hors, ...extra, traces: [...(tracesPages.get(page) ?? [])], ...releve });
   const suite = Object.entries(extra).map(([k, v]) => `  ${k}: ${v}`).join('');
   const faible = releve.plusFaible ? `${releve.plusFaible.rapport} (seuil ${releve.plusFaible.seuil})` : '-';
   console.log(`${nom.padEnd(34)} titre « ${titre} »  couleurs hors charte: ${hors}  contraste minimal: ${faible}  sous le seuil AA: ${releve.contrastesSousAA.nombre}${suite}`);
@@ -238,14 +241,34 @@ for (const [nomEcran, taille] of Object.entries(ECRANS)) {
     // Le theme choisi, tel que Backstage le garde dans le navigateur.
     await contexte.addInitScript(t => window.localStorage.setItem('theme', t), theme);
     const page = await contexte.newPage();
+    const traces = [];
+    tracesPages.set(page, traces);
+    page.on('pageerror', erreur => traces.push({ type: 'javascript', message: erreur.message }));
+    page.on('requestfailed', requete => {
+      const url = new URL(requete.url());
+      // Ne pas garder les paramètres d une adresse de connexion dans les preuves.
+      traces.push({ type: 'reseau', adresse: url.origin + url.pathname, erreur: requete.failure()?.errorText });
+    });
+    page.on('response', reponse => {
+      if (reponse.status() < 400) return;
+      const url = new URL(reponse.url());
+      traces.push({ type: 'http', adresse: url.origin + url.pathname, statut: reponse.status() });
+    });
 
     // La page de connexion, toujours: c est la seule qu on voit sans compte.
     await page.goto(adresse + '/', { waitUntil: 'networkidle' });
     // Ce qui dit que la page de connexion est la: le bouton de l invite sur
     // le poste, le nom de GitHub en test et en production.
     const repere = mode === 'invite' ? page.getByRole('button', { name: 'Entrer' }) : page.getByText('GitHub');
-    await repere.first().waitFor({ state: 'visible', timeout: 60000 }).catch(() => {});
-    await mesurer(page, `connexion-${nomTheme}-${nomEcran}`);
+    const connexionAffichee = await repere.first()
+      .waitFor({ state: 'visible', timeout: 60000 })
+      .then(() => 'oui', () => 'non');
+    await mesurer(page, `connexion-${nomTheme}-${nomEcran}`, { affichee: connexionAffichee });
+    // Une page vide ne prouve ni la charte ni une connexion utilisable.
+    if (connexionAffichee !== 'oui') {
+      await contexte.close();
+      continue;
+    }
 
     if (mode === 'invite') {
       // Entrer en invite une fois: la session vaut pour tout le contexte.
@@ -276,9 +299,11 @@ writeFileSync(join(sortie, 'releve.json'), JSON.stringify(bilan, null, 2));
 const total = bilan.reduce((n, b) => n + b.horsCharteTotal, 0);
 const nonAffichees = bilan.filter(b => b.affichee === 'non').map(b => b.nom);
 const sousAA = bilan.reduce((n, b) => n + b.contrastesSousAA.nombre, 0);
+const lightboxNonOuvertes = bilan.filter(b => 'lightbox' in b && b.lightbox !== 'oui').map(b => b.nom);
 const connus = {};
 for (const b of bilan) for (const [raison, n] of Object.entries(b.ecartsConnus)) connus[raison] = (connus[raison] ?? 0) + n;
 for (const [raison, n] of Object.entries(connus)) console.log(`ECART CONNU  ${n} element(s): ${raison}`);
 console.log(`Releve complet: ${join(sortie, 'releve.json')}`);
 console.log(`BILAN  pages: ${bilan.length}  couleurs hors charte: ${total}  textes sous le seuil AA: ${sousAA}  pages non affichees: ${nonAffichees.length ? nonAffichees.join(', ') : 'aucune'}`);
-process.exit(total === 0 && sousAA === 0 && nonAffichees.length === 0 ? 0 : 1);
+console.log(`LIGHTBOX  echecs: ${lightboxNonOuvertes.length ? lightboxNonOuvertes.join(', ') : 'aucun'}`);
+process.exit(total === 0 && sousAA === 0 && nonAffichees.length === 0 && lightboxNonOuvertes.length === 0 ? 0 : 1);
