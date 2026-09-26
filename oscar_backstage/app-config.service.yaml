@@ -1,0 +1,23 @@
+# Le portail tel qu il tourne dans son image, ou que ce soit: en test, en
+# production, et dans le mode service du poste.
+#
+# Lu apres app-config.yaml. Toutes les valeurs viennent de l environnement, que
+# la composition remplit: le meme fichier vaut sur n importe quelle machine.
+
+app:
+  baseUrl: ${OSCAR_PORTAIL_URL}
+
+backend:
+  # Le portail sert lui-meme son interface: une seule adresse pour les deux.
+  baseUrl: ${OSCAR_PORTAIL_URL}
+  listen:
+    # Toutes les interfaces DU CONTENEUR, pas de la machine: aucun port n est
+    # publie en test ni en production, c est le proxy qui fait entrer.
+    host: 0.0.0.0
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}

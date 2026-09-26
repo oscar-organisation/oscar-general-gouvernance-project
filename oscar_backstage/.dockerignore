@@ -1,34 +1,62 @@
-# Ce qui ne doit PAS entrer dans le contexte de construction.
+# Ce qui entre dans la construction de l image, et rien d autre.
 #
-# ATTENTION, LE FICHIER FOURNI PAR BACKSTAGE FAISAIT L INVERSE
+# UNE LISTE BLANCHE
 #
-# Il excluait packages/*/src et plugins, c est-a-dire LE CODE SOURCE. Ce n est
-# pas une erreur de leur part : leur Dockerfile attend qu on ait deja construit
-# sur la machine, il ne ramasse que le resultat, et le source n a donc rien a
-# faire dans le contexte.
+# Tout est refuse, puis on laisse entrer, un par un, les fichiers dont l image a
+# besoin. Un fichier ajoute demain au dossier n entre donc pas dans l image par
+# oubli: un reglage local, un fichier .env, une note. C est le meme choix que
+# pour l outil DNS (decision A16).
 #
-# Notre Dockerfile construit dans le conteneur. Il lui faut le source. Sans
-# cette correction, la compilation echoue sur :
-#   TS18003: No inputs were found in config file '/app/tsconfig.json'
+# Les fichiers que seuls les tests lisent (la composition, les fichiers
+# d environnement, les reglages du poste, le Dockerfile) entrent dans la
+# construction, pour que l etape « verifications » les verifie; ils n entrent
+# pas dans l image d execution, qui ne recopie que ce qu elle nomme. En
+# particulier app-config.poste.yaml, qui ouvre l acces invite: la chaine du
+# depot verifie qu il n est pas dans l image.
 #
-# Le fichier d origine fourni par Backstage reste lisible dans l historique
-# git, au commit f1f25ee.
+# Le fichier fourni par Backstage faisait l inverse, et excluait le code
+# source: son Dockerfile ramassait un resultat deja construit sur la machine.
+# Le notre construit dans le conteneur, et a besoin du source.
 
-# Historique git : lourd et inutile pour construire.
-.git
+*
 
-# Caches : ils se refont, et ils pesent des centaines de mega-octets.
-.yarn/cache
-.yarn/install-state.gz
-node_modules
-packages/*/node_modules
-plugins/*/node_modules
+# Ce qui decrit les dependances.
+!package.json
+!yarn.lock
+!.yarnrc.yml
+!.yarn/releases
+!backstage.json
 
-# Reglages locaux d un poste, qui n ont rien a faire dans une image.
-*.local.yaml
-.env
+# Le code, et les reglages de compilation et de test.
+!tsconfig.json
+!packages
+!plugins
 
-# Sorties de construction precedentes : l image refait les siennes.
-packages/*/dist
-packages/*/dist-types
-plugins/*/dist
+# Les reglages de Backstage, tous: l image d execution n en recopie que trois.
+!app-config.yaml
+!app-config.service.yaml
+!app-config.production.yaml
+!app-config.developpement.yaml
+!app-config.poste.yaml
+
+# Ce que lisent les tests des reglages (packages/backend/src/reglages.test.ts).
+# Jamais .env: en test et en production, Coolify y ecrit les secrets de
+# l application, et ils n ont rien a faire dans une construction. Que .env
+# soit la copie de .env.exemple, c est la chaine du depot qui le verifie.
+!compose.yaml
+!compose.override.yaml
+!.env.exemple
+!Dockerfile
+!catalog-info.yaml
+
+# La structure du catalogue, et les versions figees des outils de TechDocs.
+!catalogue
+!techdocs/requirements.txt
+
+# Et, dans ce qui est entre, ce qui se refait tout seul: les dependances
+# installees et les sorties de construction d un poste. L image refait les
+# siennes.
+**/node_modules
+**/dist
+**/dist-types
+**/*.tsbuildinfo

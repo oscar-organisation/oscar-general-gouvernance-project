@@ -1,0 +1,65 @@
+# Les images de marque du portail, fabriquees dans un conteneur.
+#
+# A lancer depuis le dossier oscar_backstage/, avec Docker et rien d autre:
+#
+#   docker compose -f marque/compose.yaml run --rm fabriquer
+#   docker compose -f marque/compose.yaml run --rm verifier
+#
+# fabriquer  refait chaque image a sa place dans le portail
+# verifier   n ecrit rien, et echoue si une image ne correspond plus au symbole
+#            officiel
+#
+# Le detail: marque/LISEZ-MOI.md.
+
+name: oscar-marque-du-portail
+
+# Python et Pillow a des versions figees: une autre version de Pillow
+# compresserait autrement, et la verification signalerait des ecarts qui ne
+# viennent pas du symbole.
+x-outil: &outil
+  image: python:3.12.14-slim
+  network_mode: none
+  working_dir: /portail/marque
+  entrypoint: ["sh", "-c", "pip install --quiet --no-index --find-links /roues --target /tmp/paquets pillow==11.3.0 && PYTHONPATH=/tmp/paquets exec python fabriquer.py \"$$@\"", "fabriquer"]
+
+services:
+
+  # Pillow se telecharge une fois, dans un volume, par ce service: les deux
+  # autres tournent ensuite sans reseau.
+  roues:
+    image: python:3.12.14-slim
+    command: ["pip", "download", "--quiet", "--dest", "/roues", "pillow==11.3.0"]
+    volumes:
+      - roues-pillow:/roues
+
+  fabriquer:
+    <<: *outil
+    command: ["generer"]
+    depends_on:
+      roues:
+        condition: service_completed_successfully
+    # Sous Linux, les images s ecrivent avec l identite de la personne, sinon
+    # elle ne pourrait plus les modifier. Meme regle que les schemas du guide.
+    user: "${OSCAR_UID:-1000}:${OSCAR_GID:-1000}"
+    environment:
+      HOME: /tmp
+    volumes:
+      - ..:/portail
+      - roues-pillow:/roues:ro
+
+  verifier:
+    <<: *outil
+    command: ["verifier"]
+    depends_on:
+      roues:
+        condition: service_completed_successfully
+    user: "${OSCAR_UID:-1000}:${OSCAR_GID:-1000}"
+    environment:
+      HOME: /tmp
+    volumes:
+      # Tout en lecture seule: une verification ne doit rien pouvoir ecrire.
+      - ..:/portail:ro
+      - roues-pillow:/roues:ro
+
+volumes:
+  roues-pillow:

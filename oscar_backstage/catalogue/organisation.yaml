@@ -1,32 +1,50 @@
-# La structure d accueil du catalogue.
+# La structure du catalogue: le domaine, les familles, l'équipe, les ressources.
 #
-# Les fiches des depots renvoient a un systeme et a un proprietaire. S ils
-# n existent pas, le portail affiche les composants avec un lien casse et
-# personne ne comprend pourquoi. Ce fichier les declare.
+# Les fiches des dépôts renvoient à une famille (un système), à un propriétaire
+# et à des ressources. Si ces fiches-là n'existent pas, le portail affiche des
+# liens cassés et personne ne comprend pourquoi. Ce fichier les déclare, une
+# fois pour tous les dépôts.
+#
+# Il vit dans le portail, et non dans un dépôt de composant: il ne décrit aucun
+# dépôt en particulier, mais la façon dont tous se rangent.
 
-# --- Le domaine : tout le projet ---
+# --- Le domaine: tout le projet -----------------------------------------------
 apiVersion: backstage.io/v1alpha1
 kind: Domain
 metadata:
   name: oscar
   title: OSCAR
   description: >-
-    La plateforme robotique OSCAR, vendue a des entreprises. Elle permet de
-    piloter des robots a distance, depuis un ecran ou un casque, et de suivre
-    leur exploitation.
+    La plateforme robotique OSCAR, vendue à des entreprises. Elle relie des
+    personnes, des logiciels et des robots: piloter un robot à distance, depuis
+    un écran ou un casque, et suivre son exploitation.
+  links:
+    - url: https://github.com/oscar-organisation
+      title: L'organisation sur GitHub
+      icon: github
 spec:
   owner: group:default/equipe-oscar
 
 ---
-# --- Les systemes : les grandes familles ---
+# --- Les familles de dépôts: un système par famille ---------------------------
+#
+# Le rangement suit la carte des dépôts du projet (_pilotage/07-carte-des-depots.md):
+#   plateforme      oscar-platform
+#   console         oscar-console-admin
+#   infrastructure  oscar-infrastructure
+#   outillage       oscar-tools, oscar-integrator
+#   verification    oscar-test, oscar-simulation
+#   gouvernance     oscar-general-gouvernance-project, oscar-docs-officiel,
+#                   oscar-skill-gouvernance-dev-agents,
+#                   oscar-gestion-incidents-and-reports
 apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
   name: plateforme
   title: Plateforme
   description: >-
-    Ce qui appartient a OSCAR et n est jamais installe chez un client : le
-    portail ou le client suit son dossier, et celui ou l equipe emet les
+    Ce qui appartient à OSCAR et n'est jamais installé chez un client: le
+    portail où le client suit son dossier, et celui où l'équipe émet les
     licences.
 spec:
   owner: group:default/equipe-oscar
@@ -39,8 +57,8 @@ metadata:
   name: console
   title: Console du client
   description: >-
-    L outil de travail quotidien du client, installable chez lui. Il porte la
-    teleoperation, le studio et l administration.
+    L'outil de travail quotidien du client, installable chez lui. Il porte la
+    téléopération, le studio et l'administration.
 spec:
   owner: group:default/equipe-oscar
   domain: oscar
@@ -52,8 +70,8 @@ metadata:
   name: infrastructure
   title: Infrastructure
   description: >-
-    Les briques techniques partagees : les noms de domaine, le deploiement, et
-    le transport de la video en temps reel.
+    Les briques techniques partagées: les noms de domaine, et le transport de
+    la vidéo en temps réel.
 spec:
   owner: group:default/equipe-oscar
   domain: oscar
@@ -65,8 +83,8 @@ metadata:
   name: outillage
   title: Outillage
   description: >-
-    Ce qui sert a construire et a faire tourner le reste, y compris ce qu on
-    remet aux integrateurs.
+    Ce qui sert à construire et à faire tourner le reste, y compris ce qu'on
+    remet aux intégrateurs.
 spec:
   owner: group:default/equipe-oscar
   domain: oscar
@@ -76,10 +94,10 @@ apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
   name: verification
-  title: Verification
+  title: Vérification
   description: >-
-    De quoi simuler un robot et verifier que les applications fonctionnent,
-    sans machine physique.
+    Tester les applications, et simuler un robot pour les vérifier sans
+    machine physique.
 spec:
   owner: group:default/equipe-oscar
   domain: oscar
@@ -91,25 +109,81 @@ metadata:
   name: gouvernance
   title: Gouvernance
   description: >-
-    La documentation, les incidents, et la facon dont on fait travailler les
-    agents de developpement.
+    Le point d'entrée du projet et son guide, la documentation, les incidents,
+    et la façon dont on fait travailler les agents de développement.
 spec:
   owner: group:default/equipe-oscar
   domain: oscar
 
 ---
-# --- Le proprietaire par defaut ---
+# --- L'équipe -------------------------------------------------------------------
 #
-# Les personnes viennent de l organisation GitHub et arrivent toutes seules.
-# Cette equipe existe pour que chaque composant ait un proprietaire des le
-# premier jour : un composant sans proprietaire est un composant que personne
-# ne reclame, et c est ce qu on veut eviter.
+# Les personnes viennent de l'organisation GitHub et arrivent toutes seules, en
+# test et en production. Cette équipe existe pour que chaque fiche ait un
+# propriétaire dès le premier jour: une fiche sans propriétaire est une fiche
+# que personne ne réclame.
 apiVersion: backstage.io/v1alpha1
 kind: Group
 metadata:
   name: equipe-oscar
-  title: Equipe OSCAR
-  description: Le proprietaire par defaut, en attendant des equipes plus fines.
+  title: Équipe OSCAR
+  description: Le propriétaire de toutes les fiches, en attendant des équipes plus fines.
 spec:
   type: team
   children: []
+
+---
+# --- Les ressources: ce dont les applications ont besoin pour tourner -------------
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: coolify
+  title: Coolify
+  description: >-
+    L'outil qui construit et lance les applications sur le serveur, à la
+    demande de la chaîne de chaque dépôt. Un projet par application, deux
+    environnements, test et production.
+  links:
+    - url: https://deploy.oscar-bot.com
+      title: Coolify
+      icon: dashboard
+spec:
+  type: plateforme-de-deploiement
+  owner: group:default/equipe-oscar
+  system: infrastructure
+  dependsOn:
+    - resource:default/proxy
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: proxy
+  title: Le proxy du serveur
+  description: >-
+    Traefik, installé et réglé par Coolify. Il reçoit les visiteurs sur les
+    ports 80 et 443, obtient les certificats, et envoie chaque adresse vers la
+    bonne application. Il refuse les noms qu'il ne connaît pas.
+spec:
+  type: proxy
+  owner: group:default/equipe-oscar
+  system: infrastructure
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ovhcloud
+  title: OVHcloud
+  description: >-
+    Le fournisseur du nom de domaine oscar-bot.com et de sa zone DNS. Le nom
+    générique *.oscar-bot.com mène au serveur: une nouvelle adresse ne demande
+    aucun enregistrement.
+  links:
+    - url: https://www.ovh.com/manager/
+      title: L'espace client OVHcloud
+      icon: dashboard
+spec:
+  type: fournisseur-de-domaine
+  owner: group:default/equipe-oscar
+  system: infrastructure

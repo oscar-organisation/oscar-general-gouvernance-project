@@ -1,0 +1,17 @@
+# Les fiches du dépôt oscar-test, lues par le portail technique.
+#
+# Place définitive: à la racine du dépôt oscar-test, où le portail cherche une
+# fiche dans chaque dépôt de l'organisation. Elle remplace la fiche d'avant,
+# qui décrivait le dépôt entier comme un seul composant.
+#
+# Le laboratoire a sa fiche dans son propre dossier (décision 62). Celle-ci ne
+# fait que la nommer.
+
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: oscar-test
+  description: Les unités du dépôt oscar-test, chacune dans son dossier.
+spec:
+  targets:
+    - ./oscar_labo_test_application/catalog-info.yaml

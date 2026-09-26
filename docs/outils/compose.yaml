@@ -1,7 +1,7 @@
 # Les outils du guide, dans des conteneurs.
 #
-# A lancer depuis la racine du depot. Ces commandes marchent sous Linux, macOS
-# et Windows, avec Docker et rien d autre:
+# A lancer depuis la racine du depot, avec Docker et rien d autre. Eprouvees
+# sous Linux; sous macOS et Windows, non verifie:
 #
 #   docker compose -f docs/outils/compose.yaml run --rm schemas
 #   docker compose -f docs/outils/compose.yaml run --rm verifier-schemas
@@ -42,8 +42,8 @@ services:
     # doit le faire avec l identite de la personne, sinon les images ne lui
     # appartiendraient pas et elle ne pourrait plus les modifier. 1000 est
     # l identite du premier compte d une machine Linux; une autre se donne par
-    # OSCAR_UID et OSCAR_GID. Sous macOS et Windows, Docker Desktop fait cette
-    # correspondance tout seul et la valeur n a pas d effet.
+    # OSCAR_UID et OSCAR_GID. Sous macOS et Windows, Docker Desktop devrait
+    # faire cette correspondance tout seul: non verifie.
     user: "${OSCAR_UID:-1000}:${OSCAR_GID:-1000}"
     environment:
       # Le navigateur qui dessine a besoin d un dossier personnel ou ecrire.
