@@ -9,8 +9,8 @@
 # LES ETAPES, ET QUI S EN SERT
 #
 #   dependances            toutes les dependances, outils de construction compris
+#   dependances-execution  seulement ce qui sert a faire tourner le portail
 #   construction           le code compile, et le paquet du portail
-#   dependances-execution  seulement ce qui sert a faire tourner le serveur
 #   verifications          les tests; la chaine du depot la vise, Coolify jamais
 #   developpement          le mode developpement local, avec rechargement a chaud
 #   execution              l image qui tourne en test et en production (la derniere)
@@ -81,45 +81,27 @@ RUN --mount=type=cache,id=oscar-portail-yarn,target=/root/.yarn/berry/cache,shar
 
 
 # ---------------------------------------------------------------------------
+# Seulement les dependances d execution, sans outils de test ni de construction.
+#
+# Tirees de l installation complete, dont on retire ce qui ne sert qu a
+# construire et a tester: pas de seconde installation depuis zero. Le resultat
+# est ensuite recopie dans l image legere, qui n a donc ni compilateur ni
+# Python de construction. Cette etape ne depend que des dependances: Docker la
+# reprend telle quelle tant que yarn.lock ne change pas.
+# ---------------------------------------------------------------------------
+FROM dependances AS dependances-execution
+RUN --mount=type=cache,id=oscar-portail-yarn,target=/root/.yarn/berry/cache,sharing=locked \
+    yarn workspaces focus --all --production
+
+
+# ---------------------------------------------------------------------------
 # Le code: verification des types, puis le paquet du portail (le serveur, et
 # l interface qu il sert).
 # ---------------------------------------------------------------------------
 FROM dependances AS construction
 COPY . .
-# yarn build:backend fabrique le paquet du serveur (bundle.tar.gz) et, a cote,
-# son « squelette » (skeleton.tar.gz): les package.json du serveur et des
-# paquets locaux dont il depend. Celui de l interface y figure sans ses
-# dependances: elle porte « bundled »: true, puisqu elle est deja compilee
-# dans le paquet. Le squelette est decompresse ici pour que l etape suivante
-# le copie fichier par fichier: Docker compare leur contenu, pas leur date,
-# et reprend l installation tant qu aucun package.json ne change.
 RUN yarn tsc \
- && yarn build:backend \
- && mkdir /squelette \
- && tar xzf packages/backend/dist/skeleton.tar.gz -C /squelette
-
-
-# ---------------------------------------------------------------------------
-# Seulement les dependances d execution du serveur.
-#
-# L installation se fait sur le squelette, et seulement pour la production:
-# ni outils de construction et de test, ni bibliotheques de l interface. Le
-# 26/09/2026, l ancienne installation, faite sur tout l espace de travail,
-# pesait 1,5 Go dans l image, dont l interface et ses outils (Material UI,
-# Swagger UI, rspack, swc, TypeScript...), inutiles pour faire tourner le
-# portail. C est la methode de l image de production decrite par Backstage.
-#
-# L image « outils » porte le compilateur: un module natif s y construit, et
-# le resultat est recopie dans l image legere, a la meme version de Node.
-# ---------------------------------------------------------------------------
-FROM ${IMAGE_OUTILS} AS dependances-execution
-WORKDIR /app
-ENV CI=true
-COPY .yarnrc.yml package.json yarn.lock backstage.json ./
-COPY .yarn/releases ./.yarn/releases
-COPY --from=construction /squelette/ ./
-RUN --mount=type=cache,id=oscar-portail-yarn,target=/root/.yarn/berry/cache,sharing=locked \
-    yarn workspaces focus --all --production
+ && yarn build:backend
 
 
 # ---------------------------------------------------------------------------
