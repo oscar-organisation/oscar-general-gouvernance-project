@@ -31,17 +31,19 @@ La règle est la même pour toutes les applications:
 | Projet Coolify | un par application | le même |
 | Environnement Coolify | `production` | `test` |
 | Application Coolify | `<application>-production` | `<application>-test` |
-| Environnement GitHub | `production` | `test` |
+| Environnement GitHub | `<application>-production` | `<application>-test` |
 
 Le nom `*.oscar-bot.com` mène déjà au serveur: une nouvelle adresse ne demande
 aucun enregistrement DNS. Le certificat de chaque adresse est obtenu tout seul
 par le proxy du serveur.
 
 L'environnement GitHub est ce que la chaîne déclare à chaque déploiement, pour
-qu'on voie sur GitHub ce qui est en test et en production. Au plan gratuit de
-GitHub, les environnements d'un dépôt privé ne sont pas disponibles; la chaîne
-déclare alors ses déploiements sous ces deux noms, ce qui marche sur tous les
-plans (lot 2).
+qu'on voie sur GitHub ce qui est en test et en production. Il porte le nom de
+l'application Coolify (`outil-dns-test`, `portail-production`...), parce qu'un
+dépôt peut porter plusieurs applications (décision A21). Chacun garde la
+variable `COOLIFY_APPLICATION`, l'identifiant de son application dans Coolify:
+aucun identifiant n'est écrit dans une chaîne. Le plan gratuit de GitHub les
+permet sur un dépôt privé (mesuré au lot 2).
 
 ## Les trois applications
 
@@ -53,10 +55,8 @@ plans (lot 2).
 
 Toutes les adresses sont sous `oscar-bot.com`.
 
-**État au 25 septembre 2026**, relevé dans Coolify par son API: les trois
-projets existent, chacun avec ses environnements `production` et `test`. Seule
-l'application `outil-dns-production` existe, et elle répond. Les autres
-applications arrivent aux lots 2 (outil DNS), 3 (laboratoire) et 4 (portail).
+Ce qui est en service aujourd'hui, application par application: le tableau
+d'[où en est le cycle](02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui).
 
 ## Les variables, trois niveaux
 
@@ -93,8 +93,8 @@ OSCAR, 18000 à 18999:
 | `181xx` | outil DNS | `18100` API, `18101` interface | en place |
 | `182xx` | console d'administration | `18200` console, `18201` authentification | réservés |
 | `183xx` | Coolify | réservé | Coolify tourne en réalité sur d'autres ports, voir la convention |
-| `184xx` | laboratoire de tests | `18400` visualiseur de rapports | lot 3 |
-| `185xx` | portail Backstage | `18500` service, `18501` et `18502` mode développement | lot 4 |
+| `184xx` | laboratoire de tests | `18400` visualiseur de rapports | en place |
+| `185xx` | portail Backstage | `18500` service, `18501` et `18502` mode développement | en place |
 | `186xx` à `189xx` | libres | | |
 
 Trois règles:

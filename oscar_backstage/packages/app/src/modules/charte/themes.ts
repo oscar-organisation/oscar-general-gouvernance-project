@@ -191,26 +191,31 @@ const alerte = (t: Teintes) => {
  * Les reglages de composants communs aux deux themes: les formes de la
  * charte (cartes arrondies a filet fin, pastilles) et ses polices.
  */
-const composants = (t: Teintes) => ({
-  MuiCssBaseline: baseDeLaPage(t),
-  // Le filet qui separe les groupes du menu: Backstage le peint en gris fixe
-  // (#383838), hors charte. Il lui donne un nom de style,
-  // BackstageSidebarDivider, par lequel on le surcharge. Son style est une
-  // fonction, qui ne se fusionne pas avec une surcharge: la surcharge le
-  // remplace, et redit donc tout (mesure a l ecran: sans hauteur ni bordure
-  // nulle, le navigateur dessinait un filet gris a lui). Le menu est Noir
-  // OSCAR dans les deux themes: le filet est celui des fonds sombres.
-  BackstageSidebarDivider: {
+/**
+ * Les surcharges des composants de Backstage lui-meme, par leur nom de style.
+ * Certains de ces noms ne sont pas declares aux types du theme: l objet est
+ * donc range a part, et deploye dans les reglages de composants.
+ */
+const champsDeBackstage = (t: Teintes): Record<string, unknown> => ({
+  BackstageSelectInputBase: {
+    styleOverrides: { input: { border: `1px solid ${t.secondaire}` } },
+  },
+  BackstageClosedDropdown: { styleOverrides: { icon: { color: t.secondaire } } },
+  BackstageOpenedDropdown: { styleOverrides: { icon: { color: t.secondaire } } },
+  BackstageAutocompleteBase: {
     styleOverrides: {
-      root: {
-        height: 1,
-        width: '100%',
-        background: derives.filetSombre,
-        border: 'none',
-        margin: '9.6px 0',
-      },
+      inputRoot: { '$root &:hover > fieldset': { borderColor: t.secondaire } },
+      popupIndicator: { color: t.secondaire },
     },
   },
+  // La carte des filtres personnels du catalogue: noir pur a 11 %.
+  CatalogReactUserListPicker: {
+    styleOverrides: { root: { backgroundColor: t.encart } },
+  },
+});
+
+const composants = (t: Teintes) => ({
+  MuiCssBaseline: baseDeLaPage(t),
   // Le panneau qui annonce une erreur ou un avertissement: Backstage fonce et
   // eclaircit la couleur de l etat, hors charte. Meme regle que les alertes.
   BackstageWarningPanel: {
@@ -221,6 +226,26 @@ const composants = (t: Teintes) => ({
     },
   },
   MuiAlert: { styleOverrides: alerte(t) },
+  // Le contour des champs: Material UI le trace en noir pur a 23 %.
+  MuiOutlinedInput: { styleOverrides: { notchedOutline: { borderColor: t.secondaire } } },
+  // Le fond de la barre de chargement: Material UI eclaircit ou fonce la
+  // couleur principale, ce qui sort de la palette.
+  MuiLinearProgress: { styleOverrides: { colorPrimary: { backgroundColor: t.encart } } },
+  // Le voile derriere une fenetre: noir pur a 50 % chez Material UI, Noir
+  // OSCAR ici. Les voiles invisibles des menus restent invisibles.
+  MuiBackdrop: {
+    styleOverrides: {
+      root: ({ ownerState }: { ownerState?: { invisible?: boolean } }) =>
+        ownerState?.invisible
+          ? {}
+          : { backgroundColor: transparence(palette.noir, 0.5) },
+    },
+  },
+  // Les champs de Backstage: la liste deroulante (BackstageSelectInputBase),
+  // ses fleches, et le champ de recherche du catalogue. Leur bordure
+  // (#ced4da) et leurs fleches (#616161) sont ecrites en dur, hors charte;
+  // leurs noms de style permettent de les surcharger.
+  ...champsDeBackstage(t),
   MuiButton: {
     styleOverrides: {
       root: { textTransform: 'none' as const, borderRadius: 8, fontWeight: 600 },
@@ -230,7 +255,11 @@ const composants = (t: Teintes) => ({
   },
   MuiChip: {
     styleOverrides: {
-      root: { borderRadius: 999, fontFamily: polices.technique },
+      // La couleur du texte: Material UI la calcule d apres le fond, et rend
+      // un noir pur a 87 % fixe, hors charte.
+      root: { borderRadius: 999, fontFamily: polices.technique, color: t.texte },
+      // Le contour des pastilles a contour: noir pur a 23 % chez Material UI.
+      outlined: { borderColor: t.filet },
     },
   },
   MuiCard: {

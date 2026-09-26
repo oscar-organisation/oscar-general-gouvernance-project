@@ -51,6 +51,17 @@ mkdirSync(sortie, { recursive: true });
 const jetons = readFileSync('/portail/packages/app/src/modules/charte/jetons.ts', 'utf8');
 const PERMISES = [...new Set([...jetons.matchAll(/'#([0-9A-Fa-f]{6})'/g)].map(m => m[1].toUpperCase()))];
 
+// Les ecarts connus, et pourquoi on ne peut pas les corriger. Ils sont comptes
+// a part et affiches, jamais caches. Un seul aujourd hui.
+const ECARTS_CONNUS = [
+  {
+    couleur: '#383838',
+    propriete: 'border-color',
+    selecteur: 'nav.MuiBottomNavigation-root',
+    raison: 'filet de la barre de menu du telephone, ecrit en dur par Backstage (core-components, MobileSidebar) sans nom de style',
+  },
+];
+
 const ECRANS = {
   ordinateur: { width: 1366, height: 900 },
   telephone: { width: 390, height: 844 },
@@ -70,7 +81,7 @@ const PAGES = mode === 'invite'
 
 // Ce qui tourne dans la page: le releve des couleurs et des contrastes. Il
 // traverse aussi les racines fantomes, ou TechDocs range la documentation.
-function releverDansLaPage(permises) {
+function releverDansLaPage({ permises, ecartsConnus }) {
   const rgba = texte => {
     const m = texte.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/);
     return m ? [Number(m[1]), Number(m[2]), Number(m[3]), m[4] === undefined ? 1 : Number(m[4])] : null;
@@ -101,19 +112,34 @@ function releverDansLaPage(permises) {
   };
   parcourir(document);
 
+  // Un element cache par un parent rogne (la facon dont les bibliotheques
+  // d accessibilite cachent un champ natif) ne se voit pas.
+  const rogne = e => {
+    for (let a = e; a; a = a.parentElement) {
+      const s = getComputedStyle(a);
+      if (s.clip === 'rect(0px, 0px, 0px, 0px)' || s.clipPath === 'inset(50%)') return true;
+    }
+    return false;
+  };
   const visible = e => {
     const r = e.getBoundingClientRect();
     const s = getComputedStyle(e);
-    return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && Number(s.opacity) > 0;
+    return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && Number(s.opacity) > 0 && !rogne(e);
   };
   const decrire = e => `${e.tagName.toLowerCase()}${e.id ? '#' + e.id : ''}${typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/).slice(0, 2).join('.') : ''}`;
 
   const hors = new Map();
+  const connus = new Map();
   const noter = (e, propriete, valeur) => {
     const c = rgba(valeur);
     if (!c || c[3] === 0) return;
     const h = hexa(c);
     if (permises.includes(h)) return;
+    const connu = ecartsConnus.find(x => x.couleur === '#' + h && x.propriete === propriete && e.matches(x.selecteur));
+    if (connu) {
+      connus.set(connu.raison, (connus.get(connu.raison) ?? 0) + 1);
+      return;
+    }
     const cle = `${h} ${propriete}`;
     if (!hors.has(cle)) hors.set(cle, { couleur: '#' + h, propriete, exemples: [], nombre: 0 });
     const n = hors.get(cle);
@@ -179,13 +205,13 @@ function releverDansLaPage(permises) {
       if (echecs.exemples.length < 5) echecs.exemples.push(mesure);
     }
   }
-  return { elements: elements.length, horsCharte: [...hors.values()].sort((a, b) => b.nombre - a.nombre), plusFaible, contrastesSousAA: echecs };
+  return { elements: elements.length, horsCharte: [...hors.values()].sort((a, b) => b.nombre - a.nombre), ecartsConnus: Object.fromEntries(connus), plusFaible, contrastesSousAA: echecs };
 }
 
 /** Mesure la page ouverte, garde sa capture, et l ajoute au bilan. */
 async function mesurer(page, nom, extra = {}) {
   await page.screenshot({ path: join(sortie, `${nom}.png`), fullPage: true });
-  const releve = await page.evaluate(releverDansLaPage, PERMISES);
+  const releve = await page.evaluate(releverDansLaPage, { permises: PERMISES, ecartsConnus: ECARTS_CONNUS });
   const titre = await page.title();
   const hors = releve.horsCharte.reduce((n, h) => n + h.nombre, 0);
   bilan.push({ nom, titre, horsCharteTotal: hors, ...extra, ...releve });
@@ -250,6 +276,9 @@ writeFileSync(join(sortie, 'releve.json'), JSON.stringify(bilan, null, 2));
 const total = bilan.reduce((n, b) => n + b.horsCharteTotal, 0);
 const nonAffichees = bilan.filter(b => b.affichee === 'non').map(b => b.nom);
 const sousAA = bilan.reduce((n, b) => n + b.contrastesSousAA.nombre, 0);
+const connus = {};
+for (const b of bilan) for (const [raison, n] of Object.entries(b.ecartsConnus)) connus[raison] = (connus[raison] ?? 0) + n;
+for (const [raison, n] of Object.entries(connus)) console.log(`ECART CONNU  ${n} element(s): ${raison}`);
 console.log(`Releve complet: ${join(sortie, 'releve.json')}`);
 console.log(`BILAN  pages: ${bilan.length}  couleurs hors charte: ${total}  textes sous le seuil AA: ${sousAA}  pages non affichees: ${nonAffichees.length ? nonAffichees.join(', ') : 'aucune'}`);
 process.exit(total === 0 && sousAA === 0 && nonAffichees.length === 0 ? 0 : 1);

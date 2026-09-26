@@ -117,12 +117,7 @@ que la chaîne **tourne** réellement, pas seulement que son fichier existe. Un
 fichier de chaîne n'est lu qu'à la racine du dépôt, dans `.github/workflows/`
 (leçon 4.3).
 
-## État au 25 septembre 2026, 21h56 UTC
+## Où en est chaque chaîne
 
-Relevé sur GitHub à cette heure-là, dépôt par dépôt.
-
-| Dépôt | Chaîne | État |
-|---|---|---|
-| `oscar-infrastructure` (outil DNS) | `.github/workflows/chaine.yml`, sur `test` et `main` | au patron commun, déploiement par le workflow commun en test puis en production, prouvé par la PR 4 vers `test` et la PR 5 vers `main`. La recette n'y est pas encore branchée (lot 3b) |
-| `oscar-test` (laboratoire) | `.github/workflows/chaine.yml`, sur `test` seulement | déploie `labo-test` par le workflow commun, puis joue la recette. Pas encore sur `main`: `labo-production` n'a jamais été déployée par la chaîne (lot 3b, en cours) |
-| `oscar-general-gouvernance-project` (portail) | `.github/workflows/chaine.yml`, arrivée par la PR 2 vers `test` | au patron commun; son premier déploiement, en test, part à la fusion de la PR 2 (lot 4, en cours) |
+Dans le tableau d'[où en est le cycle](02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui), tenu à un seul endroit pour ne
+jamais se contredire d'une page à l'autre.

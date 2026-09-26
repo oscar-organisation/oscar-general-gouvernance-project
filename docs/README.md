@@ -119,8 +119,8 @@ administrateur de l'organisation.
 - Sur GitHub, dans le dossier `docs/` du dépôt
   [`oscar-general-gouvernance-project`](https://github.com/oscar-organisation/oscar-general-gouvernance-project/tree/main/docs).
 - Dans le portail technique Backstage, `https://tech.oscar-bot.com`, onglet
-  « Docs » du composant `oscar-general-gouvernance-project`. **Pas encore en
-  service**: le portail est mis en route au lot 4 du plan.
+  « Docs » du composant `oscar-general-gouvernance-project`. Où en est le
+  portail: le tableau d'[où en est le cycle](02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui).
 
 Une correction se fait dans ce dossier, par le cycle décrit ici, comme pour du
 code. Le portail relit le dépôt: il n'y a rien à recopier.

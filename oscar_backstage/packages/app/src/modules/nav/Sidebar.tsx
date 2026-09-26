@@ -9,7 +9,6 @@
 
 import {
   Sidebar,
-  SidebarDivider,
   SidebarGroup,
   SidebarItem,
   SidebarScrollWrapper,
@@ -20,7 +19,23 @@ import { SidebarSearchModal } from '@backstage/plugin-search';
 import { UserSettingsSignInAvatar } from '@backstage/plugin-user-settings';
 import MenuIcon from '@material-ui/icons/Menu';
 import SearchIcon from '@material-ui/icons/Search';
+import { styled } from '@material-ui/core/styles';
+import { derives } from '../charte/jetons';
 import { SidebarLogo } from './SidebarLogo';
+
+/**
+ * Le filet entre les groupes du menu. Backstage fournit le sien
+ * (SidebarDivider), peint en gris fixe #383838, hors charte, et son style ne
+ * se surcharge pas par le theme sans etre efface. Le menu dessine donc le
+ * sien, aux memes dimensions, avec le filet des fonds sombres de la charte.
+ */
+const Filet = styled('hr')({
+  height: 1,
+  width: '100%',
+  background: derives.filetSombre,
+  border: 'none',
+  margin: '9.6px 0',
+});
 
 export const SidebarContent = NavContentBlueprint.make({
   params: {
@@ -39,19 +54,19 @@ export const SidebarContent = NavContentBlueprint.make({
           <SidebarGroup label="Rechercher" icon={<SearchIcon />} to="/search">
             <SidebarSearchModal />
           </SidebarGroup>
-          <SidebarDivider />
+          <Filet />
           <SidebarGroup label="Menu" icon={<MenuIcon />}>
             {nav.take('page:home')}
             {nav.take('page:catalog')}
             {nav.take('page:techdocs')}
             {nav.take('page:api-docs')}
-            <SidebarDivider />
+            <Filet />
             <SidebarScrollWrapper>
               {nav.rest({ sortBy: 'title' })}
             </SidebarScrollWrapper>
           </SidebarGroup>
           <SidebarSpace />
-          <SidebarDivider />
+          <Filet />
           <SidebarGroup
             label="Réglages"
             icon={<UserSettingsSignInAvatar />}

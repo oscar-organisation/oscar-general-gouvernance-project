@@ -35,16 +35,21 @@ dise.
 
 ## Où en est le cycle aujourd'hui
 
-**État au 25 septembre 2026, 21h56 UTC**, relevé sur GitHub. Le cycle
-décrit ici est celui du plan. Ses pièces se posent application par application:
+**État au 26 septembre 2026, 00h23 UTC**, relevé à cette heure-là par l'API de
+Coolify, l'API de GitHub et une requête à chaque site. C'est **le seul tableau
+d'état du guide**: les autres pages y renvoient au lieu de le recopier, pour
+qu'il ne se contredise jamais. Il se met à jour à chaque livraison, relevé et
+non de mémoire.
 
 | Pièce | Outil DNS | Laboratoire | Portail |
 |---|---|---|---|
 | La branche `test` | en place | en place | en place |
-| La chaîne, `.github/workflows/chaine.yml` | en place sur `test` et `main` | sur `test` seulement (lot 3b, en cours) | arrive par la PR 2 vers `test` (lot 4, en cours) |
-| Le déploiement par la chaîne en test | en place, prouvé par la PR 4 du dépôt `oscar-infrastructure` | en place | à la fusion de la PR 2 (lot 4) |
-| Le déploiement par la chaîne en production, et le contrôle de passage par `test` | en place, prouvé par la PR 5 du dépôt `oscar-infrastructure` | lot 3b | lot 4 |
-| La recette par le laboratoire | pas encore branchée (lot 3b) | branchée sur `test` (lot 3b, en cours) | pas encore branchée |
+| La chaîne, `.github/workflows/chaine.yml` | sur `test` et `main` | sur `test` et `main` | arrive par la PR 2 vers `test` (lot 4) |
+| Les applications Coolify | `outil-dns-test`, `outil-dns-production`, en service | `labo-test`, `labo-production`, en service | `portail-test`, `portail-production`, créées, pas encore déployées |
+| Le déploiement par la chaîne en test | en place (dernier: `8029a01`) | en place (dernier: `e73cd47`) | à la fusion de la PR 2 |
+| Le déploiement par la chaîne en production, avec le contrôle de passage par `test` | en place (dernier: `f0bd0d7`) | en place (dernier: `c0f21cd`) | à la promotion de `test` vers `main` |
+| La recette par le laboratoire, après chaque déploiement | en place, verte en test et en production | en place, verte en test et en production | pas branchée: le laboratoire n'a pas encore de scénario du portail |
+| Les sites | `test-dns`, `dns` répondent | `test-labo`, `labo` répondent `401` sans identifiants | `tech` répond `503`, `test-tech` pas encore |
 
 Le déploiement et le contrôle de passage par `test` sont écrits **une fois**,
 dans le workflow commun du dépôt `oscar-infrastructure`
@@ -149,9 +154,20 @@ Deux sortes de tests, dans cet ordre:
 
 **Ce qu'on doit voir**: tout vert. On n'envoie rien de rouge.
 
-**État au 25 septembre 2026**: le laboratoire tourne en conteneur, et vise une
-application locale, depuis le lot 3a: voir [sa page](08-les-applications/laboratoire.md).
-Les commandes de test de chaque application sont sur sa page.
+Les commandes de test de chaque application sont sur sa page. Pour le
+laboratoire contre l'application lancée sur le poste:
+
+```
+docker compose run --rm labo lancer --niveau local --app <application>
+```
+
+depuis le dossier `oscar_labo_test_application/` du dépôt `oscar-test`. **Sous
+Linux**, `host.docker.internal` seul ne joint pas un port publié sur
+`127.0.0.1`: on ajoute, dans le terminal, `export LABO_MODE_RESEAU=host
+LABO_HOTE_LOCAL=127.0.0.1` avant la commande (incident `INC-2026-09-25-13`).
+Sous macOS et Windows: non vérifié. Le détail est dans le guide du laboratoire,
+[`oscar_labo_test_application/README.md`](https://github.com/oscar-organisation/oscar-test/blob/main/oscar_labo_test_application/README.md),
+partie « Le niveau local sous Linux », et sur [sa page](08-les-applications/laboratoire.md).
 
 ## Étape 5. Enregistrer et pousser
 
@@ -249,9 +265,7 @@ commit déployé est bien celui qui a été vérifié. Personne ne déploie à l
 donne la réponse de Coolify. Le journal de construction est dans Coolify, sur
 le déploiement concerné.
 
-**État au 25 septembre 2026**: en place pour l'outil DNS (lot 2) et le
-laboratoire (lot 3b); le portail suit au lot 4. Voir le tableau du début de
-cette page.
+Où c'est en place: le tableau d'[où en est le cycle](#ou-en-est-le-cycle-aujourdhui), au début de cette page.
 
 ## Étape 10. La recette par le laboratoire
 
@@ -265,8 +279,7 @@ le visualiseur du laboratoire, `https://test-labo.oscar-bot.com`.
 va pas plus loin: on corrige par une nouvelle branche `travail/<sujet>`, qui
 refait les étapes 2 à 10.
 
-**État au 25 septembre 2026**: branchée seulement dans la chaîne du
-laboratoire, sur `test` (lot 3b, en cours).
+Où la recette est branchée: le tableau d'[où en est le cycle](#ou-en-est-le-cycle-aujourdhui).
 
 ## Étape 11. La PR de `test` vers `main`
 
@@ -300,10 +313,9 @@ avait échoué. Ce contrôle ne bloque pas: la production a quand même été
 déployée. On prévient Joel, et on rédige l'incident. Voir
 [comment se comporter](03-comment-se-comporter.md), règles 1 et 7.
 
-**État au 25 septembre 2026**: le contrôle est en place dans le workflow
-commun (lot 2), pour toute application dont la chaîne l'appelle. Il a servi
-pour l'outil DNS; le laboratoire et le portail y passent à leur première
-fusion dans `main` (lots 3b et 4).
+Le contrôle est écrit une fois, dans le workflow commun (lot 2), pour toute
+application dont la chaîne l'appelle. Où il a déjà servi: le tableau
+d'[où en est le cycle](#ou-en-est-le-cycle-aujourdhui).
 
 ## Étape 13. Vérifier que le site est vivant
 

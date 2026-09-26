@@ -1,11 +1,9 @@
 # Portail Backstage
 
-**État au 25 septembre 2026, 21h56 UTC.** Le portail est mis en route par le
-lot 4 du plan: connexion par GitHub, charte OSCAR, page « Commencer ici »,
-catalogue rangé, ce guide lisible dans le portail, deux façons de travailler
-en local, et sa chaîne. Ses deux applications Coolify existent; son premier
-déploiement, en test, part à la fusion de la PR 2 vers `test`. Ce qui n'est
-pas encore en place est dit comme tel, plus bas.
+Où en est le portail dans le cycle: le tableau
+d'[où en est le cycle](../02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui),
+tenu à un seul endroit. Cette page ne dit que ce qui ne change pas d'une
+livraison à l'autre: les noms, les adresses, les commandes.
 
 ## En bref
 
@@ -159,6 +157,34 @@ Les images de marque (le symbole, les icônes) se vérifient à part:
 docker compose -f marque/compose.yaml run --rm verifier
 ```
 
+### Vérifier la charte à l'écran
+
+Un vrai navigateur, en conteneur, ouvre le portail lancé en mode service, entre
+en invité, et parcourt la connexion, l'accueil, le catalogue, une fiche et deux
+pages du guide, sur ordinateur et sur téléphone, en clair et en sombre (24
+pages). Sur chacune, il relève chaque couleur affichée et la compare à la
+charte (les couleurs de `packages/app/src/modules/charte/jetons.ts`), mesure le
+contraste de chaque texte au seuil AA de sa taille, et prend une capture. Sur
+le guide, il clique sur un schéma et vérifie qu'il s'ouvre en grand.
+
+```
+docker compose up --build -d
+ADRESSE=http://127.0.0.1:18500 MODE=invite docker compose -f verifications-ecran/compose.yaml run --rm verifier
+```
+
+**Ce qu'on doit voir**: une ligne par page, puis `BILAN  pages: 24  couleurs
+hors charte: 0  textes sous le seuil AA: 0  pages non affichees: aucune`, et
+le code de sortie 0. Les captures et le relevé complet (`releve.json`) sont
+dans `verifications-ecran/resultats/`, que git ne suit pas.
+
+Une ligne `ECART CONNU` s'affiche aussi: le filet d'un pixel en haut de la barre
+de menu du téléphone, gris `#383838`, est écrit en dur par Backstage, sans nom
+de style par lequel le thème pourrait le changer. C'est le seul écart; il est
+compté à part, et nommé, plutôt que caché.
+
+Sous Linux seulement: le conteneur rejoint le portail par le réseau de la
+machine (`network_mode: host`). Sous macOS et Windows: non vérifié.
+
 ## La chaîne
 
 `.github/workflows/chaine.yml`, sur le patron commun ([la chaîne](../05-la-chaine.md)):
@@ -201,14 +227,20 @@ docker run --rm curlimages/curl:8.22.0 -fsS https://tech.oscar-bot.com/.backstag
 | Coolify | `https://deploy.oscar-bot.com`, projet `portail` |
 | Le portail | `https://tech.oscar-bot.com` et `https://test-tech.oscar-bot.com` |
 
-## Ce qui reste à faire
+## Limites connues
 
-- le premier déploiement par la chaîne, en test puis en production (lot 4,
-  en cours);
-- la recette par le laboratoire (lot 3b);
-- la traduction en français des écrans internes de Backstage: la connexion,
-  le menu, l'accueil et les messages d'erreur le sont; les pages du catalogue,
-  de la documentation et de la recherche gardent en partie leurs textes
-  anglais d'origine;
-- les logos complets d'OSCAR, dès que la charte en fournit une version dont
-  l'orange est juste (voir `oscar_backstage/marque/LISEZ-MOI.md`).
+- La recette par le laboratoire n'est pas branchée dans la chaîne du portail:
+  le laboratoire n'a encore aucun scénario du portail.
+- Les écrans internes de Backstage ne sont traduits qu'en partie: la
+  connexion, le menu, l'accueil, la recherche, le graphe et les messages
+  d'erreur le sont; les pages du catalogue et de la documentation gardent en
+  partie leurs textes anglais d'origine.
+- Les logos complets d'OSCAR ne sont pas employés tant que la charte n'en
+  fournit pas une version dont l'orange est juste (voir
+  `oscar_backstage/marque/LISEZ-MOI.md`).
+- Le filet d'un pixel en haut de la barre de menu du téléphone reste gris
+  `#383838`: Backstage l'écrit en dur, sans nom de style (partie « Vérifier la
+  charte à l'écran »).
+
+Le reste se lit dans le tableau
+d'[où en est le cycle](../02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui).

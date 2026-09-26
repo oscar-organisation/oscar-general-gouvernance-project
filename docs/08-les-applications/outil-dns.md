@@ -1,12 +1,9 @@
 # Outil DNS
 
-**État au 25 septembre 2026, en fin de journée.** L'outil est rassemblé tout
-entier dans le dossier `oscar_infra_dns/` (décision 62). Il suit le cycle
-depuis le lot 2 du plan: branche `test`, chaîne au patron commun, déploiement
-en test puis en production par le workflow commun, contrôle de passage par
-`test`. Le cycle a été prouvé par la PR 4 vers `test` et la PR 5 vers `main`
-du dépôt `oscar-infrastructure`. La recette par le laboratoire n'est pas
-encore branchée dans sa chaîne (lot 3b).
+L'outil est rassemblé tout entier dans le dossier `oscar_infra_dns/`
+(décision 62). Où il en est dans le cycle: le tableau
+d'[où en est le cycle](../02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui),
+tenu à un seul endroit.
 
 ## En bref
 
@@ -59,7 +56,6 @@ guide de développement local de l'outil:
 Les tests de l'outil tournent en conteneur. Les commandes exactes, et celle
 qui vérifie la charte graphique de l'interface, sont dans le guide de
 développement local de l'outil, parties « Tester » et « La charte graphique ».
-Le 25 septembre 2026, la suite comptait 515 tests.
 
 Le laboratoire se lance contre l'outil lancé en local: voir
 [sa page](laboratoire.md).
@@ -74,6 +70,7 @@ Le laboratoire se lance contre l'outil lancé en local: voir
 | `controles` | aucune ligne d'attribution dans les commits, aucun secret, la documentation cohérente, la typographie, les fichiers de chaîne, la composition dans ses deux lectures |
 | `verifs` | les tests de l'outil DNS et ceux de la chaîne commune, la charte graphique de l'interface, la construction des deux images |
 | `deploiement` | par le workflow commun, après une fusion dans `test` ou `main`, si le contenu de `oscar_infra_dns/` a changé (hors `*.md`) |
+| `recette` | si le déploiement a eu lieu: les scénarios de l'outil DNS au laboratoire, contre ce qui vient d'être déployé, par le workflow de recette du dépôt `oscar-test` |
 
 ## Le déploiement
 
@@ -105,9 +102,9 @@ commande de l'[étape 13 du cycle](../02-le-cycle-pas-a-pas.md).
 | La chaîne | `https://github.com/oscar-organisation/oscar-infrastructure/actions` |
 | Les déploiements déclarés | `https://github.com/oscar-organisation/oscar-infrastructure/deployments`, environnements `outil-dns-test` et `outil-dns-production` |
 | Coolify | `https://deploy.oscar-bot.com`, projet `outil-dns` |
-| Les rapports du laboratoire | `https://test-labo.oscar-bot.com`, en service, accès protégé; `https://labo.oscar-bot.com`, **lot 3b** (relevé le 25 septembre 2026 à 21h56 UTC) |
+| Les rapports du laboratoire | `https://test-labo.oscar-bot.com` et `https://labo.oscar-bot.com`, accès protégé |
 
 ## Ce qui reste à faire
 
-- la recette par le laboratoire, après chaque déploiement (lot 3b);
-- la preuve de bout en bout depuis un clone neuf (lot 5).
+Ce qui reste à faire pour l'outil DNS se lit dans le tableau
+d'[où en est le cycle](../02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui).
