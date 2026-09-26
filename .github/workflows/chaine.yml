@@ -111,6 +111,10 @@ jobs:
           # Le portail, tel que Coolify le lit (-f, sans le complément) et tel
           # qu'on le lance en local (avec le complément).
           ( cd "$PORTAIL" && docker compose -f compose.yaml config --quiet && docker compose config --quiet )
+          # Telle que Coolify la lit pour construire: avec un fichier
+          # d environnement de construction qui ne porte aucun secret. Une
+          # variable exigee (forme « :? ») y fait echouer la construction.
+          ( cd "$PORTAIL" && docker compose --env-file /dev/null -f compose.yaml config --quiet )
           # Coolify ne doit voir aucun port publié.
           if ( cd "$PORTAIL" && docker compose -f compose.yaml config ) | grep -q 'published:' ; then
             echo "::error::$PORTAIL/compose.yaml publie un port: il va dans compose.override.yaml."
