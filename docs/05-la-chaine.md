@@ -21,12 +21,12 @@ Le même patron dans les trois dépôts, dans le fichier
 | `recette` | joue les scénarios du laboratoire contre ce qui vient d'être déployé | selon l'application |
 
 **Un échec de `controles` ou de `verifs` empêche le déploiement.** La
-`recette` intervient après celui-ci : si elle échoue, la version est déjà
-déployée. La chaîne signale l’échec et il faut corriger ou suivre la procédure
-de retour arrière ; elle n’annule pas automatiquement le déploiement.
+`recette` intervient après celui-ci: si elle échoue, la version est déjà
+déployée. La chaîne signale l'échec et il faut corriger ou suivre la procédure
+de retour arrière; elle n'annule pas automatiquement le déploiement.
 
-Le portail n’a pas encore de recette par le laboratoire. Le tableau
-[d’état du cycle](02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui)
+Le portail n'a pas encore de recette par le laboratoire. Le tableau
+[d'état du cycle](02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui)
 distingue ce qui est branché pour chaque application.
 
 ## Ce qui se passe à chaque événement
@@ -46,7 +46,7 @@ changement passe les vérifications.
 documentation (`*.md`) par défaut, et ce que chaque chaîne ajoute. Une fusion
 qui ne touche que la documentation ne redéploie normalement rien si le contenu
 est déjà en service. Un retour arrière effectué dans Coolify peut créer un
-écart avec la branche : la chaîne le détecte et peut alors redéployer, même
+écart avec la branche: la chaîne le détecte et peut alors redéployer, même
 sans nouvelle modification applicative. Une passe forcée redéploie également.
 
 Contre la production, la recette ne joue que des scénarios **non destructifs**:

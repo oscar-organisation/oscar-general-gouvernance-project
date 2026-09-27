@@ -35,8 +35,8 @@ dise.
 
 ## Où en est le cycle aujourd'hui
 
-**État au 26 septembre 2026, 12h21 UTC**, relevé pendant cette reprise par l’API de
-Coolify, l'API de GitHub et une requête à chaque site. C'est **le seul tableau
+**État au 27 septembre 2026, 15h42 UTC**, relevé de 15h39 à 15h42 UTC par l'API
+de Coolify, l'API de GitHub et une requête à chaque site. C'est **le seul tableau
 d'état du guide**: les autres pages y renvoient au lieu de le recopier, pour
 qu'il ne se contredise jamais. Il se met à jour à chaque livraison, relevé et
 non de mémoire.
@@ -46,15 +46,15 @@ non de mémoire.
 | La branche `test` | en place | en place | en place |
 | La chaîne, `.github/workflows/chaine.yml` | sur `test` et `main` | sur `test` et `main` | sur `test` et `main` |
 | Les applications Coolify | `outil-dns-test`, `outil-dns-production`, en service | `labo-test`, `labo-production`, en service | `portail-test`, `portail-production`, en service |
-| Le déploiement par la chaîne en test | en place (commit servi selon Coolify: `d4eef46`) | en place (commit servi selon Coolify: `c66c189`) | en place (commit servi selon Coolify: `1cb9812`) |
-| Le déploiement par la chaîne en production, avec le contrôle de passage par `test` | en place (commit servi selon Coolify: `fc9f669`) | en place (commit servi selon Coolify: `dfe4244`) | en place (commit servi selon Coolify: `471c0f0`) |
+| Le déploiement par la chaîne en test | en place (commit servi selon Coolify: `d4eef46`) | en place (commit servi selon Coolify: `c66c189`) | en place (commit servi selon Coolify: `dfd75b6`) |
+| Le déploiement par la chaîne en production, avec le contrôle de passage par `test` | en place (commit servi selon Coolify: `fc9f669`) | en place (commit servi selon Coolify: `dfe4244`) | en place (commit servi selon Coolify: `0115683`) |
 | La recette par le laboratoire, après chaque déploiement | en place, verte à sa dernière exécution en production | en place, verte en test et en production | pas branchée: le laboratoire n'a pas encore de scénario du portail |
 | Les sites | `test-dns`, `dns` répondent | `test-labo`, `labo` répondent `401` sans identifiants | `test-tech`, `tech` et leurs routes de disponibilité répondent `200`; connexion humaine GitHub encore à valider |
 
 Les commits ci-dessus sont ceux des derniers déploiements terminés dans
 Coolify. Les branches peuvent contenir des commits documentaires plus récents
-sans déclencher de reconstruction. Les douze requêtes de cette reprise ont
-confirmé : interfaces DNS et API de santé à `200`, racines du laboratoire à
+sans déclencher de reconstruction. Les douze requêtes de ce relevé ont
+confirmé: interfaces DNS et API de santé à `200`, racines du laboratoire à
 `401` sans identifiants et `/sante` à `200`, portails et disponibilité à `200`.
 Une page de connexion accessible ne prouve pas une connexion humaine GitHub.
 
@@ -323,7 +323,7 @@ laboratoire contre `https://<nom>.oscar-bot.com`.
 
 **Ce qu'on doit voir**: la passe de `main` verte dans l'onglet Actions,
 **aucun avertissement** du contrôle de passage par `test` dans le résumé de la
-passe, l’environnement `<application>-production` au commit déployé dans la page Deployments,
+passe, l'environnement `<application>-production` au commit déployé dans la page Deployments,
 et le déploiement terminé dans Coolify, environnement `production`.
 
 **Si ça ne va pas**: le résumé signale que le contenu n'est pas passé par
@@ -347,17 +347,17 @@ de la réponse. Pour une application lancée sur le poste, voir l'étape 3: sous
 Linux, le conteneur a besoin de `--network host` pour joindre `127.0.0.1`. Une application qui a une route de santé se vérifie aussi par
 elle; sa page donne la commande.
 
-**Ce qu’on doit voir** : le code attendu par l’application. Pour le visualiseur
-du laboratoire, la racine répond `401` sans identifiants ; sa route `/sante`
+**Ce qu'on doit voir**: le code attendu par l'application. Pour le visualiseur
+du laboratoire, la racine répond `401` sans identifiants; sa route `/sante`
 doit répondre `200`. Les pages de chaque application donnent les adresses à
-vérifier. Ne pas conclure à une panne sur le seul refus d’un accès protégé.
+vérifier. Ne pas conclure à une panne sur le seul refus d'un accès protégé.
 
 Puis on vérifie que c'est la bonne version. Le commit de production effectivement
 servi doit correspondre au contenu applicatif vérifié. Le dernier commit de
 `main` peut être plus récent si seule la documentation a changé. Un retour
-d’urgence peut aussi rendre l’état de Coolify différent de la déclaration
-GitHub : utiliser la procédure d’exploitation pour les rapprocher. Pour lire
-le dernier commit de la branche :
+d'urgence peut aussi rendre l'état de Coolify différent de la déclaration
+GitHub: utiliser la procédure d'exploitation pour les rapprocher. Pour lire
+le dernier commit de la branche:
 
 ```
 git fetch origin
@@ -368,7 +368,7 @@ git rev-parse --short origin/main
 
 - `TLS connect error` et `unrecognized name`: le proxy du serveur ne connaît
   pas ce nom, rien n'y est déployé. Mesuré le 25 septembre 2026 sur
-  un nom de test avant sa création dans Coolify ; cet exemple est historique.
+  un nom de test avant sa création dans Coolify; cet exemple est historique.
 - `503`: le proxy connaît le nom, mais l'application ne répond pas. Regarder
   son état dans Coolify.
 
