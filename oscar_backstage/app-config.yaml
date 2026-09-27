@@ -66,6 +66,11 @@ app:
     - page:catalog-graph:
         config:
           title: Graphe du catalogue
+          # Le menu ne fournit pas d entite dans son adresse. Partir du domaine
+          # OSCAR; une adresse venant d une fiche garde sa propre entite.
+          rootEntityRefs:
+            - domain:default/oscar
+          maxDepth: 1
 
     # Ferme: ces pages n ont rien a montrer pour OSCAR aujourd hui. Un
     # element qui n apporte rien n a pas sa place a l ecran.

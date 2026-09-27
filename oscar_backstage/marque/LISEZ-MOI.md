@@ -53,7 +53,7 @@ Depuis le dossier `oscar_backstage/`, avec Docker et rien d'autre:
 docker compose -f marque/compose.yaml run --rm fabriquer
 ```
 
-**Ce qu'on doit voir**: une ligne `FABRIQUE` par image. Une image fabriquée ne
+**Ce qu'on doit voir**: une ligne `FABRIQUE` par fichier de marque. Une image fabriquée ne
 se retouche jamais à la main: on change `fabriquer.py`, puis on relance.
 
 ## Vérifier que les images correspondent
@@ -62,7 +62,20 @@ se retouche jamais à la main: on change `fabriquer.py`, puis on relance.
 docker compose -f marque/compose.yaml run --rm verifier
 ```
 
-**Ce qu'on doit voir**: une ligne `A JOUR` par image, et le code de sortie 0.
-Sinon, une ligne `PERIME` ou `MANQUE` nomme l'image en cause, et le code de
+**Ce qu'on doit voir**: une ligne `A JOUR` par fichier de marque, et le code de sortie 0.
+Sinon, une ligne `PERIME` ou `MANQUE` nomme le fichier en cause, et le code de
 sortie est 1. Cette commande n'écrit rien; la chaîne du dépôt la lance à
 chaque passe.
+
+## Les adresses des favicons
+
+Le générateur actualise aussi les trois références `rel="icon"` de
+`packages/app/public/index.html`. Le paramètre `v` porte les douze premiers
+caractères du SHA-256 de chaque image. Une modification d’image change ainsi
+son adresse, pour que le navigateur récupère la nouvelle icône. Les fichiers
+PNG et ICO gardent leur nom habituel et restent fabriqués depuis le symbole
+officiel.
+
+Ces paramètres ne se corrigent pas à la main : lancer `fabriquer`, puis
+`verifier`. Une référence absente, dupliquée ou portant une ancienne empreinte
+fait échouer le contrôle. Le reste du modèle HTML reste écrit à la main.

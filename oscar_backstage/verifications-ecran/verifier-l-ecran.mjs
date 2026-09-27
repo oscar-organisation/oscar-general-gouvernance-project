@@ -73,6 +73,8 @@ const PAGES = mode === 'invite'
   ? {
       accueil: { chemin: '/', pret: 'text=Commencer ici' },
       catalogue: { chemin: '/catalog', pret: 'table tbody tr' },
+      // La page peut etre chargee mais vide si aucune entite de depart n est configuree.
+      graphe: { chemin: '/catalog-graph', pret: 'svg text' },
       fiche: { chemin: '/catalog/default/component/portail', pret: 'text=Portail technique' },
       guide: { chemin: '/docs/default/component/oscar-general-gouvernance-project/', pret: '.md-content h1', attente: 120000 },
       cycle: { chemin: '/docs/default/component/oscar-general-gouvernance-project/02-le-cycle-pas-a-pas/', pret: '.md-content h1', attente: 120000 },
@@ -124,7 +126,9 @@ function releverDansLaPage({ permises, ecartsConnus }) {
   const visible = e => {
     const r = e.getBoundingClientRect();
     const s = getComputedStyle(e);
-    return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && Number(s.opacity) > 0 && !rogne(e);
+    // Un lien d acces rapide translate au-dessus de la page n est pas peint.
+    // Le defilement est compte pour garder le contenu d une capture entiere.
+    return r.width > 0 && r.height > 0 && r.bottom + window.scrollY > 0 && r.right + window.scrollX > 0 && s.visibility !== 'hidden' && s.display !== 'none' && Number(s.opacity) > 0 && !rogne(e);
   };
   const decrire = e => `${e.tagName.toLowerCase()}${e.id ? '#' + e.id : ''}${typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/).slice(0, 2).join('.') : ''}`;
 
