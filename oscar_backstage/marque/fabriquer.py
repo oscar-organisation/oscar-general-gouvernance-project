@@ -19,7 +19,9 @@ la main ne se refait pas a l identique. Celles-ci se refont a l octet pres, et
 la verification le prouve a chaque passe de la chaine.
 """
 
+import hashlib
 import io
+import re
 import os
 import sys
 
@@ -100,6 +102,18 @@ def attendus():
     for chemin, cote in ICONES.items():
         fichiers[chemin] = png(icone(cote))
     fichiers[ICONE_ICO[0]] = ico(ICONE_ICO[1])
+    # Un navigateur peut garder une ancienne icone pour une adresse identique.
+    # L empreinte change son adresse seulement quand ses octets changent.
+    index = os.path.join(APP, "public", "index.html")
+    with open(index, encoding="utf-8") as fichier:
+        page = fichier.read()
+    for nom in ("favicon.ico", "favicon-32x32.png", "favicon-16x16.png"):
+        empreinte = hashlib.sha256(fichiers["public/" + nom]).hexdigest()[:12]
+        motif = r'(<%= publicPath %>/' + re.escape(nom) + r')(?:\?v=[^"\s]*)?(?=")'
+        page, nombre = re.subn(motif, lambda m: m[1] + "?v=" + empreinte, page)
+        if nombre != 1:
+            raise ValueError("Une seule reference d icone attendue pour " + nom)
+    fichiers["public/index.html"] = page.encode("utf-8")
     return fichiers
 
 
@@ -122,7 +136,7 @@ def main(mode):
         else:
             print("A JOUR    %s" % chemin)
     if ecarts:
-        print("%d image(s) ne correspondent plus au symbole officiel. Refaire: "
+        print("%d fichier(s) de marque perimes. Refaire: "
               "docker compose -f marque/compose.yaml run --rm fabriquer" % ecarts)
         return 1
     return 0
