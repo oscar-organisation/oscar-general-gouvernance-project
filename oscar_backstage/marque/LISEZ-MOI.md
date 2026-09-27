@@ -32,13 +32,21 @@ l'en-tête de la charte elle-même.
 
 ## Ce qui est fabriqué
 
-| Fichier | Taille | Où il sert |
-|---|---|---|
-| `packages/app/src/marque/oscar-symbole-blanc-56.png` | 56 px de haut | le menu, affiché à 28 px (double densité) |
-| `packages/app/src/marque/oscar-symbole-blanc-96.png` | 96 px de haut | la page de connexion et l'accueil, affiché à 48 px |
-| `packages/app/public/favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png` | 16, 32, 48 px | l'onglet du navigateur |
-| `packages/app/public/apple-touch-icon.png` | 180 px | l'écran d'accueil d'un iPhone |
-| `packages/app/public/android-chrome-192x192.png`, `-512x512.png` | 192, 512 px | le manifeste, l'écran d'accueil Android |
+| Fichier | Taille | Où il sert | Qui l'emploie |
+|---|---|---|---|
+| `packages/app/src/marque/oscar-symbole-blanc-56.png` | 56 px de haut | le haut du menu, affiché à 28 px (double densité) | `packages/app/src/modules/nav/SidebarLogo.tsx` |
+| `packages/app/src/marque/oscar-symbole-blanc-96.png` | 96 px de haut | la page d'accueil « Commencer ici », dans son bandeau sombre, affiché à 48 px (double densité) | `packages/app/src/modules/accueil/CommencerIci.tsx` |
+| `packages/app/public/favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png` | 16, 32, 48 px | l'onglet du navigateur | les trois références `rel="icon"` de `packages/app/public/index.html` |
+| `packages/app/public/apple-touch-icon.png` | 180 px | l'écran d'accueil d'un iPhone | la référence `rel="apple-touch-icon"` de `packages/app/public/index.html` |
+| `packages/app/public/android-chrome-192x192.png`, `-512x512.png` | 192, 512 px | l'écran d'accueil Android | le manifeste, `packages/app/public/manifest.json` |
+
+Aucun autre fichier du portail n'emploie ces images. En particulier, **la page
+de connexion n'affiche pas le symbole**: c'est la page de connexion de
+Backstage (`packages/app/src/modules/connexion/index.tsx`), avec le nom
+« OSCAR » écrit en texte dans son bandeau et le titre « Se connecter au portail
+technique », sans le menu et sans aucune image. Seule l'icône de l'onglet s'y
+voit. Afficher le symbole sur cette page est une évolution de la charte, pas
+encore décidée.
 
 L'icône d'application est celle que montre la charte: le symbole blanc, à 62 %
 de la largeur, sur un carré Noir OSCAR `#1B1D1E` aux coins arrondis (26 px pour
