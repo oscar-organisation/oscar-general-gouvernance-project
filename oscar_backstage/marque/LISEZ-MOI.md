@@ -79,11 +79,11 @@ chaque passe.
 
 Le générateur actualise aussi les trois références `rel="icon"` de
 `packages/app/public/index.html`. Le paramètre `v` porte les douze premiers
-caractères du SHA-256 de chaque image. Une modification d’image change ainsi
+caractères du SHA-256 de chaque image. Une modification d'image change ainsi
 son adresse, pour que le navigateur récupère la nouvelle icône. Les fichiers
 PNG et ICO gardent leur nom habituel et restent fabriqués depuis le symbole
 officiel.
 
-Ces paramètres ne se corrigent pas à la main : lancer `fabriquer`, puis
+Ces paramètres ne se corrigent pas à la main: lancer `fabriquer`, puis
 `verifier`. Une référence absente, dupliquée ou portant une ancienne empreinte
 fait échouer le contrôle. Le reste du modèle HTML reste écrit à la main.

@@ -42,8 +42,9 @@ PART_DU_SYMBOLE = 0.62
 
 # Le symbole seul, sur fond sombre, a la hauteur ou le portail l affiche, en
 # double densite pour les ecrans fins. La charte demande 24 px au moins.
-#   menu du portail            28 px de haut
-#   page de connexion, accueil 48 px de haut
+#   haut du menu                      28 px de haut
+#   page d accueil « Commencer ici »  48 px de haut, dans son bandeau sombre
+# La page de connexion n affiche aucune image: voir LISEZ-MOI.md.
 SYMBOLES = {
     "src/marque/oscar-symbole-blanc-56.png": 56,
     "src/marque/oscar-symbole-blanc-96.png": 96,
