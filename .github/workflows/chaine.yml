@@ -11,6 +11,12 @@
 #
 # Chaque tâche attend la précédente: une tâche rouge arrête la chaîne, et rien
 # n'est déployé. Une PR ne déploie jamais.
+#
+# Les ordinateurs de GitHub qui font les vérifications sont fixés sur
+# ubuntu-24.04, et non sur ubuntu-latest, que GitHub fait passer à Ubuntu 26
+# le 19/10/2026: les vérifications automatiques doivent donner le même
+# résultat d'une semaine à l'autre, et un changement de version se décide et
+# s'éprouve (décision A38).
 name: Chaîne
 
 on:
@@ -48,7 +54,7 @@ jobs:
 
   controles:
     name: Contrôles
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -129,7 +135,7 @@ jobs:
   verifs:
     name: Vérifications
     needs: controles
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
