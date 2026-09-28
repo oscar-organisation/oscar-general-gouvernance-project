@@ -3,7 +3,8 @@
 #
 #   controles    lignes d'attribution, secrets, typographie, YAML, compositions
 #   verifs       le portail (image, tests, contenu de l'image), le guide
-#                (construction stricte, schémas), les images de marque
+#                (construction stricte, schémas), les images de marque et
+#                les tests de leur générateur, les tests du contrôle à l'écran
 #   deploiement  seulement sur test et main, après tout le reste: le workflow
 #                commun du dépôt oscar-infrastructure
 #   recette      pas encore branchée (A17), voir la fin du fichier
@@ -122,6 +123,7 @@ jobs:
           fi
           docker compose -f docs/outils/compose.yaml config --quiet
           docker compose -f "$PORTAIL/marque/compose.yaml" config --quiet
+          docker compose -f "$PORTAIL/verifications-ecran/compose.yaml" config --quiet
           echo "Compositions valides."
 
   verifs:
@@ -179,6 +181,16 @@ jobs:
 
       - name: Les images de marque correspondent au symbole officiel
         run: docker compose -f "$PORTAIL/marque/compose.yaml" run --rm verifier
+
+      - name: Les tests du générateur des images de marque
+        # Les adresses des icônes, dans la page et dans le manifeste, portent
+        # l'empreinte de leur contenu; chaque refus du générateur est éprouvé.
+        run: docker compose -f "$PORTAIL/marque/compose.yaml" run --rm tester
+
+      - name: Les tests du contrôle à l'écran
+        # Ce que le contrôle à l'écran mesure, et son verdict, éprouvés dans un
+        # vrai navigateur sur des pages d'essai: chaque critère annoncé compte.
+        run: docker compose -f "$PORTAIL/verifications-ecran/compose.yaml" run --rm tester
 
   deploiement:
     name: Déploiement
