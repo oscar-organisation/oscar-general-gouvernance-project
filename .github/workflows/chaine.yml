@@ -112,6 +112,33 @@ jobs:
       - name: Les fichiers de la chaîne sont valides
         run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color
 
+      - name: Les ordinateurs de GitHub qui font les vérifications sont fixés sur une version
+        # Décision A38: les vérifications automatiques donnent le même résultat
+        # d'une semaine à l'autre. Un nom qui bouge, comme ubuntu-latest (Ubuntu 26
+        # à partir du 19/10/2026), changerait le système sans que rien ne change
+        # chez nous. Toutes les tâches tournent donc sur une version nommée, la
+        # même partout: on en change dans une PR à part, pour toutes les tâches à
+        # la fois, une fois les vérifications automatiques réussies.
+        # La version n'est écrite qu'aux lignes runs-on, pas ici.
+        run: |
+          set -u
+          # Les machines nommées aux lignes runs-on, une par ligne, puis sur une seule ligne.
+          machines=$(sed -nE 's/^[[:space:]]+runs-on:[[:space:]]*//p' .github/workflows/*.yml | sort -u)
+          liste=$(printf '%s\n' "$machines" | paste -sd ' ' -)
+          if [ -z "$machines" ] ; then
+            echo "::error::Aucune ligne runs-on lue dans .github/workflows: le contrôle ne voit rien."
+            exit 1
+          fi
+          if printf '%s\n' "$machines" | grep -q -- '-latest' ; then
+            echo "::error::Une tâche tourne sur une machine qui change seule ($liste). La nommer, par exemple ubuntu-24.04 (décision A38)."
+            exit 1
+          fi
+          if [ "$(printf '%s\n' "$machines" | wc -l)" -ne 1 ] ; then
+            echo "::error::Les tâches ne tournent pas toutes sur la même machine ($liste). En changer pour toutes à la fois (décision A38)."
+            exit 1
+          fi
+          echo "Toutes les tâches tournent sur $liste."
+
       - name: Les compositions sont valides
         run: |
           set -eu
