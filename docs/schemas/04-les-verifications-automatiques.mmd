@@ -1,20 +1,20 @@
-%% La chaîne: ses tâches, et ce qui se passe selon l'événement.
-%% Source de 04-la-chaine.svg. L'image ne se retouche jamais à la main.
+%% Les vérifications automatiques: leurs tâches, et ce qui se passe selon l'événement.
+%% Source de 04-les-verifications-automatiques.svg. L'image ne se retouche jamais à la main.
 %% Après une modification, depuis la racine du dépôt:
 %%   docker compose -f docs/outils/compose.yaml run --rm schemas
 flowchart TB
   evenement(["Un événement sur GitHub"])
   controles["controles<br>lignes d'attribution, secrets,<br>typographie, YAML, composition"]
   verifs["verifs<br>les tests propres<br>à l'application"]
-  quoi{"Qu'est-ce qui a<br>lancé la chaîne ?"}
+  quoi{"Qu'est-ce qui a lancé<br>les vérifications ?"}
   pr["Une PR ne déploie rien<br>le résultat s'affiche sur la PR"]:::discret
   deptest["deploiement<br>#lt;application#gt;-test<br>si le contenu a changé"]
   rectest["recette<br>tous les scénarios<br>contre test-#lt;nom#gt;"]
   passage{"Ce contenu est-il<br>passé par test ?"}:::accent
-  avertissement["Avertissement<br>dans le résumé de la passe"]:::attention
+  avertissement["Avertissement<br>dans le résumé de l'exécution"]:::attention
   depprod["deploiement<br>#lt;application#gt;-production<br>si le contenu a changé"]
   recprod["recette<br>scénarios non destructifs<br>contre #lt;nom#gt;"]
-  rouge["Une tâche rouge<br>arrête la chaîne"]:::attention
+  echec["Une tâche en échec<br>arrête les suivantes"]:::attention
 
   evenement --> controles --> verifs --> quoi
   quoi -- "une PR vers test<br>ou vers main" --> pr
@@ -23,5 +23,5 @@ flowchart TB
   passage -- "oui" --> depprod
   passage -- "non" --> avertissement --> depprod
   depprod --> recprod
-  controles -. "rouge" .-> rouge
-  verifs -. "rouge" .-> rouge
+  controles -. "en échec" .-> echec
+  verifs -. "en échec" .-> echec

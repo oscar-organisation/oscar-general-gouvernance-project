@@ -7,7 +7,7 @@ flowchart TB
 
   subgraph github["GitHub, organisation oscar-organisation"]
     depot["Le dépôt de l'application<br>branches travail/#lt;sujet#gt;, test, main"]
-    chaine["La chaîne, dans GitHub Actions<br>contrôles, vérifications,<br>déploiement, recette"]
+    verifications["Les vérifications automatiques,<br>dans GitHub Actions<br>contrôles, vérifications,<br>déploiement, recette"]
     deploiement["Le déploiement, versionné<br>oscar-infrastructure, oscar_infra_deploiement/<br>descriptions, assistant, procédures"]
   end
 
@@ -20,13 +20,13 @@ flowchart TB
   end
 
   code -- "git push" --> depot
-  depot -- "chaque PR, chaque fusion" --> chaine
-  chaine -- "demande le déploiement" --> coolify
+  depot -- "chaque PR, chaque fusion" --> verifications
+  verifications -- "demande le déploiement" --> coolify
   depot -. "Coolify lit le code sur GitHub" .-> coolify
   deploiement -. "copie de main" .-> exploitation
   exploitation -. "l'assistant règle Coolify" .-> coolify
   secrets -. "valeurs de production" .-> coolify
   coolify -- "construit et lance" --> appt
   coolify -- "construit et lance" --> appp
-  chaine ~~~ exploitation
-  chaine ~~~ secrets
+  verifications ~~~ exploitation
+  verifications ~~~ secrets

@@ -10,8 +10,8 @@ metadata:
   title: Portail technique
   description: >-
     Ce portail. Il rassemble au même endroit les applications et les dépôts
-    d'OSCAR: pour chacun, l'état de sa chaîne et ses liens vers le test, la
-    production, Coolify, le code et les rapports. Il affiche aussi le guide du
+    d'OSCAR: pour chacun, l'état de ses vérifications automatiques et ses
+    liens vers le test, la production, Coolify, le code et les rapports. Il affiche aussi le guide du
     cycle de développement. On s'y connecte par GitHub.
   annotations:
     github.com/project-slug: oscar-organisation/oscar-general-gouvernance-project
@@ -32,7 +32,7 @@ metadata:
       title: Le code
       icon: github
     - url: https://github.com/oscar-organisation/oscar-general-gouvernance-project/actions
-      title: La chaîne
+      title: Les vérifications automatiques
       icon: github
     - url: https://labo.oscar-bot.com
       title: Les rapports du laboratoire, production

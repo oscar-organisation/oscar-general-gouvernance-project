@@ -18,9 +18,10 @@ une PR: d'une branche `travail/<sujet>` vers `test`, puis de `test` vers
 plan gratuit de GitHub, qui est celui de l'organisation, on ne peut pas
 interdire techniquement un envoi sur `main`, et Joel a choisi de ne pas prendre
 de compte payant pour l'instant: passer par `test` avant `main` est **une règle
-de conduite de l'équipe** (décision 63). La chaîne signale tout déploiement en
-production dont le contenu n'est pas passé par `test`, mais elle ne l'empêche
-pas. C'est donc à chacun de ne pas le faire.
+de conduite de l'équipe** (décision 63). Les vérifications automatiques de
+GitHub signalent tout déploiement en production dont le contenu n'est pas
+passé par `test`, mais elles ne l'empêchent pas. C'est donc à chacun de ne pas
+le faire.
 
 Jamais non plus de `git push --force` sur `test` ou `main`, ni de suppression de
 ces deux branches.
@@ -28,13 +29,13 @@ ces deux branches.
 ## 2. Jamais de déploiement à la main
 
 On ne déploie jamais soi-même: ni par le bouton « Deploy » de Coolify, ni par
-un `docker compose up` sur le serveur. C'est la chaîne qui déploie, et elle
-seule.
+un `docker compose up` sur le serveur. Ce sont les vérifications automatiques
+de GitHub qui déploient, et elles seules.
 
-**Pourquoi.** Le déploiement est la dernière tâche de la chaîne, et il dépend
-de toutes les autres. Quand Coolify déployait tout seul à chaque envoi, trois
-envois aux tests rouges sont partis en production (incident
-`INC-2026-09-25-02`).
+**Pourquoi.** Le déploiement est la dernière tâche des vérifications
+automatiques, et il dépend de toutes les autres. Quand Coolify déployait tout
+seul à chaque envoi, trois envois dont les tests étaient en échec sont partis
+en production (incident `INC-2026-09-25-02`).
 
 ## 3. Rien à installer en dehors de git et Docker
 
@@ -71,9 +72,10 @@ partagé, ni dans un journal, ni dans un message.
 
 Avant chaque envoi: lancer l'application en local, ses tests, et le
 laboratoire contre elle ([le cycle](02-le-cycle-pas-a-pas.md), étapes 3 et 4).
-On n'envoie rien de rouge.
+On n'envoie rien tant qu'un test échoue.
 
-**Pourquoi.** La chaîne revérifie tout, mais une vérification qui échoue sur
+**Pourquoi.** Les vérifications automatiques de GitHub refont tout, mais une
+vérification qui échoue sur
 GitHub coûte un aller-retour de plusieurs minutes, et bloque les autres qui
 attendent `test`.
 
@@ -99,38 +101,38 @@ ligne d'attribution à un outil n'est ajoutée au message, ni dans la descriptio
 d'une PR (leçon 1.3 de `LECONS-A-RESPECTER.md`). On relit chaque message avant
 de valider.
 
-## 7. Quand la chaîne est rouge
+## 7. Quand une vérification automatique échoue
 
-![Que faire quand la chaîne est rouge, selon l'endroit où elle l'est](schemas/06-quand-la-chaine-est-rouge.svg)
+![Que faire quand une vérification automatique échoue, selon l'endroit où elle échoue](schemas/06-quand-une-verification-echoue.svg)
 
-**Toujours**: ouvrir la tâche rouge dans l'onglet Actions, lire le premier
+**Toujours**: ouvrir la tâche en échec dans l'onglet Actions, lire le premier
 message d'erreur, refaire la même vérification en local, en conteneur, et
 corriger. La correction suit le cycle, comme tout changement.
 
 **Selon l'endroit**:
 
-- **Sur une PR**: c'est le rôle de la chaîne, rien n'est cassé. On corrige sur
-  la même branche et on pousse; la chaîne repart seule.
+- **Sur une PR**: c'est le rôle des vérifications automatiques, rien n'est
+  cassé. On corrige sur la même branche et on pousse; elles repartent seules.
 - **Après une fusion dans `test`**: l'environnement de test est touché, et
-  d'autres en dépendent. La réparer passe avant tout autre travail. Si la
+  d'autres en dépendent. La réparation vient avant tout autre travail. Si la
   correction n'est pas immédiate, on annule le changement
   ([le cycle](02-le-cycle-pas-a-pas.md), partie « Annuler une modification
   déjà fusionnée »). On rédige l'incident.
 - **Après une fusion dans `main`**: la production est concernée. On prévient
   Joel tout de suite, puis on suit le même chemin. On rédige l'incident.
-- **Un avertissement du contrôle de passage par `test`**, même sur une passe
-  verte: un contenu est parti en production sans être passé par le test. C'est
-  une règle enfreinte: on prévient Joel et on rédige l'incident.
+- **Un avertissement du contrôle de passage par `test`**, même sur une
+  exécution réussie: un contenu est parti en production sans être passé par le
+  test. C'est une règle enfreinte: on prévient Joel et on rédige l'incident.
 
-**Jamais**: désactiver ou affaiblir un contrôle pour le faire passer au vert,
-relancer la chaîne en boucle en espérant un autre résultat, déployer à la main,
-envoyer directement sur `main`.
+**Jamais**: désactiver ou affaiblir un contrôle pour qu'il réussisse, relancer
+les vérifications automatiques en boucle en espérant un autre résultat,
+déployer à la main, envoyer directement sur `main`.
 
 Un test qui échoue n'a pas forcément tort: il est peut-être périmé. On le
 confronte au code avant de le corriger, et si c'est lui qu'on corrige, on dit
 pourquoi dans son en-tête (leçon 8.3).
 
-Source du schéma: [`schemas/06-quand-la-chaine-est-rouge.mmd`](schemas/06-quand-la-chaine-est-rouge.mmd).
+Source du schéma: [`schemas/06-quand-une-verification-echoue.mmd`](schemas/06-quand-une-verification-echoue.mmd).
 
 ## 8. Un incident se rédige le jour même
 
@@ -169,7 +171,7 @@ parfois définitive (décision 16). Attendre une réponse ne coûte rien.
 ## 10. Vérifier avant d'affirmer
 
 On ne dit qu'une chose marche qu'après l'avoir constaté: la page s'ouvre, le
-test est vert, le nom répond. Une commande qui ne dit rien n'a rien prouvé: on
+test réussit, le nom répond. Une commande qui ne dit rien n'a rien prouvé: on
 relit l'état après coup. Ce qu'on n'a pas vérifié, on l'écrit « non vérifié ».
 
 **Pourquoi.** Plusieurs incidents viennent d'une réussite annoncée qui n'avait

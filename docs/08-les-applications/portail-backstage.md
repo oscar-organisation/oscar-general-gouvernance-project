@@ -9,8 +9,8 @@ livraison à l'autre: les noms, les adresses, les commandes.
 
 Le portail technique d'OSCAR, construit avec Backstage, version 1.55. Il
 rassemble au même endroit les applications et les dépôts: pour chacun, sa
-description, l'état de sa chaîne, et ses liens vers le test, la production,
-Coolify, le code et les rapports du laboratoire. Il affiche aussi la
+description, l'état de ses vérifications automatiques, et ses liens vers le
+test, la production, Coolify, le code et les rapports du laboratoire. Il affiche aussi la
 documentation des dépôts, dont ce guide, et sa page d'accueil, « Commencer
 ici », mène un nouveau venu où il doit aller.
 
@@ -154,8 +154,8 @@ docker build --target verifications --output type=cacheonly .
 `--output type=cacheonly` garde le verdict sans enregistrer d'image: seul
 compte que la construction aille au bout. Sans lui, Docker enregistre une
 image de tests de plusieurs gigaoctets, ce qui a pris 19 minutes de plus le
-25 septembre 2026 (mesuré sur le serveur du projet). Une seconde passe sans
-changement prend une dizaine de secondes: tout est repris du cache.
+25 septembre 2026 (mesuré sur le serveur du projet). Une seconde construction
+sans changement prend une dizaine de secondes: tout est repris du cache.
 
 **Ce qu'on doit voir**: la construction va au bout, sans erreur. Elle compile le
 code, construit le portail, puis lance tous ses tests: la page de connexion
@@ -225,15 +225,16 @@ docker compose -f verifications-ecran/compose.yaml run --rm tester
 Sous Linux seulement: le conteneur rejoint le portail par le réseau de la
 machine (`network_mode: host`). Sous macOS et Windows: non vérifié.
 
-## La chaîne
+## Les vérifications automatiques
 
-`.github/workflows/chaine.yml`, sur le patron commun ([la chaîne](../05-la-chaine.md)):
+`.github/workflows/verifications-automatiques.yml`, sur le patron commun
+([les vérifications automatiques](../05-les-verifications-automatiques.md)):
 
 | Tâche | Ce qu'elle vérifie |
 |---|---|
-| `controles` | aucun secret, `.env` copie de `.env.exemple`, typographie, fichiers de chaîne, compositions valides, aucun port publié par `compose.yaml` |
+| `controles` | aucun secret, `.env` copie de `.env.exemple`, typographie, fichiers des vérifications automatiques, compositions valides, aucun port publié par `compose.yaml` |
 | `verifs` | les tests du portail, l'image d'exécution et son contenu (les réglages du poste n'y sont pas, MkDocs y est), la construction stricte du guide, les schémas, les images de marque et les tests de leur générateur, les tests du contrôle à l'écran |
-| `deploiement` | par le workflow commun du dépôt `oscar-infrastructure`, après une fusion dans `test` ou `main`, si le contenu de `oscar_backstage/` a changé, hors documentation (`*.md`), fabrication des images de marque (`marque/`) et vérification à l'écran (`verifications-ecran/`) |
+| `deploiement` | par le déploiement automatique commun du dépôt `oscar-infrastructure`, après une fusion dans `test` ou `main`, si le contenu de `oscar_backstage/` a changé, hors documentation (`*.md`), fabrication des images de marque (`marque/`) et vérification à l'écran (`verifications-ecran/`) |
 
 ## Le déploiement
 
@@ -263,13 +264,14 @@ docker run --rm curlimages/curl:8.22.0 -fsS https://tech.oscar-bot.com/.backstag
 | Où | Adresse |
 |---|---|
 | Le dépôt | `https://github.com/oscar-organisation/oscar-general-gouvernance-project` |
-| La chaîne | `https://github.com/oscar-organisation/oscar-general-gouvernance-project/actions` |
+| Les vérifications automatiques | `https://github.com/oscar-organisation/oscar-general-gouvernance-project/actions` |
 | Coolify | `https://deploy.oscar-bot.com`, projet `portail` |
 | Le portail | `https://tech.oscar-bot.com` et `https://test-tech.oscar-bot.com` |
 
 ## Limites connues
 
-- La recette par le laboratoire n'est pas branchée dans la chaîne du portail:
+- La recette par le laboratoire n'est pas branchée dans les vérifications
+  automatiques du portail:
   le laboratoire n'a encore aucun scénario du portail.
 - Les écrans internes de Backstage ne sont traduits qu'en partie: la
   connexion, le menu, l'accueil, la recherche, le graphe et les messages

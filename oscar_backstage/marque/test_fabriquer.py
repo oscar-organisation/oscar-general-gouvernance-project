@@ -5,8 +5,8 @@ dossier oscar_backstage/:
 
     docker compose -f marque/compose.yaml run --rm tester
 
-Ils n ecrivent rien: le portail est monte en lecture seule. La chaine du depot
-les lance a chaque passe.
+Ils n ecrivent rien: le portail est monte en lecture seule. Les verifications
+automatiques de GitHub les lancent a chaque execution.
 
 Ce qu ils verifient: chaque adresse d icone porte l empreinte du contenu de
 l icone, dans la page comme dans le manifeste, et le generateur refuse une
@@ -97,7 +97,7 @@ class LesAdressesDesIcones(unittest.TestCase):
 
     def test_refaire_ne_change_rien(self):
         # Le generateur relit la page et le manifeste qu il a deja ecrits: une
-        # seconde passe doit donner les memes octets.
+        # seconde fabrication doit donner les memes octets.
         page = fabriquer.versionner_la_page(self.page, self.fichiers)
         manifeste = fabriquer.versionner_le_manifeste(
             self.fichiers["public/manifest.json"].decode("utf-8"), self.fichiers)

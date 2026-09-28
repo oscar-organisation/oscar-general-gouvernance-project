@@ -11,8 +11,8 @@
 # d environnement, les reglages du poste, le Dockerfile) entrent dans la
 # construction, pour que l etape « verifications » les verifie; ils n entrent
 # pas dans l image d execution, qui ne recopie que ce qu elle nomme. En
-# particulier app-config.poste.yaml, qui ouvre l acces invite: la chaine du
-# depot verifie qu il n est pas dans l image.
+# particulier app-config.poste.yaml, qui ouvre l acces invite: les
+# verifications automatiques de GitHub verifient qu il n est pas dans l image.
 #
 # Le fichier fourni par Backstage faisait l inverse, et excluait le code
 # source: son Dockerfile ramassait un resultat deja construit sur la machine.
@@ -42,7 +42,8 @@
 # Ce que lisent les tests des reglages (packages/backend/src/reglages.test.ts).
 # Jamais .env: en test et en production, Coolify y ecrit les secrets de
 # l application, et ils n ont rien a faire dans une construction. Que .env
-# soit la copie de .env.exemple, c est la chaine du depot qui le verifie.
+# soit la copie de .env.exemple, ce sont les verifications automatiques de
+# GitHub qui le verifient.
 !compose.yaml
 !compose.override.yaml
 !.env.exemple
