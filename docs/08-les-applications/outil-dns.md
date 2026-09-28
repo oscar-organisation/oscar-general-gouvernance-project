@@ -22,7 +22,7 @@ demande à blanc, ou répond qu'elle n'est pas encore faite.
 | Production | interface `https://dns.oscar-bot.com`, API `https://api-dns.oscar-bot.com` |
 | Test | interface `https://test-dns.oscar-bot.com`, API `https://test-api-dns.oscar-bot.com` |
 | Documentation de l'outil | `oscar_infra_dns/docs/README.md`, qui nomme la version en vigueur de chaque document |
-| Guide de développement local | `oscar_infra_dns/docs/GUIDE-developpement-local-v1.1.md` |
+| Guide de développement local | `oscar_infra_dns/docs/GUIDE-developpement-local-v1.2.md` |
 
 ## Lancer en local
 
@@ -49,7 +49,7 @@ dans `docker compose ps`, et la route de santé qui répond `"etat":"pret"`.
 
 Le détail, de la récupération du dépôt jusqu'à la production, est dans le
 guide de développement local de l'outil:
-`oscar_infra_dns/docs/GUIDE-developpement-local-v1.1.md`.
+`oscar_infra_dns/docs/GUIDE-developpement-local-v1.2.md`.
 
 ## Tester en local
 
