@@ -220,7 +220,7 @@ d'essai dont on connaît la réponse (`verifications-ecran/tests/`):
 docker compose -f verifications-ecran/compose.yaml run --rm tester
 ```
 
-**Ce qu'on doit voir**: `# fail 0` en fin de sortie, et le code de sortie 0.
+**Ce qu'on doit voir**: `ℹ fail 0` en fin de sortie, et le code de sortie 0.
 
 Sous Linux seulement: le conteneur rejoint le portail par le réseau de la
 machine (`network_mode: host`). Sous macOS et Windows: non vérifié.
