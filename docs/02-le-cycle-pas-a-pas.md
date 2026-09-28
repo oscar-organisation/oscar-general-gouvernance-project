@@ -41,13 +41,17 @@ d'état du guide**: les autres pages y renvoient au lieu de le recopier, pour
 qu'il ne se contredise jamais. Il se met à jour à chaque livraison, relevé et
 non de mémoire.
 
+**La colonne du portail est relevée plus tard, le 28 septembre 2026 à 17h32
+UTC**, après ses livraisons du jour, par l'API de Coolify et une requête à
+chaque site; les deux autres colonnes restent celles du 27 septembre.
+
 | Pièce | Outil DNS | Laboratoire | Portail |
 |---|---|---|---|
 | La branche `test` | en place | en place | en place |
 | La chaîne, `.github/workflows/chaine.yml` | sur `test` et `main` | sur `test` et `main` | sur `test` et `main` |
 | Les applications Coolify | `outil-dns-test`, `outil-dns-production`, en service | `labo-test`, `labo-production`, en service | `portail-test`, `portail-production`, en service |
-| Le déploiement par la chaîne en test | en place (commit servi selon Coolify: `d4eef46`) | en place (commit servi selon Coolify: `c66c189`) | en place (commit servi selon Coolify: `dfd75b6`) |
-| Le déploiement par la chaîne en production, avec le contrôle de passage par `test` | en place (commit servi selon Coolify: `fc9f669`) | en place (commit servi selon Coolify: `dfe4244`) | en place (commit servi selon Coolify: `0115683`) |
+| Le déploiement automatique en test | en place (commit servi selon Coolify: `d4eef46`) | en place (commit servi selon Coolify: `c66c189`) | en place (commit servi selon Coolify: `923890d`) |
+| Le déploiement automatique en production, avec le contrôle de passage par `test` | en place (commit servi selon Coolify: `fc9f669`) | en place (commit servi selon Coolify: `dfe4244`) | en place (commit servi selon Coolify: `91a8d3f`) |
 | La recette par le laboratoire, après chaque déploiement | en place, verte à sa dernière exécution en production | en place, verte en test et en production | pas branchée: le laboratoire n'a pas encore de scénario du portail |
 | Les sites | `test-dns`, `dns` répondent | `test-labo`, `labo` répondent `401` sans identifiants | `test-tech`, `tech` et leurs routes de disponibilité répondent `200`; connexion humaine GitHub encore à valider |
 
