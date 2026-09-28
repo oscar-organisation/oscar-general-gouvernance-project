@@ -15,10 +15,6 @@ ira dans ce dépôt, aux mêmes chemins:
 
 ```
 en-attente/
-  oscar-infrastructure/
-    catalog-info.yaml                           la racine du dépôt: une Location
-    oscar_infra_dns/catalog-info.yaml           l'outil DNS, et son API
-    oscar_infra_realtime_server/catalog-info.yaml  le serveur temps réel
   oscar-test/
     catalog-info.yaml                           la racine du dépôt: une Location
     oscar_labo_test_application/catalog-info.yaml  le laboratoire
@@ -43,6 +39,16 @@ Entre les deux fusions, il voit deux fiches du même nom: il garde la première
 et signale l'autre dans son journal, sans rien casser. Quand la copie d'ici
 disparaît, sa fiche disparaît avec elle (`orphanStrategy: delete`), et la
 fiche du dépôt prend sa place au passage suivant.
+
+## Déjà posées dans leur dépôt
+
+| Dépôt | Posées le | Comment |
+|---|---|---|
+| `oscar-infrastructure` | 28/09/2026 | la fiche de sa racine est devenue la Location de ses unités: l'outil DNS et son API, le serveur temps réel, et « Le déploiement » (`oscar_infra_deploiement/`), qui n'était jamais passé par ici (décision A37, P9; PR 30 et 31 de ce dépôt); la copie d'ici a été retirée ensuite |
+
+En local, le portail ne lit pas GitHub: les fiches d'un dépôt déjà posé n'y
+sont plus. Sur la page d'accueil, leurs cartes disent qu'elles ne sont pas
+encore dans le catalogue.
 
 ## Ce qui n'est pas ici
 
