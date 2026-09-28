@@ -89,9 +89,10 @@ Sans accès à GitHub, le portail lit le catalogue et la documentation **sur le
 poste**: la structure du catalogue (`oscar_backstage/catalogue/`), les fiches en
 attente, et la fiche du dépôt avec ce guide, tels qu'ils sont au lancement. Les
 fiches des autres dépôts n'y sont pas: le portail ne les lit que sur GitHub, en
-test et en production. C'est le cas de la fiche « Le déploiement », qui vit
-dans le dépôt `oscar-infrastructure`: sur l'accueil, en local, sa carte dit
-qu'elle n'est pas encore dans le catalogue.
+test et en production. C'est le cas des fiches du dépôt
+`oscar-infrastructure`, posées dans leur dépôt le 28 septembre 2026: l'outil
+DNS et son API, le serveur temps réel, et « Le déploiement ». Sur l'accueil,
+en local, leurs cartes disent qu'elles ne sont pas encore dans le catalogue.
 
 La fiche et le guide sont **copiés** à chaque lancement, par le service
 `copie-du-depot`: TechDocs réécrit `mkdocs.yml` avant chaque construction, et ne
