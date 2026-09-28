@@ -132,8 +132,8 @@ tous les schémas:
 y est réduit d'environ moitié et son texte devient petit (mesuré le 25 septembre
 2026 dans l'aperçu de TechDocs). Le module `LightBox` des extensions officielles
 de TechDocs (`@backstage/plugin-techdocs-module-addons-contrib`, déjà dans les
-dépendances du portail) permet d'ouvrir une image en grand d'un clic: à activer
-au lot 4.
+dépendances du portail) permet d'ouvrir une image en grand d'un clic; il est
+actif dans le portail.
 
 Les deux teintes de fond du schéma de séquence (`rect rgb(...)` dans sa source)
 sont les deux fonds de la charte: Mermaid ne permet pas de les prendre dans la
