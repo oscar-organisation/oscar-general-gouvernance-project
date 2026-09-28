@@ -13,8 +13,8 @@ Source du schéma: [`schemas/05-les-environnements.mmd`](schemas/05-les-environn
 | Niveau | Où | Branche | Qui le lance | Adresse |
 |---|---|---|---|---|
 | **local** | le poste du développeur | `travail/<sujet>` | le développeur, par `docker compose up` | `http://127.0.0.1:<port>` |
-| **test** | le serveur, environnement `test` de Coolify | `test` | la chaîne, à chaque fusion dans `test` | `https://test-<nom>.oscar-bot.com` |
-| **production** | le serveur, environnement `production` de Coolify | `main` | la chaîne, à chaque fusion dans `main` | `https://<nom>.oscar-bot.com` |
+| **test** | le serveur, environnement `test` de Coolify | `test` | les vérifications automatiques de GitHub, à chaque fusion dans `test` | `https://test-<nom>.oscar-bot.com` |
+| **production** | le serveur, environnement `production` de Coolify | `main` | les vérifications automatiques de GitHub, à chaque fusion dans `main` | `https://<nom>.oscar-bot.com` |
 
 Le test et la production tournent sur le même serveur, côte à côte. C'est
 possible parce qu'aucune application ne publie de port sur le serveur: le proxy
@@ -37,13 +37,15 @@ Le nom `*.oscar-bot.com` mène déjà au serveur: une nouvelle adresse ne demand
 aucun enregistrement DNS. Le certificat de chaque adresse est obtenu tout seul
 par le proxy du serveur.
 
-L'environnement GitHub est ce que la chaîne déclare à chaque déploiement, pour
-qu'on voie sur GitHub ce qui est en test et en production. Il porte le nom de
+L'environnement GitHub est ce que les vérifications automatiques déclarent à
+chaque déploiement, pour qu'on voie sur GitHub ce qui est en test et en
+production. Il porte le nom de
 l'application Coolify (`outil-dns-test`, `portail-production`...), parce qu'un
 dépôt peut porter plusieurs applications (décision A21). Chacun garde la
 variable `COOLIFY_APPLICATION`, l'identifiant de son application dans Coolify:
-aucun identifiant n'est écrit dans une chaîne. Le plan gratuit de GitHub les
-permet sur un dépôt privé (mesuré au lot 2).
+aucun identifiant n'est écrit dans les fichiers des vérifications
+automatiques. Le plan gratuit de GitHub les permet sur un dépôt privé (mesuré
+au lot 2).
 
 ## Les trois applications
 

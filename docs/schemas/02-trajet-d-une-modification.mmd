@@ -6,7 +6,7 @@ sequenceDiagram
   autonumber
   actor D as Développeur
   participant G as GitHub
-  participant C as La chaîne
+  participant C as Vérifications automatiques
   participant K as Coolify
   participant T as Test
   participant P as Production
@@ -16,14 +16,14 @@ sequenceDiagram
     D->>D: branche travail/sujet, partie de test
     D->>D: lancer, modifier, tester
     D->>G: git push, puis PR vers test
-    G->>C: la PR lance la chaîne
-    C-->>G: contrôles et vérifications, vert ou rouge
+    G->>C: la PR lance les vérifications automatiques
+    C-->>G: contrôles et vérifications, réussis ou en échec
   end
 
   rect rgb(234, 231, 223)
     Note over D,T: Vers le test
     D->>G: fusion de la PR dans test
-    G->>C: la fusion lance la chaîne
+    G->>C: la fusion lance les vérifications automatiques
     C->>C: contrôles et vérifications
     C->>K: déployer l'application de test
     K->>G: lire le code de la branche test
@@ -36,7 +36,7 @@ sequenceDiagram
   rect rgb(243, 241, 236)
     Note over D,P: Vers la production
     D->>G: PR de test vers main, puis fusion
-    G->>C: la fusion lance la chaîne
+    G->>C: la fusion lance les vérifications automatiques
     C->>C: contrôles, vérifications, passage par test
     C->>K: déployer l'application de production
     K->>P: construire et lancer

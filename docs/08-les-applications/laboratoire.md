@@ -15,9 +15,10 @@ garde un résultat, des captures d'écran et une vidéo, et produit un rapport.
 Ses scénarios sont rangés en arbre: groupe, projet, application, rôle,
 fonctionnalité, type de scénario. Ils vivent dans `projets/`.
 
-C'est lui qui fait la **recette** de chaque application dans la chaîne: tous
-ses scénarios contre le test, les scénarios non destructifs contre la
-production ([la chaîne](../05-la-chaine.md)).
+C'est lui qui fait la **recette** de chaque application, dans ses
+vérifications automatiques: tous ses scénarios contre le test, les scénarios
+non destructifs contre la production
+([les vérifications automatiques](../05-les-verifications-automatiques.md)).
 
 | | |
 |---|---|
@@ -54,9 +55,9 @@ adresse manquante, ou une application sans environnement au niveau choisi, est
 refusée avant le lancement, avec ce qu'il faut faire.
 
 **Ce qu'on doit voir**: `lister --app outil-dns` annonce le nombre de
-scénarios et de tests de l'outil DNS; la passe se termine par
+scénarios et de tests de l'outil DNS; le lancement se termine par
 `Niveau production : <n> réussis sur <n>.`, tous réussis; le visualiseur montre
-une ligne par niveau, avec le bilan de sa dernière passe.
+une ligne par niveau, avec le bilan de son dernier lancement.
 
 Sous Linux, le niveau local demande deux variables du terminal,
 `LABO_MODE_RESEAU=host` et `LABO_HOTE_LOCAL=127.0.0.1`:
@@ -79,21 +80,22 @@ la console : réussie` et `Vérification des types : réussie`.
 Pour jouer les scénarios contre une application lancée sur le poste:
 `docker compose run --rm labo lancer --niveau local --app <application>`.
 
-## La chaîne
+## Les vérifications automatiques
 
-`.github/workflows/chaine.yml`, à la racine du dépôt `oscar-test`, au patron
-commun ([la chaîne](../05-la-chaine.md)):
+`.github/workflows/verifications-automatiques.yml`, à la racine du dépôt
+`oscar-test`, au patron commun
+([les vérifications automatiques](../05-les-verifications-automatiques.md)):
 
 | Tâche | Ce qu'elle fait |
 |---|---|
-| `controles` | lignes d'attribution, secrets, un modèle à côté de chaque fichier d'environnement, typographie, fichiers de chaîne, composition |
+| `controles` | lignes d'attribution, secrets, un modèle à côté de chaque fichier d'environnement, typographie, fichiers des vérifications automatiques, composition |
 | `verifs` | l'image du laboratoire, `docker compose run --rm -T labo verifier`, les tests de l'action de recette, les images du serveur, l'épreuve du visualiseur |
-| `deploiement` | après une fusion dans `test` ou `main`: le visualiseur, par le déploiement commun (`labo-test`, `labo-production`) |
+| `deploiement` | après une fusion dans `test` ou `main`: le visualiseur, par le déploiement automatique commun (`labo-test`, `labo-production`) |
 | `recette` | si le déploiement a eu lieu: les scénarios du laboratoire contre le niveau de la branche |
 
 **La recette des autres applications.** Le laboratoire porte aussi le workflow
-réutilisable `.github/workflows/recette.yml`, que la chaîne de chaque
-application appelle après son déploiement, avec le niveau et le nom de
+réutilisable `.github/workflows/recette.yml`, que les vérifications
+automatiques de chaque application appellent après son déploiement, avec le niveau et le nom de
 l'application. Il joue ses scénarios, publie le rapport, que le visualiseur va
 chercher, et échoue si des tests échouent. En production, les scénarios qui
 écrivent sont écartés. Le détail: partie 7 du guide du laboratoire.
@@ -117,7 +119,7 @@ et un mot de passe, un par environnement.
 | Où | Adresse |
 |---|---|
 | Le dépôt | `https://github.com/oscar-organisation/oscar-test` |
-| La chaîne | `https://github.com/oscar-organisation/oscar-test/actions` |
+| Les vérifications automatiques | `https://github.com/oscar-organisation/oscar-test/actions` |
 | Coolify | `https://deploy.oscar-bot.com`, projet `labo` |
 | Les rapports | `https://test-labo.oscar-bot.com` et `https://labo.oscar-bot.com`; en local, `http://127.0.0.1:18400` |
 

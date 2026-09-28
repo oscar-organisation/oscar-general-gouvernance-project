@@ -35,7 +35,7 @@ metadata:
       title: Le code
       icon: github
     - url: https://github.com/oscar-organisation/oscar-test/actions
-      title: La chaîne
+      title: Les vérifications automatiques
       icon: github
 spec:
   type: tool

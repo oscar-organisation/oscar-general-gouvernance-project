@@ -12,9 +12,9 @@ Chaque schéma a deux fichiers, côte à côte: sa **source**, écrite en Mermai
 | La vue d'ensemble | [`01-vue-d-ensemble.mmd`](01-vue-d-ensemble.mmd) | [`01-vue-d-ensemble.svg`](01-vue-d-ensemble.svg) | [Commencer ici](../README.md) |
 | Le trajet d'une modification | [`02-trajet-d-une-modification.mmd`](02-trajet-d-une-modification.mmd) | [`02-trajet-d-une-modification.svg`](02-trajet-d-une-modification.svg) | [Le cycle pas à pas](../02-le-cycle-pas-a-pas.md) |
 | Les branches | [`03-les-branches.mmd`](03-les-branches.mmd) | [`03-les-branches.svg`](03-les-branches.svg) | [Le cycle pas à pas](../02-le-cycle-pas-a-pas.md) |
-| La chaîne | [`04-la-chaine.mmd`](04-la-chaine.mmd) | [`04-la-chaine.svg`](04-la-chaine.svg) | [La chaîne](../05-la-chaine.md) |
+| Les vérifications automatiques | [`04-les-verifications-automatiques.mmd`](04-les-verifications-automatiques.mmd) | [`04-les-verifications-automatiques.svg`](04-les-verifications-automatiques.svg) | [Les vérifications automatiques](../05-les-verifications-automatiques.md) |
 | Les environnements | [`05-les-environnements.mmd`](05-les-environnements.mmd) | [`05-les-environnements.svg`](05-les-environnements.svg) | [Les environnements](../04-les-environnements.md) |
-| Quand la chaîne est rouge | [`06-quand-la-chaine-est-rouge.mmd`](06-quand-la-chaine-est-rouge.mmd) | [`06-quand-la-chaine-est-rouge.svg`](06-quand-la-chaine-est-rouge.svg) | [Comment se comporter](../03-comment-se-comporter.md) |
+| Quand une vérification automatique échoue | [`06-quand-une-verification-echoue.mmd`](06-quand-une-verification-echoue.mmd) | [`06-quand-une-verification-echoue.svg`](06-quand-une-verification-echoue.svg) | [Comment se comporter](../03-comment-se-comporter.md) |
 
 **La source fait foi. L'image ne se retouche jamais à la main**: on corrige la
 source, puis on refait l'image par la commande ci-dessous.
@@ -55,8 +55,8 @@ et en les essayant en conteneur:
 **Ce que ça coûte**, et comment on le tient: deux fichiers par schéma, et le
 risque d'oublier de refaire l'image après avoir changé la source. La commande
 `verifier-schemas` le détecte: elle refait les images à part et échoue si l'une
-d'elles ne correspond plus à sa source. Elle est faite pour tourner dans la
-chaîne de ce dépôt, quand elle existera (lot 4).
+d'elles ne correspond plus à sa source. Les vérifications automatiques de
+GitHub la lancent à chaque exécution, dans leur tâche `verifs`.
 
 ## Refaire les images
 
@@ -124,16 +124,16 @@ tous les schémas:
 - **un tirage fixé**, `handDrawnSeed: 1`: Mermaid dessine certaines formes,
   comme les cadres arrondis, avec une part de hasard. Sans tirage fixé, deux
   fabrications de la même source diffèrent, et la vérification échoue à tort
-  (constaté le 25 septembre 2026 sur `04-la-chaine` et
-  `06-quand-la-chaine-est-rouge`).
+  (constaté le 25 septembre 2026 sur les schémas 04 et 06, incident
+  `INC-2026-09-25-15`).
 
 **Les images larges dans le portail.** La colonne de texte de TechDocs est plus
 étroite que celle de GitHub. Le schéma de séquence, le plus large (1042 pixels),
 y est réduit d'environ moitié et son texte devient petit (mesuré le 25 septembre
 2026 dans l'aperçu de TechDocs). Le module `LightBox` des extensions officielles
 de TechDocs (`@backstage/plugin-techdocs-module-addons-contrib`, déjà dans les
-dépendances du portail) permet d'ouvrir une image en grand d'un clic: à activer
-au lot 4.
+dépendances du portail) permet d'ouvrir une image en grand d'un clic; il est
+actif dans le portail.
 
 Les deux teintes de fond du schéma de séquence (`rect rgb(...)` dans sa source)
 sont les deux fonds de la charte: Mermaid ne permet pas de les prendre dans la

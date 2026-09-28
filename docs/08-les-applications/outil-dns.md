@@ -22,7 +22,7 @@ demande à blanc, ou répond qu'elle n'est pas encore faite.
 | Production | interface `https://dns.oscar-bot.com`, API `https://api-dns.oscar-bot.com` |
 | Test | interface `https://test-dns.oscar-bot.com`, API `https://test-api-dns.oscar-bot.com` |
 | Documentation de l'outil | `oscar_infra_dns/docs/README.md`, qui nomme la version en vigueur de chaque document |
-| Guide de développement local | `oscar_infra_dns/docs/GUIDE-developpement-local-v1.1.md` |
+| Guide de développement local | `oscar_infra_dns/docs/GUIDE-developpement-local-v1.2.md` |
 
 ## Lancer en local
 
@@ -49,7 +49,7 @@ dans `docker compose ps`, et la route de santé qui répond `"etat":"pret"`.
 
 Le détail, de la récupération du dépôt jusqu'à la production, est dans le
 guide de développement local de l'outil:
-`oscar_infra_dns/docs/GUIDE-developpement-local-v1.1.md`.
+`oscar_infra_dns/docs/GUIDE-developpement-local-v1.2.md`.
 
 ## Tester en local
 
@@ -60,16 +60,17 @@ développement local de l'outil, parties « Tester » et « La charte graphique 
 Le laboratoire se lance contre l'outil lancé en local: voir
 [sa page](laboratoire.md).
 
-## La chaîne
+## Les vérifications automatiques
 
-`.github/workflows/chaine.yml`, à la racine du dépôt, au patron commun
-([la chaîne](../05-la-chaine.md)):
+`.github/workflows/verifications-automatiques.yml`, à la racine du dépôt, au
+patron commun
+([les vérifications automatiques](../05-les-verifications-automatiques.md)):
 
 | Tâche | Ce qu'elle vérifie |
 |---|---|
-| `controles` | aucune ligne d'attribution dans les commits, aucun secret, la documentation cohérente, la typographie, les fichiers de chaîne, la composition dans ses deux lectures |
-| `verifs` | les tests de l'outil DNS et ceux de la chaîne commune, la charte graphique de l'interface, la construction des deux images |
-| `deploiement` | par le workflow commun, après une fusion dans `test` ou `main`, si le contenu de `oscar_infra_dns/` a changé (hors `*.md`) |
+| `controles` | aucune ligne d'attribution dans les commits, aucun secret, la documentation cohérente, la typographie, les fichiers des vérifications automatiques, la composition dans ses deux lectures |
+| `verifs` | les tests de l'outil DNS et ceux du déploiement automatique commun, la charte graphique de l'interface, la construction des deux images |
+| `deploiement` | par le déploiement automatique commun, après une fusion dans `test` ou `main`, si le contenu de `oscar_infra_dns/` a changé (hors `*.md`) |
 | `recette` | si le déploiement a eu lieu: les scénarios de l'outil DNS au laboratoire, contre ce qui vient d'être déployé, par le workflow de recette du dépôt `oscar-test` |
 
 ## Le déploiement
@@ -99,7 +100,7 @@ commande de l'[étape 13 du cycle](../02-le-cycle-pas-a-pas.md).
 
 | Où | Adresse |
 |---|---|
-| La chaîne | `https://github.com/oscar-organisation/oscar-infrastructure/actions` |
+| Les vérifications automatiques | `https://github.com/oscar-organisation/oscar-infrastructure/actions` |
 | Les déploiements déclarés | `https://github.com/oscar-organisation/oscar-infrastructure/deployments`, environnements `outil-dns-test` et `outil-dns-production` |
 | Coolify | `https://deploy.oscar-bot.com`, projet `outil-dns` |
 | Les rapports du laboratoire | `https://test-labo.oscar-bot.com` et `https://labo.oscar-bot.com`, accès protégé |

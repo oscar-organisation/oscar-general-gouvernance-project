@@ -360,8 +360,8 @@ export const CommencerIci = (props: { reglages: ReglagesDeLAccueil }) => {
               Operating System &amp; Control Architecture for Robotics
             </p>
             <p className={classes.accroche}>
-              Le portail technique: les applications d'OSCAR, leur code, leur
-              chaîne, et le guide pour les faire évoluer.
+              Le portail technique: les applications d'OSCAR, leur code, leurs
+              vérifications automatiques, et le guide pour les faire évoluer.
             </p>
             <p className={classes.essence}>Sense · Plan · Execute</p>
           </div>
@@ -424,7 +424,8 @@ export const CommencerIci = (props: { reglages: ReglagesDeLAccueil }) => {
           </p>
           <p className={classes.chapeau}>
             Chacune a un environnement de test et un de production. Leur fiche
-            donne l'état de leur chaîne et tous leurs liens.
+            donne l'état de leurs vérifications automatiques et tous leurs
+            liens.
           </p>
           <Fiches references={applications} />
         </section>
