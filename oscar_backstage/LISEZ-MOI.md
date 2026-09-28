@@ -26,7 +26,8 @@ Dockerfile                    la construction, entierement dans Docker
 .env.exemple, .env            chaque variable, son role et son niveau
 app-config*.yaml              les reglages de Backstage, un fichier par role (voir app-config.yaml)
 catalogue/                    la structure du catalogue, et les fiches en attente
-marque/                       les images de la charte, et leur fabrication
+marque/                       les images de la charte, leur fabrication et ses tests
+verifications-ecran/          le controle de la charte a l ecran, dans un navigateur, et ses tests
 techdocs/requirements.txt     les versions figees de MkDocs, pour la documentation
 packages/app/                 l interface: charte, menu, connexion, accueil
 packages/backend/             le serveur, et les tests des reglages
