@@ -28,9 +28,11 @@ En mots: le développeur travaille dans `code/`, sur son poste, avec git et
 Docker. Il pousse sur GitHub. La **chaîne** (les vérifications automatiques de
 GitHub) contrôle chaque PR et chaque fusion, puis demande à Coolify de
 déployer. Coolify lit le code sur GitHub, construit et lance l'application sur
-le serveur, en test ou en production. Sur le serveur, `exploitation/` décrit
-comment Coolify est réglé, et `secret_root/` garde les secrets. Le poste du
-développeur n'a ni l'un ni l'autre.
+le serveur, en test ou en production. La façon dont Coolify est réglé est
+versionnée elle aussi, dans le dossier du déploiement du dépôt
+`oscar-infrastructure`; sur le serveur, `exploitation/` en garde une copie de
+service, et `secret_root/` garde les secrets. Le poste du développeur n'a ni
+l'un ni l'autre ([le code et l'exploitation](06-le-code-et-l-exploitation.md)).
 
 Source du schéma: [`schemas/01-vue-d-ensemble.mmd`](schemas/01-vue-d-ensemble.mmd).
 

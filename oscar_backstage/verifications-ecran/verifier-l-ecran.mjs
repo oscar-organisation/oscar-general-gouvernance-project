@@ -11,7 +11,12 @@
  *   - mesure le contraste de chaque texte sur son fond reel, et garde le plus
  *     faible;
  *   - sur une page du guide, clique sur un schema et verifie qu il s ouvre en
- *     grand (l extension LightBox de TechDocs).
+ *     grand (l extension LightBox de TechDocs);
+ *   - sur l accueil, lit la partie « Le deploiement »: elle est la, elle
+ *     montre des cartes de fiches, et le bloc du tableau de bord de Traefik donne
+ *     son adresse, le chemin de ses identifiants et sa documentation. Une
+ *     fiche absente du catalogue est nommee (en local, le portail ne lit pas
+ *     GitHub, et donc pas la fiche du deploiement).
  *
  * Il avance aussi au clavier, sur la page de connexion, jusqu au bouton qui
  * connecte, et verifie l etat au focus: le bouton doit etre atteint, dans
@@ -31,8 +36,9 @@
  *
  * Code de sortie: 0 si aucune couleur hors charte n a ete vue, si chaque
  * texte atteint le contraste AA de sa taille, si chaque page s est affichee,
- * si LightBox s ouvre sur chaque page du cycle, et si chaque focus porte
- * l anneau de la charte; 1 sinon.
+ * si LightBox s ouvre sur chaque page du cycle, si chaque focus porte
+ * l anneau de la charte, et si la partie « Le deploiement » de l accueil est
+ * complete; 1 sinon.
  *
  * Usage, dans le conteneur de compose.yaml, a cote:
  *   node verifier-l-ecran.mjs <adresse du portail> <dossier des resultats> [invite]
@@ -46,6 +52,7 @@ import { join } from 'node:path';
 import {
   anneauDuFocus,
   ECARTS_CONNUS,
+  lireLeDeploiement,
   lireOrange,
   lirePermises,
   releverDansLaPage,
@@ -77,7 +84,10 @@ const THEMES = { clair: 'light', sombre: 'dark' };
 // construit a la premiere visite: il a droit a plus de temps.
 const PAGES = mode === 'invite'
   ? {
-      accueil: { chemin: '/', pret: 'text=Commencer ici' },
+      // L accueil est pret quand les fiches du deploiement sont lues: une
+      // carte de fiche, presente ou dite absente, parle du catalogue; le bloc
+      // du tableau de bord, affiche tout de suite, n en parle pas.
+      accueil: { chemin: '/', pret: 'section[aria-label="Le déploiement"] article:has-text("catalogue")' },
       catalogue: { chemin: '/catalog', pret: 'table tbody tr' },
       // La page peut etre chargee mais vide si aucune entite de depart n est configuree.
       graphe: { chemin: '/catalog-graph', pret: 'svg text' },
@@ -190,6 +200,12 @@ for (const [nomEcran, taille] of Object.entries(ECRANS)) {
       await page.waitForTimeout(1500);
       const extra = { affichee };
       await mesurer(page, `${nomPage}-${nomTheme}-${nomEcran}`, extra);
+      if (nomPage === 'accueil') {
+        const deploiement = await page.evaluate(lireLeDeploiement);
+        bilan[bilan.length - 1].deploiement = deploiement;
+        const absentes = deploiement.absentes?.length ? deploiement.absentes.join(', ') : 'aucune';
+        console.log(`${''.padEnd(34)} le deploiement: partie ${deploiement.partie}, tableau de bord ${deploiement.tableauDeBord ?? '-'}, identifiants ${deploiement.identifiants ?? '-'}, documentation ${deploiement.documentation ?? '-'}, fiches ${deploiement.fiches ?? 0}, absentes du catalogue: ${absentes}`);
+      }
       if (nomPage === 'cycle') {
         const lightbox = await essayerLightBox(page);
         bilan[bilan.length - 1].lightbox = lightbox;

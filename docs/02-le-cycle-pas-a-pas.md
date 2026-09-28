@@ -405,7 +405,8 @@ annule et pourquoi (règle des [messages de commit](03-comment-se-comporter.md#6
 On ouvre ensuite une PR vers `test`, comme à l'étape 6.
 
 Remettre en service une version précédente sans passer par le cycle est une
-procédure d'exploitation, écrite pour chaque application dans `exploitation/`
+procédure d'exploitation, écrite pour chaque application dans le dossier du
+déploiement du dépôt `oscar-infrastructure`
 (voir [le code et l'exploitation](06-le-code-et-l-exploitation.md)), dans le
-fichier `procedures/revenir-en-arriere.md` du dossier de l'application. Elle
-n'est pas entre les mains du développeur.
+fichier `docs/applications/<application>/revenir-en-arriere.md`. Elle n'est
+pas entre les mains du développeur.

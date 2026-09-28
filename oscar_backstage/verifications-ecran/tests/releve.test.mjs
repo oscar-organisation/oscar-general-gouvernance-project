@@ -16,6 +16,7 @@ import { after, before, describe, it } from 'node:test';
 import {
   anneauDuFocus,
   ECARTS_CONNUS,
+  lireLeDeploiement,
   lireOrange,
   lirePermises,
   releverDansLaPage,
@@ -197,6 +198,66 @@ describe('l anneau du focus', () => {
   });
 });
 
+describe('la partie Le deploiement de l accueil', () => {
+  /**
+   * La partie telle que l accueil la rend (CommencerIci.tsx), avec des
+   * adresses d essai. Chaque essai n y change qu une chose.
+   */
+  const partie = ({
+    adresse = 'https://traefik.exemple.test/dashboard/',
+    identifiants = 'secret_root/essai/identifiants.md',
+    documentation = '/docs/default/component/deploiement/traefik/',
+  } = {}) => `
+    <section aria-label="Le déploiement">
+      <h2>Le déploiement</h2>
+      <article aria-labelledby="t">
+        <h3 id="t">Le tableau de bord de Traefik</h3>
+        <p>Il montre, en lecture seule, ce que le proxy sait.</p>
+        <p>Dans le fichier <span>${identifiants}</span>.</p>
+        <ul>
+          <li><a href="${adresse}">Ouvrir le tableau de bord</a></li>
+          <li><a href="${documentation}">Comment y accéder, et ce qu'on y lit</a></li>
+        </ul>
+      </article>
+      <div>
+        <article><h3>Coolify</h3><ul><li><a href="/catalog/default/resource/coolify">La fiche dans le catalogue</a></li></ul></article>
+        <article><h3>component:default/deploiement</h3><p>Cette fiche n'est pas encore dans le catalogue.</p></article>
+      </div>
+    </section>`;
+
+  async function lire(corps) {
+    await ouvrir(corps);
+    return page.evaluate(lireLeDeploiement);
+  }
+
+  it('lit une partie conforme, et nomme la fiche qui manque sans la compter en defaut', async () => {
+    assert.deepEqual(await lire(partie()), {
+      partie: 'oui',
+      tableauDeBord: 'oui',
+      identifiants: 'oui',
+      documentation: 'oui',
+      fiches: 2,
+      absentes: ['component:default/deploiement'],
+    });
+  });
+
+  it('dit qu une page sans la partie ne la montre pas', async () => {
+    assert.equal((await lire('<main><h2>Les outils</h2></main>')).partie, 'non');
+  });
+
+  it('refuse un tableau de bord hors de https', async () => {
+    assert.equal((await lire(partie({ adresse: 'http://traefik.exemple.test/dashboard/' }))).tableauDeBord, 'non');
+  });
+
+  it('refuse des identifiants qui ne sont pas un chemin sous secret_root/', async () => {
+    assert.equal((await lire(partie({ identifiants: 'un-mot-de-passe' }))).identifiants, 'non');
+  });
+
+  it('refuse une documentation qui ne mene pas au lecteur du portail', async () => {
+    assert.equal((await lire(partie({ documentation: 'https://ailleurs.exemple.test/' }))).documentation, 'non');
+  });
+});
+
 describe('le verdict', () => {
   /** Une vue conforme; chaque essai n y change qu un critere. */
   const vue = (changement = {}) => ({
@@ -208,11 +269,35 @@ describe('le verdict', () => {
     ...changement,
   });
   const focusConforme = { atteint: 'oui', visible: 'oui', anneau: 'oui' };
+  const deploiementConforme = {
+    partie: 'oui',
+    tableauDeBord: 'oui',
+    identifiants: 'oui',
+    documentation: 'oui',
+    fiches: 4,
+    absentes: [],
+  };
 
   it('est vert quand tout est conforme', () => {
-    const { code, lignes } = verdict([vue(), vue({ lightbox: 'oui' }), vue({ focus: focusConforme })]);
+    const { code, lignes } = verdict([
+      vue(),
+      vue({ lightbox: 'oui' }),
+      vue({ focus: focusConforme }),
+      vue({ deploiement: deploiementConforme }),
+    ]);
     assert.equal(code, 0);
     assert.ok(lignes.some(l => l.startsWith('FOCUS') && l.endsWith('aucun')));
+    assert.ok(lignes.some(l => l.startsWith('DEPLOIEMENT') && l.endsWith('aucune')));
+  });
+
+  it('nomme une fiche du deploiement absente du catalogue, sans echouer pour autant', () => {
+    // En local, le portail ne lit pas GitHub: la fiche du deploiement, qui
+    // vit dans le depot oscar-infrastructure, y manque, et la page le dit.
+    const { code, lignes } = verdict([
+      vue({ deploiement: { ...deploiementConforme, absentes: ['component:default/deploiement'] } }),
+    ]);
+    assert.equal(code, 0);
+    assert.ok(lignes.includes('DEPLOIEMENT  fiches dites absentes du catalogue: component:default/deploiement'));
   });
 
   const defauts = {
@@ -224,6 +309,11 @@ describe('le verdict', () => {
     'un focus jamais atteint': { focus: { ...focusConforme, atteint: 'non' } },
     'un focus hors de l ecran': { focus: { ...focusConforme, visible: 'non' } },
     'un focus sans l anneau de la charte': { focus: { ...focusConforme, anneau: 'non' } },
+    'une partie Le deploiement absente': { deploiement: { ...deploiementConforme, partie: 'non' } },
+    'un tableau de bord de Traefik sans adresse en https': { deploiement: { ...deploiementConforme, tableauDeBord: 'non' } },
+    'des identifiants qui ne sont pas un chemin': { deploiement: { ...deploiementConforme, identifiants: 'non' } },
+    'un tableau de bord sans sa documentation': { deploiement: { ...deploiementConforme, documentation: 'non' } },
+    'une partie Le deploiement sans aucune fiche': { deploiement: { ...deploiementConforme, fiches: 0 } },
   };
   for (const [defaut, changement] of Object.entries(defauts)) {
     it(`est rouge pour ${defaut}`, () => {
