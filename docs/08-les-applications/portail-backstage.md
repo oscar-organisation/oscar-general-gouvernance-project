@@ -146,41 +146,59 @@ changement prend une dizaine de secondes: tout est repris du cache.
 
 **Ce qu'on doit voir**: la construction va au bout, sans erreur. Elle compile le
 code, construit le portail, puis lance tous ses tests: la page de connexion
-(l'invité sur le poste, GitHub ailleurs), la charte (aucune couleur hors de la
-palette, contrastes lisibles), la page d'accueil, et les réglages (aucun port
-publié par `compose.yaml`, le contrôle de santé sur la bonne route, les
-variables toutes décrites, les réglages du poste jamais dans l'image).
+(l'invité sur le poste, GitHub ailleurs, l'icône OSCAR devant son titre), la
+charte (aucune couleur hors de la palette, contrastes lisibles, l'anneau
+orange au focus, le filet de la barre de menu du téléphone), la page
+d'accueil, et les réglages (aucun port publié par `compose.yaml`, le contrôle
+de santé sur la bonne route, les variables toutes décrites, les réglages du
+poste jamais dans l'image).
 
-Les images de marque (le symbole, les icônes) se vérifient à part:
+Les images de marque (le symbole, les icônes) se vérifient à part, et leur
+générateur a ses propres tests:
 
 ```
 docker compose -f marque/compose.yaml run --rm verifier
+docker compose -f marque/compose.yaml run --rm tester
 ```
 
 ### Vérifier la charte à l'écran
 
 Un vrai navigateur, en conteneur, ouvre le portail lancé en mode service, entre
-en invité, et parcourt la connexion, l'accueil, le catalogue, une fiche et deux
-pages du guide, sur ordinateur et sur téléphone, en clair et en sombre (24
-pages). Sur chacune, il relève chaque couleur affichée et la compare à la
-charte (les couleurs de `packages/app/src/modules/charte/jetons.ts`), mesure le
-contraste de chaque texte au seuil AA de sa taille, et prend une capture. Sur
-le guide, il clique sur un schéma et vérifie qu'il s'ouvre en grand.
+en invité, et parcourt la connexion, l'accueil, le catalogue, le graphe, une
+fiche et deux pages du guide, sur ordinateur et sur téléphone, en clair et en
+sombre (28 pages). Sur chacune, il relève chaque couleur affichée et la compare
+à la charte (les couleurs de `packages/app/src/modules/charte/jetons.ts`),
+mesure le contraste de chaque texte au seuil AA de sa taille, et prend une
+capture. Sur le guide, il clique sur un schéma et vérifie qu'il s'ouvre en
+grand. Sur la page de connexion, il avance au clavier jusqu'au bouton qui
+connecte, et vérifie qu'il porte l'anneau orange de la charte (4 vues de plus).
 
 ```
 docker compose up --build -d
 ADRESSE=http://127.0.0.1:18500 MODE=invite docker compose -f verifications-ecran/compose.yaml run --rm verifier
 ```
 
-**Ce qu'on doit voir**: une ligne par page, puis `BILAN  pages: 24  couleurs
-hors charte: 0  textes sous le seuil AA: 0  pages non affichees: aucune`, et
-le code de sortie 0. Les captures et le relevé complet (`releve.json`) sont
-dans `verifications-ecran/resultats/`, que git ne suit pas.
+**Ce qu'on doit voir**: une ligne par page, puis `BILAN  pages: 32  couleurs
+hors charte: 0  textes sous le seuil AA: 0  pages non affichees: aucune`,
+`LIGHTBOX  echecs: aucun`, `FOCUS  sans l anneau de la charte, hors de
+l ecran ou non atteint: aucun`, et le code de sortie 0. Les captures et le
+relevé complet (`releve.json`) sont dans `verifications-ecran/resultats/`, que
+git ne suit pas.
 
-Une ligne `ECART CONNU` s'affiche aussi: le filet d'un pixel en haut de la barre
-de menu du téléphone, gris `#383838`, est écrit en dur par Backstage, sans nom
-de style par lequel le thème pourrait le changer. C'est le seul écart; il est
-compté à part, et nommé, plutôt que caché.
+Il n'y a plus d'écart connu. Le filet d'un pixel en haut de la barre de menu
+du téléphone, gris `#383838`, est écrit en dur par Backstage, sans nom de
+style; le thème le peint depuis le 28/09/2026 par la propriété par défaut de
+cette barre (`MuiBottomNavigation`). S'il revenait, le contrôle le compterait
+comme toute couleur hors charte.
+
+Ce que le contrôle mesure, et son verdict, ont leurs tests, sur des pages
+d'essai dont on connaît la réponse (`verifications-ecran/tests/`):
+
+```
+docker compose -f verifications-ecran/compose.yaml run --rm tester
+```
+
+**Ce qu'on doit voir**: `# fail 0` en fin de sortie, et le code de sortie 0.
 
 Sous Linux seulement: le conteneur rejoint le portail par le réseau de la
 machine (`network_mode: host`). Sous macOS et Windows: non vérifié.
@@ -192,7 +210,7 @@ machine (`network_mode: host`). Sous macOS et Windows: non vérifié.
 | Tâche | Ce qu'elle vérifie |
 |---|---|
 | `controles` | aucun secret, `.env` copie de `.env.exemple`, typographie, fichiers de chaîne, compositions valides, aucun port publié par `compose.yaml` |
-| `verifs` | les tests du portail, l'image d'exécution et son contenu (les réglages du poste n'y sont pas, MkDocs y est), la construction stricte du guide, les schémas, les images de marque |
+| `verifs` | les tests du portail, l'image d'exécution et son contenu (les réglages du poste n'y sont pas, MkDocs y est), la construction stricte du guide, les schémas, les images de marque et les tests de leur générateur, les tests du contrôle à l'écran |
 | `deploiement` | par le workflow commun du dépôt `oscar-infrastructure`, après une fusion dans `test` ou `main`, si le contenu de `oscar_backstage/` a changé, hors documentation (`*.md`), fabrication des images de marque (`marque/`) et vérification à l'écran (`verifications-ecran/`) |
 
 ## Le déploiement
@@ -238,9 +256,13 @@ docker run --rm curlimages/curl:8.22.0 -fsS https://tech.oscar-bot.com/.backstag
 - Les logos complets d'OSCAR ne sont pas employés tant que la charte n'en
   fournit pas une version dont l'orange est juste (voir
   `oscar_backstage/marque/LISEZ-MOI.md`).
-- Le filet d'un pixel en haut de la barre de menu du téléphone reste gris
-  `#383838`: Backstage l'écrit en dur, sans nom de style (partie « Vérifier la
-  charte à l'écran »).
+- Le lien « Aller au contenu » que Backstage place en tête du menu, pour le
+  clavier, n'apparaît qu'après un nouveau rendu du menu survenu une fois le
+  titre de la page affiché: sa présence dépend de l'ordre des rendus (mesuré
+  le 28/09/2026: absent de sept pages, au clavier comme à la souris). Ses
+  couleurs viennent du thème (texte à l'encre, anneau orange au focus), ce que
+  vérifie le test de la charte; elles n'ont pas pu être vues à l'écran ce
+  jour-là, faute de lien affiché.
 
 Le reste se lit dans le tableau
 d'[où en est le cycle](../02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui).

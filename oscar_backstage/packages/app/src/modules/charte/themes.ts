@@ -248,10 +248,44 @@ const composants = (t: Teintes) => ({
   ...champsDeBackstage(t),
   MuiButton: {
     styleOverrides: {
-      root: { textTransform: 'none' as const, borderRadius: 8, fontWeight: 600 },
+      root: {
+        textTransform: 'none' as const,
+        borderRadius: 8,
+        fontWeight: 600,
+        // Le focus au clavier: l anneau orange de la charte, comme dans
+        // Backstage UI (--bui-ring). Material UI retire le contour du
+        // navigateur et ne laisse qu une ombre ou une onde, peu visibles.
+        // :focus-visible est la regle du navigateur: l anneau vient au
+        // clavier, pas au clic de la souris.
+        '&:focus-visible': {
+          outline: `2px solid ${palette.orange}`,
+          outlineOffset: 2,
+        },
+      },
       // Material UI trace ce contour en noir pur a 23 %, hors charte.
       outlined: { borderColor: t.secondaire },
+      // Le bouton plein de couleur par defaut, dont le lien « Aller au
+      // contenu » du menu: Material UI 4 le pose sur grey[300], le papier
+      // soutenu dans les deux themes, et calcule son texte en noir pur a
+      // 87 %, hors charte. L encre, sur ce fond. Material UI 4 range cette
+      // couleur dans la regle contained, que containedPrimary et
+      // containedSecondary surchargent ensuite. Material UI 5, lui, n a plus
+      // de couleur par defaut et applique contained a tous les boutons
+      // pleins: on n y touche pas. ownerState n existe qu en version 5.
+      contained: ({ ownerState }: { ownerState?: object }) =>
+        ownerState ? {} : { color: palette.noir },
     },
+  },
+  // Le filet en haut de la barre de menu du telephone. Backstage l ecrit en
+  // dur, gris #383838, dans un style sans nom que le theme ne peut pas
+  // surcharger (MobileSidebar, @backstage/core-components 0.18.14, encore
+  // ainsi le 28/09/2026). Cette barre est un BottomNavigation de Material UI:
+  // la propriete par defaut style, donnee par le theme, pose la couleur du
+  // filet sur l element meme, ou elle l emporte sur la classe de Backstage.
+  // Le filet des fonds sombres de la charte, comme les filets du menu
+  // (nav/Sidebar.tsx): la barre est Noir OSCAR dans les deux themes.
+  MuiBottomNavigation: {
+    defaultProps: { style: { borderTopColor: derives.filetSombre } },
   },
   MuiChip: {
     styleOverrides: {

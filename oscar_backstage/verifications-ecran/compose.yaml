@@ -3,6 +3,11 @@
 #
 #   ADRESSE=http://127.0.0.1:18500 MODE=invite docker compose -f verifications-ecran/compose.yaml run --rm verifier
 #   ADRESSE=https://test-tech.oscar-bot.com docker compose -f verifications-ecran/compose.yaml run --rm verifier
+#   docker compose -f verifications-ecran/compose.yaml run --rm tester
+#
+# verifier  parcourt le portail a l adresse donnee
+# tester    eprouve le releve et le verdict sur des pages d essai
+#           (tests/releve.test.mjs); la chaine du depot le lance a chaque passe
 #
 # Les captures et le releve vont dans verifications-ecran/resultats/, que git
 # ne suit pas. Le detail: le commentaire de verifier-l-ecran.mjs.
@@ -26,4 +31,19 @@ services:
       HOME: /tmp
     volumes:
       - .:/outil
+      - ..:/portail:ro
+
+  # Les tests du releve et du verdict, dans le meme navigateur. Ils ne
+  # joignent aucun portail: ils ouvrent des pages d essai ecrites dans le
+  # test. Le reseau ne sert qu a installer Playwright.
+  tester:
+    image: mcr.microsoft.com/playwright:v1.63.0-noble
+    working_dir: /outil
+    entrypoint: ["sh", "-c", "npm install --silent --no-save --prefix /tmp/outil playwright@1.63.0 && exec node --test tests/*.test.mjs"]
+    user: "${OSCAR_UID:-1000}:${OSCAR_GID:-1000}"
+    environment:
+      HOME: /tmp
+    volumes:
+      # Tout en lecture seule: un test ne doit rien pouvoir ecrire.
+      - .:/outil:ro
       - ..:/portail:ro

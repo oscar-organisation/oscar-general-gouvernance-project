@@ -4,10 +4,12 @@
 #
 #   docker compose -f marque/compose.yaml run --rm fabriquer
 #   docker compose -f marque/compose.yaml run --rm verifier
+#   docker compose -f marque/compose.yaml run --rm tester
 #
 # fabriquer  refait chaque image a sa place dans le portail
 # verifier   n ecrit rien, et echoue si une image ne correspond plus au symbole
 #            officiel
+# tester     n ecrit rien, et lance les tests du generateur (test_fabriquer.py)
 #
 # Le detail: marque/LISEZ-MOI.md.
 
@@ -58,6 +60,23 @@ services:
       HOME: /tmp
     volumes:
       # Tout en lecture seule: une verification ne doit rien pouvoir ecrire.
+      - ..:/portail:ro
+      - roues-pillow:/roues:ro
+
+  # Les tests du generateur: les adresses versionnees des icones, dans la page
+  # et dans le manifeste, et les refus. Meme outil, meme Pillow, sans reseau.
+  tester:
+    <<: *outil
+    entrypoint: ["sh", "-c", "pip install --quiet --no-index --find-links /roues --target /tmp/paquets pillow==11.3.0 && PYTHONPATH=/tmp/paquets exec python -m unittest -v test_fabriquer"]
+    depends_on:
+      roues:
+        condition: service_completed_successfully
+    user: "${OSCAR_UID:-1000}:${OSCAR_GID:-1000}"
+    environment:
+      HOME: /tmp
+      # Rien ne s ecrit, pas meme le cache de Python.
+      PYTHONDONTWRITEBYTECODE: "1"
+    volumes:
       - ..:/portail:ro
       - roues-pillow:/roues:ro
 

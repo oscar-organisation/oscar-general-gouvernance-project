@@ -17,10 +17,16 @@ Deux usages, dans le conteneur decrit par compose.yaml, a cote:
 Pourquoi un script plutot que des images faites a la main: une image faite a
 la main ne se refait pas a l identique. Celles-ci se refont a l octet pres, et
 la verification le prouve a chaque passe de la chaine.
+
+Le script tient aussi les adresses qui citent ces images: dans la page du
+portail (public/index.html) et dans son manifeste (public/manifest.json),
+chaque adresse porte l empreinte du contenu du fichier. Ses tests sont dans
+test_fabriquer.py, a cote.
 """
 
 import hashlib
 import io
+import json
 import re
 import os
 import sys
@@ -44,7 +50,6 @@ PART_DU_SYMBOLE = 0.62
 # double densite pour les ecrans fins. La charte demande 24 px au moins.
 #   haut du menu                      28 px de haut
 #   page d accueil « Commencer ici »  48 px de haut, dans son bandeau sombre
-# La page de connexion n affiche aucune image: voir LISEZ-MOI.md.
 SYMBOLES = {
     "src/marque/oscar-symbole-blanc-56.png": 56,
     "src/marque/oscar-symbole-blanc-96.png": 96,
@@ -52,14 +57,32 @@ SYMBOLES = {
 
 # L icone d application: onglet du navigateur, ecran d accueil d un telephone,
 # manifeste. Le nom du fichier est celui que les navigateurs cherchent.
+# La page de connexion la montre aussi, devant son titre: la charte la
+# designe pour les interfaces numeriques, et elle se lit sur le fond clair
+# comme sur le fond sombre (le symbole blanc seul ne va que sur fond sombre).
+# Elle y est affichee a 48 px; l image fait 96 px, pour la double densite.
 ICONES = {
     "public/favicon-16x16.png": 16,
     "public/favicon-32x32.png": 32,
     "public/apple-touch-icon.png": 180,
     "public/android-chrome-192x192.png": 192,
     "public/android-chrome-512x512.png": 512,
+    "src/marque/oscar-icone-96.png": 96,
 }
 ICONE_ICO = ("public/favicon.ico", (16, 32, 48))
+
+# Les fichiers que la page du portail cite par leur adresse, dans son en-tete.
+# Le manifeste en fait partie: il cite lui-meme des icones, et son contenu
+# change avec elles.
+REFERENCES_DE_LA_PAGE = (
+    "favicon.ico",
+    "favicon-32x32.png",
+    "favicon-16x16.png",
+    "apple-touch-icon.png",
+    "manifest.json",
+)
+# Les icones que le manifeste cite, pour l ecran d accueil d un telephone.
+ICONES_DU_MANIFESTE = ("android-chrome-192x192.png", "android-chrome-512x512.png")
 
 
 def symbole_a_la_hauteur(hauteur):
@@ -95,6 +118,59 @@ def ico(tailles):
     return tampon.getvalue()
 
 
+# POURQUOI UNE EMPREINTE DANS CHAQUE ADRESSE
+#
+# Un navigateur garde une icone, ou le manifeste, pour une adresse donnee. Le
+# portail le laisse revalider, mais l etiquette qu il renvoie pour cela ne
+# depend que de la taille du fichier (mesure le 28/09/2026: « W/"<taille>-0" »,
+# date au 1er janvier 1970): une image changee de meme taille passerait pour
+# inchangee. L empreinte du contenu, dans l adresse, change l adresse des que
+# les octets changent, et seulement alors.
+
+def empreinte(contenu):
+    """Les douze premiers caracteres du SHA-256 du contenu."""
+    return hashlib.sha256(contenu).hexdigest()[:12]
+
+
+def versionner_le_manifeste(texte, fichiers):
+    """Le manifeste, chaque icone citee avec l empreinte de son contenu.
+
+    Il ne doit citer que les icones fabriquees ici, chacune une fois: une icone
+    faite a la main, absente ou citee deux fois arrete la fabrication. Le
+    reste du manifeste est garde tel quel."""
+    manifeste = json.loads(texte)
+    citees = []
+    for icone_citee in manifeste.get("icons", []):
+        nom = icone_citee["src"].split("?", 1)[0]
+        if nom not in ICONES_DU_MANIFESTE:
+            raise ValueError("Icone du manifeste que ce script ne fabrique pas: " + nom)
+        citees.append(nom)
+        icone_citee["src"] = nom + "?v=" + empreinte(fichiers["public/" + nom])
+    for nom in ICONES_DU_MANIFESTE:
+        if citees.count(nom) != 1:
+            raise ValueError("Une seule icone attendue dans le manifeste pour " + nom)
+    return (json.dumps(manifeste, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+
+
+def versionner_la_page(page, fichiers):
+    """La page du portail, chaque reference d icone et du manifeste avec
+    l empreinte de son contenu. Une reference absente ou en double arrete la
+    fabrication. Le reste de la page reste ecrit a la main."""
+    for nom in REFERENCES_DE_LA_PAGE:
+        adresse = nom + "?v=" + empreinte(fichiers["public/" + nom])
+        motif = r'(<%= publicPath %>/)' + re.escape(nom) + r'(?:\?v=[^"\s]*)?(?=")'
+        page, nombre = re.subn(motif, lambda m: m[1] + adresse, page)
+        if nombre != 1:
+            raise ValueError("Une seule reference attendue dans index.html pour " + nom)
+    return page.encode("utf-8")
+
+
+def lire(chemin):
+    """Un fichier texte du portail, relu tel qu il est."""
+    with open(os.path.join(APP, chemin), encoding="utf-8") as fichier:
+        return fichier.read()
+
+
 def attendus():
     """Chaque fichier a fabriquer, et son contenu."""
     fichiers = {}
@@ -103,18 +179,12 @@ def attendus():
     for chemin, cote in ICONES.items():
         fichiers[chemin] = png(icone(cote))
     fichiers[ICONE_ICO[0]] = ico(ICONE_ICO[1])
-    # Un navigateur peut garder une ancienne icone pour une adresse identique.
-    # L empreinte change son adresse seulement quand ses octets changent.
-    index = os.path.join(APP, "public", "index.html")
-    with open(index, encoding="utf-8") as fichier:
-        page = fichier.read()
-    for nom in ("favicon.ico", "favicon-32x32.png", "favicon-16x16.png"):
-        empreinte = hashlib.sha256(fichiers["public/" + nom]).hexdigest()[:12]
-        motif = r'(<%= publicPath %>/' + re.escape(nom) + r')(?:\?v=[^"\s]*)?(?=")'
-        page, nombre = re.subn(motif, lambda m: m[1] + "?v=" + empreinte, page)
-        if nombre != 1:
-            raise ValueError("Une seule reference d icone attendue pour " + nom)
-    fichiers["public/index.html"] = page.encode("utf-8")
+    # Le manifeste avant la page: la page cite le manifeste, dont le contenu
+    # depend des icones qu il cite.
+    fichiers["public/manifest.json"] = versionner_le_manifeste(
+        lire("public/manifest.json"), fichiers)
+    fichiers["public/index.html"] = versionner_la_page(
+        lire("public/index.html"), fichiers)
     return fichiers
 
 
