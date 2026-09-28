@@ -203,11 +203,50 @@ export function anneauDuFocus({ orange }) {
 }
 
 /**
+ * La partie « Le deploiement » de l accueil, telle qu elle est affichee
+ * (accueil/CommencerIci.tsx). Elle doit etre la; son bloc du tableau de bord
+ * de Traefik doit donner une adresse en https, le chemin des identifiants
+ * sous secret_root/ (jamais une valeur), et un lien vers sa documentation
+ * dans le portail; et la partie doit montrer des cartes de fiches.
+ *
+ * Une fiche absente du catalogue garde sa carte, qui le dit: elle est nommee,
+ * pas comptee en defaut. C est le cas normal en local, ou le portail ne lit
+ * pas GitHub, et donc pas la fiche du deploiement.
+ *
+ * Tourne dans la page: n emploie rien de ce module.
+ */
+export function lireLeDeploiement() {
+  const partie = document.querySelector('section[aria-label="Le déploiement"]');
+  if (!partie) return { partie: 'non' };
+  const titre = a => (a.querySelector('h3')?.textContent || '').trim();
+  const articles = [...partie.querySelectorAll('article')];
+  const bloc = articles.find(a => titre(a) === 'Le tableau de bord de Traefik');
+  const lien = debut => [...(bloc?.querySelectorAll('a') ?? [])]
+    .find(a => a.textContent.trim().startsWith(debut))?.getAttribute('href') ?? '';
+  const chemin = [...(bloc?.querySelectorAll('span') ?? [])]
+    .map(s => s.textContent.trim())
+    .find(t => /^secret_root\/\S+$/.test(t));
+  const cartes = articles.filter(a => a !== bloc);
+  return {
+    partie: 'oui',
+    tableauDeBord: lien('Ouvrir le tableau de bord').startsWith('https://') ? 'oui' : 'non',
+    identifiants: chemin ? 'oui' : 'non',
+    documentation: lien('Comment y accéder').startsWith('/docs/') ? 'oui' : 'non',
+    fiches: cartes.length,
+    absentes: cartes
+      .filter(c => c.textContent.includes("n'est pas encore dans le catalogue"))
+      .map(titre),
+  };
+}
+
+/**
  * Le verdict d une passe, a partir du bilan de chaque vue. Chaque critere y
  * participe (lecon 10.3): une couleur hors charte, un texte sous le seuil AA,
  * une page non affichee, une LightBox qui ne s ouvre pas, un focus non
- * atteint, hors de l ecran ou sans l anneau de la charte. Code 0 si aucun, 1
- * sinon.
+ * atteint, hors de l ecran ou sans l anneau de la charte, une partie « Le
+ * deploiement » absente, sans fiche, ou dont le bloc du tableau de bord de
+ * Traefik manque d une adresse en https, du chemin de ses identifiants ou de
+ * sa documentation. Code 0 si aucun, 1 sinon.
  */
 export function verdict(bilan) {
   const total = bilan.reduce((n, b) => n + b.horsCharteTotal, 0);
@@ -217,6 +256,11 @@ export function verdict(bilan) {
   const focusEnDefaut = bilan
     .filter(b => 'focus' in b && (b.focus.atteint !== 'oui' || b.focus.visible !== 'oui' || b.focus.anneau !== 'oui'))
     .map(b => b.nom);
+  const avecDeploiement = bilan.filter(b => 'deploiement' in b);
+  const deploiementEnDefaut = avecDeploiement
+    .filter(({ deploiement: d }) => d.partie !== 'oui' || d.tableauDeBord !== 'oui' || d.identifiants !== 'oui' || d.documentation !== 'oui' || !(d.fiches > 0))
+    .map(b => b.nom);
+  const absentes = [...new Set(avecDeploiement.flatMap(b => b.deploiement.absentes ?? []))];
   const connus = {};
   for (const b of bilan) for (const [raison, n] of Object.entries(b.ecartsConnus ?? {})) connus[raison] = (connus[raison] ?? 0) + n;
   const lignes = [
@@ -224,7 +268,11 @@ export function verdict(bilan) {
     `BILAN  pages: ${bilan.length}  couleurs hors charte: ${total}  textes sous le seuil AA: ${sousAA}  pages non affichees: ${nonAffichees.length ? nonAffichees.join(', ') : 'aucune'}`,
     `LIGHTBOX  echecs: ${lightboxNonOuvertes.length ? lightboxNonOuvertes.join(', ') : 'aucun'}`,
     `FOCUS  sans l anneau de la charte, hors de l ecran ou non atteint: ${focusEnDefaut.length ? focusEnDefaut.join(', ') : 'aucun'}`,
+    ...(avecDeploiement.length
+      ? [`DEPLOIEMENT  partie, tableau de bord de Traefik ou fiches en defaut: ${deploiementEnDefaut.length ? deploiementEnDefaut.join(', ') : 'aucune'}`]
+      : []),
+    ...(absentes.length ? [`DEPLOIEMENT  fiches dites absentes du catalogue: ${absentes.join(', ')}`] : []),
   ];
-  const conforme = total === 0 && sousAA === 0 && nonAffichees.length === 0 && lightboxNonOuvertes.length === 0 && focusEnDefaut.length === 0;
+  const conforme = total === 0 && sousAA === 0 && nonAffichees.length === 0 && lightboxNonOuvertes.length === 0 && focusEnDefaut.length === 0 && deploiementEnDefaut.length === 0;
   return { code: conforme ? 0 : 1, lignes };
 }

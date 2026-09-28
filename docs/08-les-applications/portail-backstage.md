@@ -14,6 +14,16 @@ Coolify, le code et les rapports du laboratoire. Il affiche aussi la
 documentation des dépôts, dont ce guide, et sa page d'accueil, « Commencer
 ici », mène un nouveau venu où il doit aller.
 
+La page d'accueil a quatre parties: les lectures à faire dans l'ordre, les
+applications, les outils, et **le déploiement**: la fiche « Le déploiement »
+(sa documentation vit dans le dépôt `oscar-infrastructure`, dossier
+`oscar_infra_deploiement/`), Coolify, le proxy Traefik et OVHcloud, avec le
+tableau de bord de Traefik: son adresse, ce qu'on y lit, et le chemin du
+fichier de ses identifiants sur le serveur, jamais leur valeur. Chaque partie
+se règle par une liste de fiches, dans `oscar_backstage/app-config.yaml`
+(`home-page-layout:home/commencer-ici`): une fiche de plus est une ligne de
+réglage, pas une ligne de code.
+
 On s'y connecte avec son compte GitHub, membre de l'organisation
 `oscar-organisation`. Sur son poste, on entre en invité, sans compte.
 
@@ -79,7 +89,9 @@ Sans accès à GitHub, le portail lit le catalogue et la documentation **sur le
 poste**: la structure du catalogue (`oscar_backstage/catalogue/`), les fiches en
 attente, et la fiche du dépôt avec ce guide, tels qu'ils sont au lancement. Les
 fiches des autres dépôts n'y sont pas: le portail ne les lit que sur GitHub, en
-test et en production.
+test et en production. C'est le cas de la fiche « Le déploiement », qui vit
+dans le dépôt `oscar-infrastructure`: sur l'accueil, en local, sa carte dit
+qu'elle n'est pas encore dans le catalogue.
 
 La fiche et le guide sont **copiés** à chaque lancement, par le service
 `copie-du-depot`: TechDocs réécrit `mkdocs.yml` avant chaque construction, et ne
@@ -172,6 +184,12 @@ mesure le contraste de chaque texte au seuil AA de sa taille, et prend une
 capture. Sur le guide, il clique sur un schéma et vérifie qu'il s'ouvre en
 grand. Sur la page de connexion, il avance au clavier jusqu'au bouton qui
 connecte, et vérifie qu'il porte l'anneau orange de la charte (4 vues de plus).
+Sur l'accueil, il lit la partie « Le déploiement »: elle doit être là, avec
+des cartes de fiches, et le bloc du tableau de bord de Traefik doit
+donner une adresse en `https`, le chemin de ses identifiants sous
+`secret_root/` et un lien vers sa documentation dans le portail. Une fiche
+absente du catalogue est nommée, sans compter comme un défaut: c'est le cas
+normal en local pour la fiche « Le déploiement ».
 
 ```
 docker compose up --build -d
@@ -181,7 +199,10 @@ ADRESSE=http://127.0.0.1:18500 MODE=invite docker compose -f verifications-ecran
 **Ce qu'on doit voir**: une ligne par page, puis `BILAN  pages: 32  couleurs
 hors charte: 0  textes sous le seuil AA: 0  pages non affichees: aucune`,
 `LIGHTBOX  echecs: aucun`, `FOCUS  sans l anneau de la charte, hors de
-l ecran ou non atteint: aucun`, et le code de sortie 0. Les captures et le
+l ecran ou non atteint: aucun`, `DEPLOIEMENT  partie, tableau de bord de
+Traefik ou fiches en defaut: aucune`, en local
+`DEPLOIEMENT  fiches dites absentes du catalogue: component:default/deploiement`,
+et le code de sortie 0. Les captures et le
 relevé complet (`releve.json`) sont dans `verifications-ecran/resultats/`, que
 git ne suit pas.
 

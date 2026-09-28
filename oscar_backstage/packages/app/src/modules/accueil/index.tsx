@@ -20,6 +20,23 @@ const commencerIci = HomePageLayoutBlueprint.makeWithOverrides({
       .default('component:default/oscar-general-gouvernance-project'),
     applications: z.array(z.string()).default([]),
     outils: z.array(z.string()).default([]),
+    // La partie « Le deploiement »: ses fiches, et le tableau de bord de
+    // Traefik. Absente des reglages, la partie ne s affiche pas.
+    deploiement: z
+      .object({
+        fiches: z.array(z.string()).default([]),
+        traefik: z
+          .object({
+            adresse: z.string(),
+            // Un chemin sous secret_root/, jamais une valeur.
+            identifiants: z.string(),
+            documentation: z
+              .object({ fiche: z.string(), page: z.string().default('') })
+              .optional(),
+          })
+          .optional(),
+      })
+      .optional(),
   },
   factory(originalFactory, { config }) {
     return originalFactory({
