@@ -3,7 +3,8 @@
  *
  * Ce module est separe du parcours du portail (verifier-l-ecran.mjs) pour
  * pouvoir etre eprouve seul, sur des pages d essai dont on connait la
- * reponse: tests/releve.test.mjs, que la chaine du depot lance a chaque passe.
+ * reponse: tests/releve.test.mjs, que les verifications automatiques de GitHub
+ * lancent a chaque execution.
  *
  * Deux fonctions tournent dans la page, envoyees au navigateur par
  * Playwright: releverDansLaPage et anneauDuFocus. Elles ne doivent donc rien
@@ -240,7 +241,7 @@ export function lireLeDeploiement() {
 }
 
 /**
- * Le verdict d une passe, a partir du bilan de chaque vue. Chaque critere y
+ * Le verdict d un parcours, a partir du bilan de chaque vue. Chaque critere y
  * participe (lecon 10.3): une couleur hors charte, un texte sous le seuil AA,
  * une page non affichee, une LightBox qui ne s ouvre pas, un focus non
  * atteint, hors de l ecran ou sans l anneau de la charte, une partie « Le

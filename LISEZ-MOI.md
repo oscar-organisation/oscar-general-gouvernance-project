@@ -53,6 +53,7 @@ docker compose -f docs/outils/compose.yaml run --rm verifier-schemas
 
 Par le cycle du guide, comme pour toute application: une branche
 `travail/<sujet>` partie de `test`, une PR vers `test`, puis une PR de `test`
-vers `main`. La chaîne du dépôt, `.github/workflows/chaine.yml`, vérifie chaque
-PR et déploie après chaque fusion. Personne ne déploie à la main. Voir
+vers `main`. Les vérifications automatiques de GitHub, écrites dans
+`.github/workflows/verifications-automatiques.yml`, contrôlent chaque PR et
+déploient après chaque fusion. Personne ne déploie à la main. Voir
 [le cycle pas à pas](docs/02-le-cycle-pas-a-pas.md).

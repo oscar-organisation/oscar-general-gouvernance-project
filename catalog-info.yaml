@@ -28,7 +28,7 @@ metadata:
       title: Le guide sur GitHub
       icon: github
     - url: https://github.com/oscar-organisation/oscar-general-gouvernance-project/actions
-      title: La chaîne
+      title: Les vérifications automatiques
       icon: github
 spec:
   type: documentation

@@ -21,7 +21,7 @@
  * Il avance aussi au clavier, sur la page de connexion, jusqu au bouton qui
  * connecte, et verifie l etat au focus: le bouton doit etre atteint, dans
  * l ecran, et porter l anneau orange de la charte; la page est relevee avec
- * lui, comme les autres. Ce bouton est la sur chaque passe, en invite comme
+ * lui, comme les autres. Ce bouton est la a chaque parcours, en invite comme
  * en test et en production.
  *
  * Le lien « Aller au contenu » du menu n est pas verifie ici: Backstage ne le

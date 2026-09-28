@@ -22,12 +22,11 @@ les conteneurs. Chaque application a deux environnements: **test** et
 
 ## La vue d'ensemble
 
-![Vue d'ensemble: le poste du développeur, GitHub et sa chaîne, Coolify et le serveur, avec code/, exploitation/ et secret_root/](schemas/01-vue-d-ensemble.svg)
+![Vue d'ensemble: le poste du développeur, GitHub et ses vérifications automatiques, Coolify et le serveur, avec code/, exploitation/ et secret_root/](schemas/01-vue-d-ensemble.svg)
 
 En mots: le développeur travaille dans `code/`, sur son poste, avec git et
-Docker. Il pousse sur GitHub. La **chaîne** (les vérifications automatiques de
-GitHub) contrôle chaque PR et chaque fusion, puis demande à Coolify de
-déployer. Coolify lit le code sur GitHub, construit et lance l'application sur
+Docker. Il pousse sur GitHub. Les **vérifications automatiques de GitHub**
+contrôlent chaque PR et chaque fusion, puis demandent à Coolify de déployer. Coolify lit le code sur GitHub, construit et lance l'application sur
 le serveur, en test ou en production. La façon dont Coolify est réglé est
 versionnée elle aussi, dans le dossier du déploiement du dépôt
 `oscar-infrastructure`; sur le serveur, `exploitation/` en garde une copie de
@@ -109,7 +108,7 @@ administrateur de l'organisation.
 | [Le cycle pas à pas](02-le-cycle-pas-a-pas.md) | de `git clone` à la production, étape par étape, avec les commandes |
 | [Comment se comporter](03-comment-se-comporter.md) | les règles de l'équipe, et pourquoi |
 | [Les environnements](04-les-environnements.md) | local, test, production: les noms, les variables, les ports |
-| [La chaîne](05-la-chaine.md) | ce que font les vérifications automatiques, à chaque événement |
+| [Les vérifications automatiques](05-les-verifications-automatiques.md) | ce que GitHub contrôle et déploie seul, à chaque événement |
 | [Le code et l'exploitation](06-le-code-et-l-exploitation.md) | ce qui vit dans un dépôt, ce qui vit sur le serveur |
 | [Surveiller](07-surveiller.md) | où regarder: GitHub, Coolify, Backstage, les rapports du laboratoire |
 | [Les applications](08-les-applications/README.md) | une page par application |

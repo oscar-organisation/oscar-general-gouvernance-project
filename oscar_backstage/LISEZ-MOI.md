@@ -6,7 +6,8 @@ réglages, les images de marque, le catalogue.
 
 **Le mode d'emploi complet est dans le guide:**
 [`docs/08-les-applications/portail-backstage.md`](../docs/08-les-applications/portail-backstage.md):
-lancer en local, tester, la chaîne, le déploiement, surveiller.
+lancer en local, tester, les vérifications automatiques de GitHub, le
+déploiement, surveiller.
 
 ## En deux commandes
 

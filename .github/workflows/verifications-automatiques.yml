@@ -1,5 +1,6 @@
-# La chaîne du dépôt oscar-general-gouvernance-project, au patron commun des
-# trois dépôts (guide: docs/05-la-chaine.md).
+# Les vérifications automatiques de GitHub pour le dépôt
+# oscar-general-gouvernance-project, au patron commun des trois dépôts
+# (guide: docs/05-les-verifications-automatiques.md).
 #
 #   controles    lignes d'attribution, secrets, typographie, YAML, compositions
 #   verifs       le portail (image, tests, contenu de l'image), le guide
@@ -9,24 +10,25 @@
 #                commun du dépôt oscar-infrastructure
 #   recette      pas encore branchée (A17), voir la fin du fichier
 #
-# Chaque tâche attend la précédente: une tâche rouge arrête la chaîne, et rien
-# n'est déployé. Une PR ne déploie jamais.
+# Chaque tâche attend la précédente: une tâche en échec arrête les suivantes,
+# et rien n'est déployé. Une PR ne déploie jamais.
 #
 # Les ordinateurs de GitHub qui font les vérifications sont fixés sur
 # ubuntu-24.04, et non sur ubuntu-latest, que GitHub fait passer à Ubuntu 26
 # le 19/10/2026: les vérifications automatiques doivent donner le même
 # résultat d'une semaine à l'autre, et un changement de version se décide et
 # s'éprouve (décision A38).
-name: Chaîne
+name: Vérifications automatiques
 
 on:
   push:
     branches: [test, main]
   pull_request:
     branches: [test, main]
-  # Une passe à la main: redéployer ce qui est déjà vérifié, ou demander à
-  # blanc ce que ferait un déploiement. Visible dans l'onglet Actions une fois
-  # ce fichier sur main. Même entrée que la chaîne de l'outil DNS.
+  # Une exécution lancée à la main: redéployer ce qui est déjà vérifié, ou
+  # demander à blanc ce que ferait un déploiement. Visible dans l'onglet
+  # Actions une fois ce fichier sur main. Mêmes entrées que les vérifications
+  # automatiques de l'outil DNS.
   workflow_dispatch:
     inputs:
       a_blanc:
@@ -39,7 +41,7 @@ on:
         options: [de-la-branche, test, production]
         default: de-la-branche
 
-# Par défaut, la passe ne fait que lire. La tâche de déploiement demande en plus
+# Par défaut, une exécution ne fait que lire. La tâche de déploiement demande en plus
 # le droit de déclarer ses déploiements, et rien d'autre.
 permissions:
   contents: read
@@ -59,12 +61,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # L'historique complet: le contrôle des messages de commit doit
-          # pouvoir dire quels commits la passe apporte.
+          # pouvoir dire quels commits l'exécution apporte.
           fetch-depth: 0
 
       - name: Aucune ligne d'attribution dans les commits
-        # La règle A18, écrite une fois dans la chaîne commune du dépôt
-        # oscar-infrastructure, avec ses tests.
+        # La règle A18, écrite une fois, avec ses tests, dans une action du
+        # dépôt oscar-infrastructure.
         uses: oscar-organisation/oscar-infrastructure/.github/actions/controler-les-commits@main
 
       - name: Chercher des motifs de secrets
@@ -109,7 +111,7 @@ jobs:
           fi
           echo "Typographie conforme."
 
-      - name: Les fichiers de la chaîne sont valides
+      - name: Les fichiers des vérifications automatiques sont valides
         run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color
 
       - name: Les ordinateurs de GitHub qui font les vérifications sont fixés sur une version
@@ -168,8 +170,8 @@ jobs:
 
       # Les constructions passent par BuildKit, avec le cache de GitHub
       # Actions: tant que yarn.lock ne change pas, l'installation des
-      # dépendances, de loin l'étape la plus longue, est reprise d'une passe à
-      # l'autre au lieu d'être refaite.
+      # dépendances, de loin l'étape la plus longue, est reprise d'une
+      # exécution à l'autre au lieu d'être refaite.
       - uses: docker/setup-buildx-action@v3
 
       - name: Les tests du portail
@@ -227,10 +229,11 @@ jobs:
 
   deploiement:
     name: Déploiement
-    # Après tout le reste (leçon 5.1): une vérification rouge ne déploie rien.
+    # Après tout le reste (leçon 5.1): une vérification en échec ne déploie
+    # rien.
     needs: [controles, verifs]
     # Un envoi sur test ou main (les seules branches de « push » ci-dessus), ou
-    # une passe à la main. Jamais une PR.
+    # une exécution lancée à la main. Jamais une PR.
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
@@ -259,8 +262,8 @@ jobs:
         verifications-ecran/*
       a_blanc: ${{ github.event_name == 'workflow_dispatch' && inputs.a_blanc }}
       environnement: ${{ github.event_name == 'workflow_dispatch' && inputs.environnement != 'de-la-branche' && inputs.environnement || '' }}
-      # Une passe à la main qui n'est pas à blanc veut redéployer: on redéploie
-      # même un contenu déjà en service.
+      # Une exécution lancée à la main, qui n'est pas à blanc, veut
+      # redéployer: on redéploie même un contenu déjà en service.
       forcer: ${{ github.event_name == 'workflow_dispatch' }}
     secrets:
       coolify_jeton: ${{ secrets.COOLIFY_JETON }}

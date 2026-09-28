@@ -6,7 +6,8 @@
  *
  * A lancer depuis le dossier oscar_backstage/, avec Docker et rien d autre:
  *   docker compose -f verifications-ecran/compose.yaml run --rm tester
- * La chaine du depot les lance a chaque passe. Ils n ecrivent rien.
+ * Les verifications automatiques de GitHub les lancent a chaque execution. Ils
+ * n ecrivent rien.
  */
 
 import assert from 'node:assert/strict';
@@ -278,7 +279,7 @@ describe('le verdict', () => {
     absentes: [],
   };
 
-  it('est vert quand tout est conforme', () => {
+  it('est une reussite quand tout est conforme', () => {
     const { code, lignes } = verdict([
       vue(),
       vue({ lightbox: 'oui' }),
@@ -316,7 +317,7 @@ describe('le verdict', () => {
     'une partie Le deploiement sans aucune fiche': { deploiement: { ...deploiementConforme, fiches: 0 } },
   };
   for (const [defaut, changement] of Object.entries(defauts)) {
-    it(`est rouge pour ${defaut}`, () => {
+    it(`est un echec pour ${defaut}`, () => {
       const { code } = verdict([vue(), vue({ nom: 'fautive', ...changement })]);
       assert.equal(code, 1);
     });

@@ -7,10 +7,11 @@ correction urgente le suit aussi.
 ![Le trajet d'une modification, du poste jusqu'à la production, en diagramme de séquence](schemas/02-trajet-d-une-modification.svg)
 
 En mots: on travaille sur une branche `travail/<sujet>`, partie de `test`. On
-ouvre une PR vers `test`; la chaîne vérifie. À la fusion, la chaîne déploie en
-test et y joue les scénarios du laboratoire. On ouvre ensuite une PR de `test`
-vers `main`; à sa fusion, la chaîne déploie en production, en signalant tout
-contenu qui ne serait pas passé par le test.
+ouvre une PR vers `test`; les vérifications automatiques de GitHub la
+contrôlent. À la fusion, elles déploient en test et y jouent les scénarios du
+laboratoire. On ouvre ensuite une PR de `test` vers `main`; à sa fusion, elles
+déploient en production, en signalant tout contenu qui ne serait pas passé par
+le test.
 
 Source du schéma: [`schemas/02-trajet-d-une-modification.mmd`](schemas/02-trajet-d-une-modification.mmd).
 
@@ -48,11 +49,11 @@ chaque site; les deux autres colonnes restent celles du 27 septembre.
 | Pièce | Outil DNS | Laboratoire | Portail |
 |---|---|---|---|
 | La branche `test` | en place | en place | en place |
-| La chaîne, `.github/workflows/chaine.yml` | sur `test` et `main` | sur `test` et `main` | sur `test` et `main` |
+| Les vérifications automatiques de GitHub, dans `.github/workflows/` | sur `test` et `main` | sur `test` et `main` | sur `test` et `main` |
 | Les applications Coolify | `outil-dns-test`, `outil-dns-production`, en service | `labo-test`, `labo-production`, en service | `portail-test`, `portail-production`, en service |
 | Le déploiement automatique en test | en place (commit servi selon Coolify: `d4eef46`) | en place (commit servi selon Coolify: `c66c189`) | en place (commit servi selon Coolify: `923890d`) |
 | Le déploiement automatique en production, avec le contrôle de passage par `test` | en place (commit servi selon Coolify: `fc9f669`) | en place (commit servi selon Coolify: `dfe4244`) | en place (commit servi selon Coolify: `91a8d3f`) |
-| La recette par le laboratoire, après chaque déploiement | en place, verte à sa dernière exécution en production | en place, verte en test et en production | pas branchée: le laboratoire n'a pas encore de scénario du portail |
+| La recette par le laboratoire, après chaque déploiement | en place, réussie à sa dernière exécution en production | en place, réussie en test et en production | pas branchée: le laboratoire n'a pas encore de scénario du portail |
 | Les sites | `test-dns`, `dns` répondent | `test-labo`, `labo` répondent `401` sans identifiants | `test-tech`, `tech` et leurs routes de disponibilité répondent `200`; connexion humaine GitHub encore à valider |
 
 Les commits ci-dessus sont ceux des derniers déploiements terminés dans
@@ -63,8 +64,9 @@ confirmé: interfaces DNS et API de santé à `200`, racines du laboratoire à
 Une page de connexion accessible ne prouve pas une connexion humaine GitHub.
 
 Le déploiement et le contrôle de passage par `test` sont écrits **une fois**,
-dans le workflow commun du dépôt `oscar-infrastructure`
-(`.github/workflows/deployer.yml`), que chaque chaîne appelle (lot 2). Les
+dans le déploiement automatique commun, rangé dans le dépôt
+`oscar-infrastructure` (`.github/workflows/deployer.yml`), que les
+vérifications automatiques de chaque dépôt appellent (lot 2). Les
 commandes git des étapes 1, 2, 5 et 6 marchent dans les trois dépôts.
 
 ## Les branches
@@ -174,7 +176,8 @@ Deux sortes de tests, dans cet ordre:
    l'application lancée à l'étape 3. Le laboratoire tourne lui aussi en
    conteneur, depuis le dépôt `oscar-test`.
 
-**Ce qu'on doit voir**: tout vert. On n'envoie rien de rouge.
+**Ce qu'on doit voir**: tous les tests réussissent. On n'envoie rien tant
+qu'un test échoue.
 
 Les commandes de test de chaque application sont sur sa page. Pour le
 laboratoire contre l'application lancée sur le poste:
@@ -229,7 +232,7 @@ pourquoi ce changement, et comment on l'a testé.
 
 **Ce qu'on doit voir**: en haut de la page, `base: test` et
 `compare: travail/<sujet>`. Après création, la PR montre la liste des
-vérifications de la chaîne, qui tournent.
+vérifications automatiques, qui tournent.
 
 **Si ça ne va pas**:
 
@@ -238,23 +241,26 @@ vérifications de la chaîne, qui tournent.
 - `There isn't anything to compare`: la branche n'a pas été poussée, ou elle
   n'a aucun commit de plus que `test`.
 
-## Étape 7. La chaîne vérifie la PR
+## Étape 7. Les vérifications automatiques contrôlent la PR
 
-La chaîne lance ses tâches `controles`, puis `verifs`. Rien n'est déployé à ce
-stade. Le détail des tâches: [la chaîne](05-la-chaine.md).
+GitHub lance les tâches `controles`, puis `verifs`. Rien n'est déployé à ce
+stade. Le détail des tâches:
+[les vérifications automatiques](05-les-verifications-automatiques.md).
 
-**Ce qu'on doit voir**: sur la PR, chaque vérification passe au vert. Le détail
+**Ce qu'on doit voir**: sur la PR, chaque vérification réussit. Le détail
 est dans l'onglet Actions du dépôt:
 `https://github.com/oscar-organisation/<dépôt>/actions`.
 
-**Si ça ne va pas**: une vérification rouge. On clique sur « Details » à côté
-d'elle, on lit le premier message d'erreur, on corrige sur la même branche et
-on pousse: la chaîne repart seule. Voir
-[comment se comporter](03-comment-se-comporter.md), règle 7, « Quand la chaîne est rouge ».
+**Si ça ne va pas**: une vérification en échec. On clique sur « Details » à
+côté d'elle, on lit le premier message d'erreur, on corrige sur la même
+branche et on pousse: les vérifications automatiques repartent seules. Voir
+[comment se comporter](03-comment-se-comporter.md), règle 7, « Quand une
+vérification automatique échoue ».
 
 ## Étape 8. Fusionner dans `test`
 
-Quand la chaîne est verte, on fusionne la PR par le bouton « Merge pull
+Quand les vérifications automatiques ont réussi, on fusionne la PR par le
+bouton « Merge pull
 request », en choisissant **« Create a merge commit »**. Puis on supprime la
 branche sur GitHub par le bouton « Delete branch ».
 
@@ -263,19 +269,21 @@ deux-là fabriquent sur la branche d'arrivée des commits qui n'existent pas sur
 la branche de départ. Les PR suivantes affichent alors des changements déjà
 fusionnés, et deviennent confuses.
 
-**Ce qu'on doit voir**: la PR passe à l'état `Merged`, et une nouvelle passe de
-la chaîne démarre sur la branche `test`, dans l'onglet Actions.
+**Ce qu'on doit voir**: la PR passe à l'état `Merged`, et une nouvelle
+exécution des vérifications automatiques démarre sur la branche `test`, dans
+l'onglet Actions.
 
 ## Étape 9. Le déploiement automatique en test
 
-Sur la branche `test`, la chaîne refait `controles` et `verifs`, puis lance
-`deploiement`. Cette tâche demande à Coolify de déployer l'application
+Sur la branche `test`, les vérifications automatiques refont `controles` et
+`verifs`, puis lancent `deploiement`. Cette tâche demande à Coolify de déployer l'application
 `<application>-test`, suit ce déploiement jusqu'au bout, et vérifie que le
 commit déployé est bien celui qui a été vérifié. Personne ne déploie à la main.
 
 **Ce qu'on doit voir**:
 
-- dans l'onglet Actions, la passe de `test` verte, tâche `deploiement` comprise;
+- dans l'onglet Actions, l'exécution de `test` réussie, tâche `deploiement`
+  comprise;
 - dans la page Deployments du dépôt,
   `https://github.com/oscar-organisation/<dépôt>/deployments`, l'environnement
   `<application>-test` au commit effectivement déployé;
@@ -294,8 +302,8 @@ Où c'est en place: le tableau d'[où en est le cycle](#ou-en-est-le-cycle-aujou
 Après le déploiement en test, la tâche `recette` joue **tous** les scénarios du
 laboratoire qui concernent l'application, contre `https://test-<nom>.oscar-bot.com`.
 
-**Ce qu'on doit voir**: la tâche `recette` verte, et le rapport de la passe dans
-le visualiseur du laboratoire, `https://test-labo.oscar-bot.com`.
+**Ce qu'on doit voir**: la tâche `recette` réussie, et le rapport de cette
+recette dans le visualiseur du laboratoire, `https://test-labo.oscar-bot.com`.
 
 **Si ça ne va pas**: le changement est en test, mais il n'est pas validé. On ne
 va pas plus loin: on corrige par une nouvelle branche `travail/<sujet>`, qui
@@ -305,29 +313,29 @@ Où la recette est branchée: le tableau d'[où en est le cycle](#ou-en-est-le-c
 
 ## Étape 11. La PR de `test` vers `main`
 
-Quand le déploiement en test et sa recette sont verts, on propose de passer ce
+Quand le déploiement en test et sa recette ont réussi, on propose de passer ce
 contenu en production:
 
 ```
 https://github.com/oscar-organisation/<dépôt>/compare/main...test?expand=1
 ```
 
-**Ce qu'on doit voir**: `base: main` et `compare: test`. La chaîne vérifie la PR,
-comme à l'étape 7. On fusionne ensuite par **« Create a merge commit »**. On ne
+**Ce qu'on doit voir**: `base: main` et `compare: test`. Les vérifications
+automatiques contrôlent la PR, comme à l'étape 7. On fusionne ensuite par **« Create a merge commit »**. On ne
 supprime jamais la branche `test`.
 
 ## Étape 12. Le déploiement automatique en production
 
-Sur `main`, la chaîne refait `controles` et `verifs`, puis contrôle le passage
-par `test`: le contenu à déployer de ce commit doit être exactement celui que
-Coolify sert en test, c'est-à-dire celui de son dernier déploiement terminé en
-test. Elle déploie ensuite
-`<application>-production`, et joue les scénarios non destructifs du
+Sur `main`, les vérifications automatiques refont `controles` et `verifs`,
+puis contrôlent le passage par `test`: le contenu à déployer de ce commit doit
+être exactement celui que Coolify sert en test, c'est-à-dire celui de son
+dernier déploiement terminé en test. Elles déploient ensuite
+`<application>-production`, et jouent les scénarios non destructifs du
 laboratoire contre `https://<nom>.oscar-bot.com`.
 
-**Ce qu'on doit voir**: la passe de `main` verte dans l'onglet Actions,
-**aucun avertissement** du contrôle de passage par `test` dans le résumé de la
-passe, l'environnement `<application>-production` au commit déployé dans la page Deployments,
+**Ce qu'on doit voir**: l'exécution de `main` réussie dans l'onglet Actions,
+**aucun avertissement** du contrôle de passage par `test` dans le résumé de
+l'exécution, l'environnement `<application>-production` au commit déployé dans la page Deployments,
 et le déploiement terminé dans Coolify, environnement `production`.
 
 **Si ça ne va pas**: le résumé signale que le contenu n'est pas passé par
@@ -336,8 +344,9 @@ avait échoué. Ce contrôle ne bloque pas: la production a quand même été
 déployée. On prévient Joel, et on rédige l'incident. Voir
 [comment se comporter](03-comment-se-comporter.md), règles 1 et 7.
 
-Le contrôle est écrit une fois, dans le workflow commun (lot 2), pour toute
-application dont la chaîne l'appelle. Où il a déjà servi: le tableau
+Le contrôle est écrit une fois, dans le déploiement automatique commun
+(lot 2), pour toute application dont les vérifications automatiques
+l'appellent. Où il a déjà servi: le tableau
 d'[où en est le cycle](#ou-en-est-le-cycle-aujourdhui).
 
 ## Étape 13. Vérifier que le site est vivant

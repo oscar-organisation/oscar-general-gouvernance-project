@@ -7,7 +7,8 @@
 #
 # verifier  parcourt le portail a l adresse donnee
 # tester    eprouve le releve et le verdict sur des pages d essai
-#           (tests/releve.test.mjs); la chaine du depot le lance a chaque passe
+#           (tests/releve.test.mjs); les verifications automatiques de GitHub
+#           le lancent a chaque execution
 #
 # Les captures et le releve vont dans verifications-ecran/resultats/, que git
 # ne suit pas. Le detail: le commentaire de verifier-l-ecran.mjs.

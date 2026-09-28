@@ -11,7 +11,8 @@
 #   dependances            toutes les dependances, outils de construction compris
 #   construction           le code compile, et le paquet du portail
 #   dependances-execution  seulement ce qui sert a faire tourner le serveur
-#   verifications          les tests; la chaine du depot la vise, Coolify jamais
+#   verifications          les tests; les verifications automatiques de GitHub
+#                          la visent, Coolify jamais
 #   developpement          le mode developpement local, avec rechargement a chaud
 #   execution              l image qui tourne en test et en production (la derniere)
 #
@@ -123,8 +124,9 @@ RUN --mount=type=cache,id=oscar-portail-yarn,target=/root/.yarn/berry/cache,shar
 
 
 # ---------------------------------------------------------------------------
-# Les tests du portail. La chaine du depot construit cette etape; Coolify ne
-# la construit jamais, puisqu il vise l image d execution.
+# Les tests du portail. Les verifications automatiques de GitHub construisent
+# cette etape; Coolify ne la construit jamais, puisqu il vise l image
+# d execution.
 # ---------------------------------------------------------------------------
 FROM construction AS verifications
 RUN yarn test:all
