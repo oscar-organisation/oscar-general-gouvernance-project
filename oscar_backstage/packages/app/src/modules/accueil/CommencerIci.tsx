@@ -6,22 +6,42 @@
  * Son style suit la page de la charte: etiquettes en Space Grotesk, filets
  * fins, beaucoup d air, cartes arrondies.
  *
- * Aucune adresse d application n est ecrite ici. Les applications et les
- * outils sont des fiches du catalogue, nommees dans la configuration de la
- * page (app-config.yaml): leur titre, leur description et leurs liens viennent
- * de ces fiches, qui vivent dans le depot de chacun. Une application de plus
- * demande une ligne de configuration, pas une ligne de code.
+ * Aucune adresse d application n est ecrite ici. Les applications, les
+ * outils et le deploiement sont des fiches du catalogue, nommees dans la
+ * configuration de la page (app-config.yaml): leur titre, leur description et
+ * leurs liens viennent de ces fiches, qui vivent dans le depot de chacun. Une
+ * application de plus demande une ligne de configuration, pas une ligne de
+ * code. Il en va de meme du tableau de bord du proxy: son adresse et le
+ * chemin de ses identifiants sont dans la configuration, pas ici.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Link } from '@backstage/core-components';
 import { useApi } from '@backstage/core-plugin-api';
-import { Entity, parseEntityRef } from '@backstage/catalog-model';
+import {
+  Entity,
+  parseEntityRef,
+  stringifyEntityRef,
+} from '@backstage/catalog-model';
 import { catalogApiRef, EntityRefLink } from '@backstage/plugin-catalog-react';
 import { makeStyles } from '@material-ui/core/styles';
 import symbole from '../../marque/oscar-symbole-blanc-96.png';
 import { Etiquette } from '../charte/composants';
 import { polices } from '../charte/themes';
+
+/**
+ * Le tableau de bord de Traefik, le proxy du serveur. Il est protege par un
+ * identifiant et un mot de passe: la page ne donne que le chemin du fichier
+ * qui les porte, sur le serveur, jamais leur valeur.
+ */
+export type ReglagesDeTraefik = {
+  /** L adresse du tableau de bord. */
+  adresse: string;
+  /** Le chemin du fichier des identifiants, sous secret_root/. */
+  identifiants: string;
+  /** La page de documentation qui explique comment y acceder. */
+  documentation?: { fiche: string; page: string };
+};
 
 /** Ce que la configuration de la page donne. */
 export type ReglagesDeLAccueil = {
@@ -31,6 +51,12 @@ export type ReglagesDeLAccueil = {
   applications: string[];
   /** Les outils de l equipe, par leur reference de fiche. */
   outils: string[];
+  /**
+   * La partie « Le deploiement »: comment les applications tournent sur le
+   * serveur, et comment refaire le tout. Sans ce reglage, elle ne s affiche
+   * pas.
+   */
+  deploiement?: { fiches: string[]; traefik?: ReglagesDeTraefik };
 };
 
 const useStyles = makeStyles(theme => ({
@@ -159,6 +185,16 @@ const useStyles = makeStyles(theme => ({
     fontSize: 14,
   },
   absente: { color: theme.palette.text.secondary, fontSize: 14, margin: 0 },
+  // Le bloc du tableau de bord: une carte comme les autres, pleine largeur,
+  // au-dessus des fiches.
+  bloc: { marginTop: 24 },
+  // Un chemin de fichier: la police technique de la charte, et le droit de
+  // passer a la ligne n importe ou, pour tenir sur un telephone.
+  chemin: {
+    fontFamily: polices.technique,
+    color: theme.palette.text.primary,
+    overflowWrap: 'anywhere',
+  },
 }));
 
 /** L adresse de la documentation d une fiche, dans le lecteur TechDocs. */
@@ -205,6 +241,11 @@ const CarteDeFiche = (props: { reference: string; fiche?: Entity }) => {
     );
   }
   const titre = fiche.metadata.title ?? fiche.metadata.name;
+  // Une fiche qui porte une documentation (l annotation que lit TechDocs) y
+  // mene directement: c est souvent la premiere chose qu on y cherche.
+  const documentee = Boolean(
+    fiche.metadata.annotations?.['backstage.io/techdocs-ref'],
+  );
   return (
     <article className={classes.carte}>
       <h3 className={classes.titreDeCarte}>{titre}</h3>
@@ -217,9 +258,64 @@ const CarteDeFiche = (props: { reference: string; fiche?: Entity }) => {
             <Link to={lien.url}>{lien.title ?? lien.url}</Link>
           </li>
         ))}
+        {documentee && (
+          <li>
+            <Link to={adresseDeLaDocumentation(stringifyEntityRef(fiche))}>
+              La documentation
+            </Link>
+          </li>
+        )}
         <li>
           <EntityRefLink entityRef={fiche}>La fiche dans le catalogue</EntityRefLink>
         </li>
+      </ul>
+    </article>
+  );
+};
+
+/**
+ * Le tableau de bord de Traefik: ce qu on y lit, ou sont ses identifiants, et
+ * comment y acceder. Le mot de passe n apparait jamais: seulement le chemin du
+ * fichier qui le porte, sur le serveur du projet.
+ */
+const BlocTraefik = (props: { reglages: ReglagesDeTraefik }) => {
+  const classes = useStyles();
+  const { adresse, identifiants, documentation } = props.reglages;
+  const idDuTitre = useId();
+  return (
+    <article
+      className={`${classes.carte} ${classes.bloc}`}
+      aria-labelledby={idDuTitre}
+    >
+      <h3 id={idDuTitre} className={classes.titreDeCarte}>
+        Le tableau de bord de Traefik
+      </h3>
+      <p className={classes.description}>
+        Il montre, en lecture seule, ce que le proxy sait: chaque adresse
+        servie, l'application vers laquelle il l'envoie, les règles appliquées
+        au passage et les erreurs de configuration. Il ne permet de rien
+        changer: il sert à comprendre pourquoi une adresse ne mène pas où on
+        l'attend.
+      </p>
+      <p className={classes.description}>
+        Le navigateur demande un identifiant et un mot de passe. Ils sont sur
+        le serveur du projet, dans le fichier{' '}
+        <span className={classes.chemin}>{identifiants}</span>. On donne ce
+        chemin, jamais le mot de passe.
+      </p>
+      <ul className={classes.liens}>
+        <li>
+          <Link to={adresse}>Ouvrir le tableau de bord</Link>
+        </li>
+        {documentation && (
+          <li>
+            <Link
+              to={adresseDeLaDocumentation(documentation.fiche, documentation.page)}
+            >
+              Comment y accéder, et ce qu'on y lit
+            </Link>
+          </li>
+        )}
       </ul>
     </article>
   );
@@ -249,7 +345,7 @@ const Fiches = (props: { references: string[] }) => {
 
 export const CommencerIci = (props: { reglages: ReglagesDeLAccueil }) => {
   const classes = useStyles();
-  const { guide, applications, outils } = props.reglages;
+  const { guide, applications, outils, deploiement } = props.reglages;
 
   return (
     <div className={classes.page}>
@@ -338,6 +434,24 @@ export const CommencerIci = (props: { reglages: ReglagesDeLAccueil }) => {
           <p className={classes.titreDeSection}>Où le travail se voit.</p>
           <Fiches references={outils} />
         </section>
+
+        {deploiement && (
+          <section className={classes.section} aria-label="Le déploiement">
+            <Etiquette as="h2">Le déploiement</Etiquette>
+            <p className={classes.titreDeSection}>
+              Comment les applications tournent, et comment tout refaire.
+            </p>
+            <p className={classes.chapeau}>
+              Coolify construit et lance chaque application; Traefik, le
+              proxy, reçoit les visiteurs et les envoie à la bonne; OVHcloud
+              tient le nom de domaine. La documentation du déploiement dit
+              comment tout installer, mettre à jour, vérifier, remettre en
+              arrière, et refaire sur un serveur neuf.
+            </p>
+            {deploiement.traefik && <BlocTraefik reglages={deploiement.traefik} />}
+            <Fiches references={deploiement.fiches} />
+          </section>
+        )}
       </main>
     </div>
   );

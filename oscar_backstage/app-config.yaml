@@ -29,8 +29,9 @@ app:
 
   extensions:
     # La page d accueil, « Commencer ici », a la racine du portail. Ses
-    # fiches: le guide du cycle, les applications qui suivent le cycle, et les
-    # outils de l equipe. Une application de plus: une ligne de plus ici.
+    # fiches: le guide du cycle, les applications qui suivent le cycle, les
+    # outils de l equipe, et le deploiement. Une application de plus: une
+    # ligne de plus ici.
     - page:home:
         config:
           path: /
@@ -44,8 +45,29 @@ app:
             - component:default/portail
           outils:
             - domain:default/oscar
-            - resource:default/coolify
             - component:default/labo
+          # « Le deploiement »: comment les applications tournent sur le
+          # serveur, et comment refaire le tout (decisions 83 et 84, A37).
+          # Coolify y est, et plus dans les outils: une fiche ne s affiche
+          # qu une fois sur la page.
+          # La fiche du deploiement vit dans le depot oscar-infrastructure,
+          # dossier oscar_infra_deploiement/, avec sa documentation; les
+          # ressources, dans catalogue/organisation.yaml.
+          deploiement:
+            fiches:
+              - component:default/deploiement
+              - resource:default/coolify
+              - resource:default/proxy
+              - resource:default/ovhcloud
+            # Le tableau de bord de Traefik, protege par un identifiant et un
+            # mot de passe. On ecrit ici le CHEMIN du fichier qui les porte,
+            # sur le serveur, jamais leur valeur (R-17).
+            traefik:
+              adresse: https://traefik.oscar-bot.com/dashboard/
+              identifiants: secret_root/acess-admin-app/traefik-tableau-de-bord/identifiants.md
+              documentation:
+                fiche: component:default/deploiement
+                page: traefik/
 
     # Les titres du menu, en francais.
     - page:catalog:

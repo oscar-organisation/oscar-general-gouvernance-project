@@ -230,6 +230,52 @@ describe('le catalogue', () => {
     }
   });
 
+  describe('la page d accueil, dans app-config.yaml', () => {
+    const extensions: Record<string, any>[] = yaml('app-config.yaml').app
+      .extensions;
+    const accueil = extensions.find(
+      e => 'home-page-layout:home/commencer-ici' in e,
+    )!['home-page-layout:home/commencer-ici'].config;
+    const references: string[] = [
+      ...accueil.applications,
+      ...accueil.outils,
+      ...accueil.deploiement.fiches,
+    ];
+    const structure = new Set(
+      organisation.map(
+        e => `${e.kind.toLocaleLowerCase('en-US')}:default/${e.metadata.name}`,
+      ),
+    );
+
+    it('le deploiement ne repete aucune fiche des autres parties, et aucune partie ne se repete', () => {
+      // Le laboratoire est a la fois une application du cycle et un outil
+      // (ses rapports): ces deux parties le montrent chacune, depuis le
+      // lot 4. Le deploiement, lui, est une autre question: ses fiches n ont
+      // rien a faire ailleurs sur la page.
+      const ailleurs = new Set([...accueil.applications, ...accueil.outils]);
+      expect(accueil.deploiement.fiches.filter((r: string) => ailleurs.has(r))).toEqual([]);
+      for (const partie of [accueil.applications, accueil.outils, accueil.deploiement.fiches]) {
+        expect(partie.filter((r: string, i: number) => partie.indexOf(r) !== i)).toEqual([]);
+      }
+    });
+
+    it('ne nomme que des ressources et des domaines qui existent', () => {
+      // Les composants viennent des depots, sur GitHub: seule la structure
+      // du catalogue, ecrite ici, peut etre verifiee sans eux.
+      for (const reference of references.filter(r => /^(resource|domain):/.test(r))) {
+        expect([reference, structure.has(reference)]).toEqual([reference, true]);
+      }
+    });
+
+    it('le tableau de bord de Traefik: une adresse en https, et le chemin de ses identifiants, jamais une valeur', () => {
+      const { adresse, identifiants, documentation } = accueil.deploiement.traefik;
+      expect(adresse).toMatch(/^https:\/\/[^/]+\/.*$/);
+      // R-17: un secret ne s ecrit jamais; on donne le fichier qui le porte.
+      expect(identifiants).toMatch(/^secret_root\/[A-Za-z0-9_./-]+\.md$/);
+      expect(documentation.fiche).toBe(accueil.deploiement.fiches[0]);
+    });
+  });
+
   it('chaque fiche renvoie a une famille, un proprietaire et des ressources qui existent', () => {
     const fiches = fichiersEnAttente(enAttente)
       .concat(['catalog-info.yaml'])
