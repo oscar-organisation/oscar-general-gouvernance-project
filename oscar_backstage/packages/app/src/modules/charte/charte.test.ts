@@ -78,6 +78,9 @@ describe.each([
       // Les reglages de composants: une couleur ecrite dans une surcharge
       // (alertes, boutons, filet du menu) doit aussi venir des jetons.
       ...chaines((v4(theme) as any).overrides),
+      // Les proprietes par defaut des composants: le filet de la barre de
+      // menu du telephone y est pose.
+      ...chaines((v4(theme) as any).props),
       ...Object.values(variables),
     ].flatMap(couleurs);
     expect(employees.length).toBeGreaterThan(50);
@@ -104,6 +107,55 @@ describe.each([
     expect(p.tabbar.indicator).toBe(palette.orange);
     expect(p.text.primary).not.toBe(palette.orange);
     expect(p.primary.main).not.toBe(palette.orange);
+  });
+
+  it('ecrit a l encre le bouton plein par defaut, que Material UI peindrait en noir pur', () => {
+    // C est le bouton « Aller au contenu » du menu, visible au focus.
+    const t = v4(theme) as any;
+    // Son fond: grey[300], le papier soutenu, dans les deux themes.
+    const fond = t.palette.grey[300];
+    expect(fond).toBe(nuances.papierSoutenu);
+    // Sans reglage, Material UI calcule son texte d apres ce fond: du noir
+    // pur a 87 %, hors de la charte.
+    expect(couleurs(t.palette.getContrastText(fond))).toEqual(['#000000']);
+    const texte = t.overrides.MuiButton.contained.color;
+    expect(texte).toBe(palette.noir);
+    expect(contraste(texte, fond)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('laisse les boutons pleins de Material UI 5 a leur couleur', () => {
+    // Material UI 5 n a plus de couleur par defaut: sa regle contained vaut
+    // pour tous les boutons pleins, primaires compris. L encre n y va pas.
+    const contained = (theme.getTheme('v5') as any).components.MuiButton
+      .styleOverrides.contained;
+    expect(contained({ ownerState: { color: 'primary' } })).toEqual({});
+  });
+
+  it('montre le focus au clavier par l anneau orange de la charte', () => {
+    const t = v4(theme) as any;
+    const anneau = t.overrides.MuiButton.root['&:focus-visible'];
+    expect(anneau.outline).toBe(`2px solid ${palette.orange}`);
+    // Un indicateur d interface se voit a 3 pour 1 au moins: sur le fond de
+    // la page, sur les cartes, et sur le menu ou vit « Aller au contenu ».
+    for (const fond of [
+      t.palette.background.default,
+      t.palette.background.paper,
+      t.palette.navigation.background,
+    ]) {
+      expect(contraste(palette.orange, fond)).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('peint le filet de la barre de menu du telephone avec le filet de la charte', () => {
+    // Backstage l ecrit en dur, #383838, sans nom de style: le theme le pose
+    // par la propriete par defaut style de la barre (BottomNavigation).
+    const t = v4(theme) as any;
+    expect(t.props.MuiBottomNavigation.style.borderTopColor).toBe(
+      derives.filetSombre,
+    );
+    // La barre est Noir OSCAR dans les deux themes: c est le filet des fonds
+    // sombres qui lui va.
+    expect(t.palette.navigation.background).toBe(palette.noir);
   });
 });
 
