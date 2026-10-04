@@ -6,8 +6,8 @@
  *
  * A lancer depuis le dossier oscar_backstage/, avec Docker et rien d autre:
  *   docker compose -f verifications-ecran/compose.yaml run --rm tester
- * Les verifications automatiques de GitHub les lancent a chaque execution. Ils
- * n ecrivent rien.
+ * Ils se lancent a la main: les verifications automatiques de GitHub ne les
+ * lancent plus (decision 91). Ils n ecrivent rien.
  */
 
 import assert from 'node:assert/strict';

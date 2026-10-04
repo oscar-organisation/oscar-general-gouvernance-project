@@ -7,8 +7,10 @@
 #
 # verifier  parcourt le portail a l adresse donnee
 # tester    eprouve le releve et le verdict sur des pages d essai
-#           (tests/releve.test.mjs); les verifications automatiques de GitHub
-#           le lancent a chaque execution
+#           (tests/releve.test.mjs)
+#
+# Un outil du developpeur, lance a la main: les verifications automatiques de
+# GitHub ne le lancent plus (decision 91).
 #
 # Les captures et le releve vont dans verifications-ecran/resultats/, que git
 # ne suit pas. Le detail: le commentaire de verifier-l-ecran.mjs.

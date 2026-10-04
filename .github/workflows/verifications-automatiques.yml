@@ -1,23 +1,31 @@
 # Les vérifications automatiques de GitHub pour le dépôt
-# oscar-general-gouvernance-project, au patron commun des trois dépôts
-# (guide: docs/05-les-verifications-automatiques.md).
+# oscar-general-gouvernance-project, au patron commun des trois dépôts.
 #
-#   controles    lignes d'attribution, secrets, typographie, YAML, compositions
-#   verifs       le portail (image, tests, contenu de l'image), le guide
-#                (construction stricte, schémas), les images de marque et
-#                les tests de leur générateur, les tests du contrôle à l'écran
-#   deploiement  seulement sur test et main, après tout le reste: le workflow
-#                commun du dépôt oscar-infrastructure
-#   recette      pas encore branchée (A17), voir la fin du fichier
+#   verifications_rapides  lignes d'attribution, secrets, fichiers d'environnement,
+#                          typographie, fichiers des workflows, compositions lues comme
+#                          Coolify, et la construction du guide (décision 98)
+#   deploiement            le déploiement automatique commun par image de Harbor:
+#                          à chaque PR et à chaque envoi, les tests du code (l'étape
+#                          « verifications » du Dockerfile); à l'envoi sur test, l'image du
+#                          portail construite une seule fois, son contenu contrôlé, rangée
+#                          dans Harbor (oscar/portail-portail) puis mise en ligne en test;
+#                          à l'envoi sur main, LA MÊME en production, sans rien reconstruire;
+#                          pour une PR de test vers main, la vérification que l'image testée
+#                          existe
+#   resume                 un résumé de l'exécution, et un seul commentaire dans la PR
 #
-# Chaque tâche attend la précédente: une tâche en échec arrête les suivantes,
-# et rien n'est déployé. Une PR ne déploie jamais.
+# Chaque tâche attend la précédente: une tâche en échec arrête les suivantes, et rien
+# n'est mis en ligne. Une PR ne met jamais rien en ligne.
 #
-# Les ordinateurs de GitHub qui font les vérifications sont fixés sur
-# ubuntu-24.04, et non sur ubuntu-latest, que GitHub fait passer à Ubuntu 26
-# le 19/10/2026: les vérifications automatiques doivent donner le même
-# résultat d'une semaine à l'autre, et un changement de version se décide et
-# s'éprouve (décision A38).
+# Ne sont plus lancés ici (décision 91), et restent des outils du développeur, lancés à
+# la main (oscar_backstage/LISEZ-MOI.md): les schémas du guide, les images de marque et
+# les tests de leur générateur, les tests du contrôle à l'écran, les tests de l'accueil
+# et de la charte.
+#
+# Les ordinateurs de GitHub qui font les vérifications sont fixés sur ubuntu-24.04, et
+# non sur ubuntu-latest, que GitHub fait passer à Ubuntu 26 le 19/10/2026: les
+# vérifications automatiques doivent donner le même résultat d'une semaine à l'autre, et
+# un changement de version se décide et s'éprouve (décision A38).
 name: Vérifications automatiques
 
 on:
@@ -25,37 +33,21 @@ on:
     branches: [test, main]
   pull_request:
     branches: [test, main]
-  # Une exécution lancée à la main: redéployer ce qui est déjà vérifié, ou
-  # demander à blanc ce que ferait un déploiement. Visible dans l'onglet
-  # Actions une fois ce fichier sur main. Mêmes entrées que les vérifications
-  # automatiques de l'outil DNS.
-  workflow_dispatch:
-    inputs:
-      a_blanc:
-        description: Tout évaluer et le dire, sans rien déployer
-        type: boolean
-        default: true
-      environnement:
-        description: L'environnement visé; autre que celui de la branche, seulement à blanc
-        type: choice
-        options: [de-la-branche, test, production]
-        default: de-la-branche
 
-# Par défaut, une exécution ne fait que lire. La tâche de déploiement demande en plus
-# le droit de déclarer ses déploiements, et rien d'autre.
+# Par défaut, une exécution ne fait que lire. Le déploiement demande en plus le droit de
+# déclarer ses déploiements, et le résumé celui d'écrire son commentaire dans la PR.
 permissions:
   contents: read
 
 env:
   # Le dossier du portail dans le dépôt. Tout le portail y vit (décision 62).
-  # Son nom n'est écrit qu'ici: le jour où il bouge, c'est la seule ligne à
-  # changer.
+  # Son nom n'est écrit qu'ici pour les étapes de ce fichier.
   PORTAIL: oscar_backstage
 
 jobs:
 
-  controles:
-    name: Contrôles
+  verifications_rapides:
+    name: Vérifications rapides
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -161,112 +153,80 @@ jobs:
           docker compose -f "$PORTAIL/verifications-ecran/compose.yaml" config --quiet
           echo "Compositions valides."
 
-  verifs:
-    name: Vérifications
-    needs: controles
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      # Les constructions passent par BuildKit, avec le cache de GitHub
-      # Actions: tant que yarn.lock ne change pas, l'installation des
-      # dépendances, de loin l'étape la plus longue, est reprise d'une
-      # exécution à l'autre au lieu d'être refaite.
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Les tests du portail
-        # L'étape « verifications » du Dockerfile: compilation, construction du
-        # paquet, puis tous les tests. Elle échoue si un test échoue. Rien
-        # n'est exporté: seul compte le verdict.
-        uses: docker/build-push-action@v6
-        with:
-          context: ${{ env.PORTAIL }}
-          target: verifications
-          outputs: type=cacheonly
-          cache-from: type=gha,scope=portail
-          cache-to: type=gha,scope=portail,mode=max
-
-      - name: L'image du portail se construit
-        uses: docker/build-push-action@v6
-        with:
-          context: ${{ env.PORTAIL }}
-          target: execution
-          tags: oscar-portail:execution
-          load: true
-          cache-from: type=gha,scope=portail
-
-      - name: L'image contient ce qu'il faut, et rien de plus
-        run: |
-          set -u
-          # Les réglages du poste ouvrent l'accès invité: ils ne doivent jamais
-          # entrer dans l'image (leçon 3.4: vérifier le contenu, pas seulement
-          # que l'image démarre).
-          if docker run --rm oscar-portail:execution test -e app-config.poste.yaml ; then
-            echo "::error::app-config.poste.yaml est dans l'image."
-            exit 1
-          fi
-          docker run --rm oscar-portail:execution sh -c 'test -f app-config.production.yaml && test -f catalogue/organisation.yaml && mkdocs --version'
-          echo "Contenu de l'image conforme."
-
       - name: Le guide se construit, sans aucun avertissement
+        # Le guide du cycle, lu par le portail sur GitHub (décision 98): un lien cassé,
+        # une page oubliée ou une ancre absente arrêtent tout.
         run: docker compose -f docs/outils/compose.yaml run --rm construire
 
-      - name: Les schémas du guide correspondent à leurs sources
-        run: docker compose -f docs/outils/compose.yaml run --rm verifier-schemas
-
-      - name: Les images de marque correspondent au symbole officiel
-        run: docker compose -f "$PORTAIL/marque/compose.yaml" run --rm verifier
-
-      - name: Les tests du générateur des images de marque
-        # Les adresses des icônes, dans la page et dans le manifeste, portent
-        # l'empreinte de leur contenu; chaque refus du générateur est éprouvé.
-        run: docker compose -f "$PORTAIL/marque/compose.yaml" run --rm tester
-
-      - name: Les tests du contrôle à l'écran
-        # Ce que le contrôle à l'écran mesure, et son verdict, éprouvés dans un
-        # vrai navigateur sur des pages d'essai: chaque critère annoncé compte.
-        run: docker compose -f "$PORTAIL/verifications-ecran/compose.yaml" run --rm tester
-
   deploiement:
-    name: Déploiement
-    # Après tout le reste (leçon 5.1): une vérification en échec ne déploie
-    # rien.
-    needs: [controles, verifs]
-    # Un envoi sur test ou main (les seules branches de « push » ci-dessus), ou
-    # une exécution lancée à la main. Jamais une PR.
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    name: Tests du code, puis construire, ranger et mettre en ligne
+    # Après les vérifications rapides (leçon 5.1): une vérification en échec ne met rien
+    # en ligne.
+    needs: verifications_rapides
     permissions:
       contents: read
       deployments: write
-    uses: oscar-organisation/oscar-infrastructure/.github/workflows/deployer.yml@main
+    uses: oscar-organisation/oscar-infrastructure/.github/workflows/deploiement-par-image-harbor.yml@main
     with:
+      # Les applications Coolify portail-test et portail-production, et les
+      # environnements GitHub du même nom, où vit COOLIFY_APPLICATION (A2).
       application: portail
+      # Le dépôt d'images oscar/portail-portail: l'application, puis le service de la
+      # composition (conventions de la phase 3 du plan 17).
+      nom_des_images: portail
       dossier: oscar_backstage
-      # Les identifiants Coolify ne sont pas ici: chacun vit dans son
-      # environnement GitHub, portail-test et portail-production, sous la
-      # variable COOLIFY_APPLICATION (A21).
-      site_test: https://test-tech.oscar-bot.com
-      site_production: https://tech.oscar-bot.com
-      # La route de disponibilité de Backstage: 200 seulement quand tous ses
-      # modules sont prêts (leçon 3.7).
-      sante_test: https://test-tech.oscar-bot.com/.backstage/health/v1/readiness
-      sante_production: https://tech.oscar-bot.com/.backstage/health/v1/readiness
-      # Ce qui ne change rien à l'image: la documentation, la fabrication des
-      # images de marque (seul son résultat, dans packages/, compte) et la
-      # vérification à l'écran. Les motifs se comparent aux chemins pris
-      # depuis le dossier du portail (marque/fabriquer.py), et * y couvre
-      # aussi les sous-dossiers.
+      # Le seul service construit; la base est l'image publique postgres.
+      services: portail
+      # Ce qui n'entre pas dans l'empreinte du contenu: la documentation et les fiches du
+      # catalogue (la règle commune), et les deux outils du développeur, qui n'entrent
+      # pas dans l'image. Les modifier ne reconstruit ni ne remet en ligne le portail.
       ignorer: |
         *.md
-        marque/*
-        verifications-ecran/*
-      a_blanc: ${{ github.event_name == 'workflow_dispatch' && inputs.a_blanc }}
-      environnement: ${{ github.event_name == 'workflow_dispatch' && inputs.environnement != 'de-la-branche' && inputs.environnement || '' }}
-      # Une exécution lancée à la main, qui n'est pas à blanc, veut
-      # redéployer: on redéploie même un contenu déjà en service.
-      forcer: ${{ github.event_name == 'workflow_dispatch' }}
+        catalog-info.yaml
+        marque/
+        verifications-ecran/
+      # Les tests du code: l'étape « verifications » du Dockerfile (yarn tsc, le paquet du
+      # serveur, puis tous les tests), avec le cache de GitHub qu'elle partage avec
+      # l'image.
+      cible_des_tests: verifications
+      service_des_tests: portail
+      # Le contenu de l'image exacte qui sera rangée (leçon 3.4): les réglages du poste
+      # absents, ceux de la production, le catalogue et MkDocs présents.
+      controles_des_images: |
+        portail: ./controler-l-image.sh "$IMAGE_A_CONTROLER"
+      site_test: https://test-tech.oscar-bot.com
+      site_production: https://tech.oscar-bot.com
+      # La route de disponibilité de Backstage: 200 seulement quand tous ses modules sont
+      # prêts (leçon 3.7).
+      sante_test: https://test-tech.oscar-bot.com/.backstage/health/v1/readiness
+      sante_production: https://tech.oscar-bot.com/.backstage/health/v1/readiness
+      # Backstage met une à deux minutes à se dire prêt (start_period de 180 s dans la
+      # composition): dix minutes laissent plus de trois fois ce temps.
+      attente_de_la_sante: "600"
     secrets:
       coolify_jeton: ${{ secrets.COOLIFY_JETON }}
+      harbor_compte_envoi_nom: ${{ secrets.HARBOR_COMPTE_ENVOI_NOM }}
+      harbor_compte_envoi_secret: ${{ secrets.HARBOR_COMPTE_ENVOI_SECRET }}
 
-  # recette:
-  #   La place de la recette par le laboratoire (A17), branchée au lot 3b.
+  resume:
+    name: Résumé
+    # Toujours, même quand une tâche échoue: le résumé dit alors ce qui a échoué et que
+    # rien n'a été mis en ligne.
+    if: always()
+    needs: [verifications_rapides, deploiement]
+    runs-on: ubuntu-24.04
+    # Lire le début de l'exécution (sa durée, dans le résumé) demande actions: read;
+    # sans lui, l'API répond 403 « Resource not accessible by integration » (vu sur la
+    # première exécution de la PR 34). Écrire le commentaire demande pull-requests: write.
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    steps:
+      - name: Écrire le résumé, et le commentaire de la PR
+        uses: oscar-organisation/oscar-infrastructure/.github/actions/deploiement-par-image-harbor@main
+        with:
+          etape: resumer
+          taches: ${{ toJSON(needs) }}
+          numero_de_la_pr: ${{ github.event.pull_request.number }}
+          jeton_github: ${{ github.token }}

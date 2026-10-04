@@ -55,8 +55,9 @@ et en les essayant en conteneur:
 **Ce que ça coûte**, et comment on le tient: deux fichiers par schéma, et le
 risque d'oublier de refaire l'image après avoir changé la source. La commande
 `verifier-schemas` le détecte: elle refait les images à part et échoue si l'une
-d'elles ne correspond plus à sa source. Les vérifications automatiques de
-GitHub la lancent à chaque exécution, dans leur tâche `verifs`.
+d'elles ne correspond plus à sa source. **Elle se lance à la main**, après
+toute modification d'un schéma: les vérifications automatiques de GitHub ne la
+lancent plus (décision 91).
 
 ## Refaire les images
 

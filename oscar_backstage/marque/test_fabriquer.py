@@ -5,8 +5,9 @@ dossier oscar_backstage/:
 
     docker compose -f marque/compose.yaml run --rm tester
 
-Ils n ecrivent rien: le portail est monte en lecture seule. Les verifications
-automatiques de GitHub les lancent a chaque execution.
+Ils n ecrivent rien: le portail est monte en lecture seule. Ils se lancent a
+la main: les verifications automatiques de GitHub ne les lancent plus
+(decision 91).
 
 Ce qu ils verifient: chaque adresse d icone porte l empreinte du contenu de
 l icone, dans la page comme dans le manifeste, et le generateur refuse une

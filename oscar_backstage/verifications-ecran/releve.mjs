@@ -3,8 +3,8 @@
  *
  * Ce module est separe du parcours du portail (verifier-l-ecran.mjs) pour
  * pouvoir etre eprouve seul, sur des pages d essai dont on connait la
- * reponse: tests/releve.test.mjs, que les verifications automatiques de GitHub
- * lancent a chaque execution.
+ * reponse: tests/releve.test.mjs, lance a la main (les verifications
+ * automatiques de GitHub ne le lancent plus, decision 91).
  *
  * Deux fonctions tournent dans la page, envoyees au navigateur par
  * Playwright: releverDansLaPage et anneauDuFocus. Elles ne doivent donc rien
