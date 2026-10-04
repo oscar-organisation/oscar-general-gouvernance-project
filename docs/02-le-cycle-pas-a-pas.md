@@ -8,10 +8,12 @@ correction urgente le suit aussi.
 
 En mots: on travaille sur une branche `travail/<sujet>`, partie de `test`. On
 ouvre une PR vers `test`; les vérifications automatiques de GitHub la
-contrôlent. À la fusion, elles déploient en test et y jouent les scénarios du
-laboratoire. On ouvre ensuite une PR de `test` vers `main`; à sa fusion, elles
-déploient en production, en signalant tout contenu qui ne serait pas passé par
-le test.
+contrôlent, sans rien construire ni mettre en ligne. À la fusion, elles
+construisent l'image de l'application **une seule fois**, la rangent dans
+**Harbor**, l'entrepôt des images, et la mettent en ligne en test. On ouvre
+ensuite une PR de `test` vers `main`, qui vérifie seulement que cette image
+existe et a tourné en test; à sa fusion, **la même image** est mise en ligne en
+production, sans rien reconstruire ni retester (plan 17, depuis le 04/10/2026).
 
 Source du schéma: [`schemas/02-trajet-d-une-modification.mmd`](schemas/02-trajet-d-une-modification.mmd).
 
@@ -36,38 +38,36 @@ dise.
 
 ## Où en est le cycle aujourd'hui
 
-**État au 27 septembre 2026, 15h42 UTC**, relevé de 15h39 à 15h42 UTC par l'API
-de Coolify, l'API de GitHub et une requête à chaque site. C'est **le seul tableau
-d'état du guide**: les autres pages y renvoient au lieu de le recopier, pour
-qu'il ne se contredise jamais. Il se met à jour à chaque livraison, relevé et
-non de mémoire.
-
-**La colonne du portail est relevée plus tard, le 28 septembre 2026 à 17h32
-UTC**, après ses livraisons du jour, par l'API de Coolify et une requête à
-chaque site; les deux autres colonnes restent celles du 27 septembre.
+**État au 4 octobre 2026, 11h27 UTC**, relevé de 11h24 à 11h27 UTC par l'API
+de Coolify, l'API de GitHub, Harbor et une requête à chaque site. C'est **le
+seul tableau d'état du guide**: les autres pages y renvoient au lieu de le
+recopier, pour qu'il ne se contredise jamais. Il se met à jour à chaque
+livraison, relevé et non de mémoire.
 
 | Pièce | Outil DNS | Laboratoire | Portail |
 |---|---|---|---|
 | La branche `test` | en place | en place | en place |
-| Les vérifications automatiques de GitHub, dans `.github/workflows/` | sur `test` et `main` | sur `test` et `main` | sur `test` et `main` |
-| Les applications Coolify | `outil-dns-test`, `outil-dns-production`, en service | `labo-test`, `labo-production`, en service | `portail-test`, `portail-production`, en service |
-| Le déploiement automatique en test | en place (commit servi selon Coolify: `d4eef46`) | en place (commit servi selon Coolify: `c66c189`) | en place (commit servi selon Coolify: `923890d`) |
-| Le déploiement automatique en production, avec le contrôle de passage par `test` | en place (commit servi selon Coolify: `fc9f669`) | en place (commit servi selon Coolify: `dfe4244`) | en place (commit servi selon Coolify: `91a8d3f`) |
-| La recette par le laboratoire, après chaque déploiement | en place, réussie à sa dernière exécution en production | en place, réussie en test et en production | pas branchée: le laboratoire n'a pas encore de scénario du portail |
-| Les sites | `test-dns`, `dns` répondent | `test-labo`, `labo` répondent `401` sans identifiants | `test-tech`, `tech` et leurs routes de disponibilité répondent `200`; connexion humaine GitHub encore à valider |
+| Les vérifications automatiques de GitHub, dans `.github/workflows/` | sur `test` et `main`, sur le déploiement automatique commun par image | sur `test` et `main`, idem | sur `test` et `main`, idem |
+| Les applications Coolify | `outil-dns-test`, `outil-dns-production`, en service, en mode image | `labo-test`, `labo-production`, en service, en mode image | `portail-test`, `portail-production`, en service, en mode image |
+| L'image en service dans Harbor, **la même en test et en production** | `contenu-9438e947dc23` (`oscar/outil-dns-api`, `oscar/outil-dns-interface`) | `contenu-fa85a4f15def` (`oscar/laboratoire-visualiseur`, `oscar/laboratoire-collecteur`) | `contenu-093b638ca881` (`oscar/portail-portail`) |
+| Mise en ligne en test, puis en production | 04/10 10h15, puis 10h38 | 04/10 10h20, puis 10h42 | 04/10 10h32, puis 10h54 |
+| La recette par le laboratoire | lancée à la main (décision 98) | lancée à la main | pas branchée: le laboratoire n'a pas encore de scénario du portail |
+| Les sites | `test-dns`, `dns` et leur API de santé répondent | `test-labo`, `labo` répondent `401` sans identifiants, `/sante` `200` | `test-tech`, `tech` et leurs routes de disponibilité répondent `200`; la connexion part vers GitHub |
 
-Les commits ci-dessus sont ceux des derniers déploiements terminés dans
-Coolify. Les branches peuvent contenir des commits documentaires plus récents
-sans déclencher de reconstruction. Les douze requêtes de ce relevé ont
-confirmé: interfaces DNS et API de santé à `200`, racines du laboratoire à
-`401` sans identifiants et `/sante` à `200`, portails et disponibilité à `200`.
-Une page de connexion accessible ne prouve pas une connexion humaine GitHub.
+Les heures sont celles des mises en ligne réussies, lues dans les étiquettes
+`en-test-depuis-le-...` et `en-production-depuis-le-...` de Harbor. Une
+fusion qui ne change pas le contenu de l'application (la documentation, par
+exemple) ne reconstruit rien et ne remet rien en ligne: les branches peuvent
+porter des commits plus récents que l'image en service.
 
-Le déploiement et le contrôle de passage par `test` sont écrits **une fois**,
-dans le déploiement automatique commun, rangé dans le dépôt
-`oscar-infrastructure` (`.github/workflows/deployer.yml`), que les
-vérifications automatiques de chaque dépôt appellent (lot 2). Les
-commandes git des étapes 1, 2, 5 et 6 marchent dans les trois dépôts.
+La construction, le rangement dans Harbor, la mise en ligne et le contrôle
+que la production reçoit l'image testée sont écrits **une fois**, dans le
+déploiement automatique commun, rangé dans le dépôt `oscar-infrastructure`
+(`.github/workflows/deploiement-par-image-harbor.yml`), que les vérifications
+automatiques de chaque dépôt appellent. Ce que fait chaque exécution, en
+détail: le « parcours de mise en ligne » de la documentation du déploiement
+(fiche « Le déploiement » du portail). Les commandes git des étapes 1, 2, 5
+et 6 marchent dans les trois dépôts.
 
 ## Les branches
 
@@ -243,8 +243,11 @@ vérifications automatiques, qui tournent.
 
 ## Étape 7. Les vérifications automatiques contrôlent la PR
 
-GitHub lance les tâches `controles`, puis `verifs`. Rien n'est déployé à ce
-stade. Le détail des tâches:
+GitHub lance les « Vérifications rapides », puis les « Tests du code » (pour
+le portail, les « Tests du code dans l'image », une étape de son Dockerfile).
+Rien n'est construit pour Harbor ni mis en ligne à ce stade. Un résumé de
+l'exécution arrive en commentaire dans la PR, « Vérifications automatiques:
+le résumé », mis à jour à chaque exécution. Le détail des tâches:
 [les vérifications automatiques](05-les-verifications-automatiques.md).
 
 **Ce qu'on doit voir**: sur la PR, chaque vérification réussit. Le détail
@@ -273,81 +276,104 @@ fusionnés, et deviennent confuses.
 exécution des vérifications automatiques démarre sur la branche `test`, dans
 l'onglet Actions.
 
-## Étape 9. Le déploiement automatique en test
+## Étape 9. La mise en ligne automatique en test
 
-Sur la branche `test`, les vérifications automatiques refont `controles` et
-`verifs`, puis lancent `deploiement`. Cette tâche demande à Coolify de déployer l'application
-`<application>-test`, suit ce déploiement jusqu'au bout, et vérifie que le
-commit déployé est bien celui qui a été vérifié. Personne ne déploie à la main.
+Sur la branche `test`, les vérifications automatiques refont les vérifications
+rapides et les tests, puis la tâche « Construire, ranger et mettre en ligne »:
+
+1. « Décider »: elle calcule l'**empreinte du contenu** du dossier de
+   l'application (sans la documentation), et regarde dans Harbor si l'image
+   `contenu-<empreinte>` existe déjà;
+2. « Construire l'image et la ranger dans Harbor (une seule fois) »: seulement
+   si elle manque; l'image est contrôlée avant d'être rangée;
+3. « Sécurité: lecture des failles par Trivy (informe, ne bloque pas) »;
+4. « Mettre en ligne et vérifier la santé »: elle pose l'étiquette de l'image
+   sur l'application Coolify `<application>-test`, demande la mise en ligne,
+   la suit, puis vérifie que l'adresse de santé répond; enfin elle note dans
+   Harbor `en-test-depuis-le-<date>`.
+
+Coolify ne construit rien: il télécharge l'image dans Harbor et la lance
+(une douzaine de secondes pour l'outil DNS et le laboratoire, 30 s pour le
+portail, mesurées le 04/10/2026). Personne ne met en ligne à la main.
 
 **Ce qu'on doit voir**:
 
-- dans l'onglet Actions, l'exécution de `test` réussie, tâche `deploiement`
-  comprise;
+- dans l'onglet Actions, l'exécution de `test` réussie, et son résumé:
+  l'image, « Construite cette fois » (ou « non: déjà rangée dans Harbor »), les
+  failles par niveau, « Mise en ligne » avec la santé vérifiée;
 - dans la page Deployments du dépôt,
   `https://github.com/oscar-organisation/<dépôt>/deployments`, l'environnement
-  `<application>-test` au commit effectivement déployé;
-- dans Coolify, projet `<application>`, environnement `test`, un déploiement
-  terminé;
+  `<application>-test`;
+- dans Coolify, projet `<application>`, environnement `test`, une mise en
+  ligne terminée, sans construction dans son journal;
 - le site `https://test-<nom>.oscar-bot.com` qui répond.
 
-**Si ça ne va pas**: le journal de la tâche `deploiement` dans l'onglet Actions
-donne la réponse de Coolify. Le journal de construction est dans Coolify, sur
-le déploiement concerné.
+**Si ça ne va pas**: le résumé dit quelle tâche a échoué, et que rien n'a été
+mis en ligne. Le journal de la tâche en échec, dans l'onglet Actions, donne le
+premier message d'erreur (une construction ratée, un contrôle de l'image, la
+réponse de Coolify, une santé qui ne vient pas). Une image illisible fait
+échouer la mise en ligne **avant** l'arrêt de l'ancienne version, qui reste en
+service.
 
 Où c'est en place: le tableau d'[où en est le cycle](#ou-en-est-le-cycle-aujourdhui), au début de cette page.
 
-## Étape 10. La recette par le laboratoire
+## Étape 10. La recette par le laboratoire, à la main
 
-Après le déploiement en test, la tâche `recette` joue **tous** les scénarios du
-laboratoire qui concernent l'application, contre `https://test-<nom>.oscar-bot.com`.
+Depuis le 04/10/2026, la recette n'est plus jouée après chaque mise en ligne
+(décisions 91 et 98): on la lance quand le changement le demande. Onglet
+Actions du dépôt `oscar-test`, « Recette (laboratoire) », « Run workflow »:
+le niveau `test` et l'application. Elle joue les scénarios du laboratoire qui
+concernent l'application, contre `https://test-<nom>.oscar-bot.com`.
 
-**Ce qu'on doit voir**: la tâche `recette` réussie, et le rapport de cette
-recette dans le visualiseur du laboratoire, `https://test-labo.oscar-bot.com`.
+**Ce qu'on doit voir**: l'exécution de la recette réussie, et son rapport dans
+le visualiseur du laboratoire, `https://test-labo.oscar-bot.com`.
 
 **Si ça ne va pas**: le changement est en test, mais il n'est pas validé. On ne
 va pas plus loin: on corrige par une nouvelle branche `travail/<sujet>`, qui
 refait les étapes 2 à 10.
 
-Où la recette est branchée: le tableau d'[où en est le cycle](#ou-en-est-le-cycle-aujourdhui).
-
 ## Étape 11. La PR de `test` vers `main`
 
-Quand le déploiement en test et sa recette ont réussi, on propose de passer ce
-contenu en production:
+Quand la mise en ligne en test (et, s'il y a lieu, la recette) a réussi, on
+propose de passer ce contenu en production:
 
 ```
 https://github.com/oscar-organisation/<dépôt>/compare/main...test?expand=1
 ```
 
 **Ce qu'on doit voir**: `base: main` et `compare: test`. Les vérifications
-automatiques contrôlent la PR, comme à l'étape 7. On fusionne ensuite par **« Create a merge commit »**. On ne
-supprime jamais la branche `test`.
+automatiques ne refont ni tests ni construction: après les vérifications
+rapides, « Décider » vérifie en quelques secondes que l'image
+`contenu-<empreinte>` existe dans Harbor et qu'elle a été mise en ligne en
+test; le résumé dit « Image testée: retrouvée, déjà mise en ligne en test ».
+On fusionne ensuite par **« Create a merge commit »**. On ne supprime jamais
+la branche `test`.
 
-## Étape 12. Le déploiement automatique en production
+**Si ça ne va pas**: « Décider » refuse net si l'image manque, ou n'a jamais
+été mise en ligne en test: ce contenu n'est pas passé par `test`. On ne
+fusionne pas; on cherche ce qui est arrivé sur `test` (une exécution en échec,
+un envoi direct).
 
-Sur `main`, les vérifications automatiques refont `controles` et `verifs`,
-puis contrôlent le passage par `test`: le contenu à déployer de ce commit doit
-être exactement celui que Coolify sert en test, c'est-à-dire celui de son
-dernier déploiement terminé en test. Elles déploient ensuite
-`<application>-production`, et jouent les scénarios non destructifs du
-laboratoire contre `https://<nom>.oscar-bot.com`.
+## Étape 12. La mise en ligne automatique en production
 
-**Ce qu'on doit voir**: l'exécution de `main` réussie dans l'onglet Actions,
-**aucun avertissement** du contrôle de passage par `test` dans le résumé de
-l'exécution, l'environnement `<application>-production` au commit déployé dans la page Deployments,
-et le déploiement terminé dans Coolify, environnement `production`.
+Sur `main`, les vérifications automatiques refont les vérifications rapides,
+puis « Décider » **retrouve l'image testée** par l'empreinte du contenu: la
+fusion de `test` dans `main` ne change pas le contenu, donc pas l'empreinte.
+**La même image** est mise en ligne sur `<application>-production`, puis la
+santé est vérifiée, et Harbor note `en-production-depuis-le-<date>`. Ni tests,
+ni construction, ni Trivy (une minute environ de bout en bout pour l'outil DNS
+et le laboratoire, mesurée le 04/10/2026).
 
-**Si ça ne va pas**: le résumé signale que le contenu n'est pas passé par
-`test`. Quelqu'un a envoyé directement sur `main`, ou le déploiement en test
-avait échoué. Ce contrôle ne bloque pas: la production a quand même été
-déployée. On prévient Joel, et on rédige l'incident. Voir
-[comment se comporter](03-comment-se-comporter.md), règles 1 et 7.
+**Ce qu'on doit voir**: l'exécution de `main` réussie dans l'onglet Actions et
+son résumé, l'environnement `<application>-production` dans la page
+Deployments, la mise en ligne terminée dans Coolify, environnement
+`production`, sans construction.
 
-Le contrôle est écrit une fois, dans le déploiement automatique commun
-(lot 2), pour toute application dont les vérifications automatiques
-l'appellent. Où il a déjà servi: le tableau
-d'[où en est le cycle](#ou-en-est-le-cycle-aujourdhui).
+**Si ça ne va pas**: « Décider » refuse net si l'image du contenu de `main`
+manque dans Harbor: `main` porterait autre chose que ce qui a été testé, et
+**rien n'est mis en ligne**. Quelqu'un a envoyé directement sur `main`, ou la
+mise en ligne en test avait échoué. On prévient Joel, et on rédige l'incident.
+Voir [comment se comporter](03-comment-se-comporter.md), règles 1 et 7.
 
 ## Étape 13. Vérifier que le site est vivant
 
@@ -365,12 +391,14 @@ du laboratoire, la racine répond `401` sans identifiants; sa route `/sante`
 doit répondre `200`. Les pages de chaque application donnent les adresses à
 vérifier. Ne pas conclure à une panne sur le seul refus d'un accès protégé.
 
-Puis on vérifie que c'est la bonne version. Le commit de production effectivement
-servi doit correspondre au contenu applicatif vérifié. Le dernier commit de
-`main` peut être plus récent si seule la documentation a changé. Un retour
-d'urgence peut aussi rendre l'état de Coolify différent de la déclaration
-GitHub: utiliser la procédure d'exploitation pour les rapprocher. Pour lire
-le dernier commit de la branche:
+Puis on vérifie que c'est la bonne version: l'image que Coolify fait tourner
+porte l'étiquette `contenu-<empreinte>` du contenu de `main`, et c'est la même
+qu'en test. Le dernier commit de `main` peut être plus récent si seule la
+documentation a changé: l'empreinte ne bouge pas. Un retour en arrière fait à
+la main peut aussi faire tourner une autre image, jusqu'à la prochaine
+exécution. La page « Vérifier » de chaque application, dans la documentation
+du déploiement, donne les commandes (dont l'empreinte du contenu recalculée à
+la main). Pour lire le dernier commit de la branche:
 
 ```
 git fetch origin
@@ -417,9 +445,17 @@ PR elle-même. `git revert` propose un message en anglais, « Revert "..." »:
 annule et pourquoi (règle des [messages de commit](03-comment-se-comporter.md#6-des-messages-de-commit-clairs)).
 On ouvre ensuite une PR vers `test`, comme à l'étape 6.
 
-Remettre en service une version précédente sans passer par le cycle est une
-procédure d'exploitation, écrite pour chaque application dans le dossier du
+Le contenu revenu à l'ancien retrouve son ancienne empreinte: l'image existe
+déjà dans Harbor (les 10 dernières sont gardées), **rien n'est reconstruit**,
+et elle est remise en ligne en test, puis en production.
+
+Remettre en service une version précédente **en quelques secondes**, sans
+attendre le cycle, se fait par l'étiquette d'une image déjà rangée dans
+Harbor: c'est une procédure d'exploitation, écrite dans le dossier du
 déploiement du dépôt `oscar-infrastructure`
-(voir [le code et l'exploitation](06-le-code-et-l-exploitation.md)), dans le
-fichier `docs/applications/<application>/revenir-en-arriere.md`. Elle n'est
-pas entre les mains du développeur.
+(voir [le code et l'exploitation](06-le-code-et-l-exploitation.md)):
+`docs/mise-en-ligne/PROCEDURE-revenir-en-arriere-par-l-etiquette-v1.0.md`, et,
+pour chaque application, `docs/applications/<application>/revenir-en-arriere.md`.
+Elle n'est pas entre les mains du développeur, et elle ne dure que jusqu'à la
+prochaine exécution sur la branche: l'annulation par le cycle, ci-dessus, la
+rend durable.

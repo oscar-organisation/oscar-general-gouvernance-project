@@ -5,7 +5,7 @@ que ce qui n'appartient à aucun dépôt, et ce qui attend d'y être posé.
 
 | Fichier | Ce qu'il porte |
 |---|---|
-| `organisation.yaml` | la structure: le domaine OSCAR, un système par famille de dépôts, l'équipe `equipe-oscar`, et les ressources (Coolify, le proxy, OVHcloud) |
+| `organisation.yaml` | la structure: le domaine OSCAR, un système par famille de dépôts, l'équipe `equipe-oscar`, et les ressources (Coolify, le proxy, OVHcloud). Harbor, l'entrepôt des images, est aussi une ressource, mais sa fiche vit dans son dépôt (`oscar-infrastructure/oscar_infra_container_registry/`): le test des réglages la nomme, dans la liste des ressources des dépôts, pour que les fiches et l'accueil puissent en dépendre |
 | `en-attente/` | les fiches qui iront dans leur dépôt, lues ici en attendant: voir `en-attente/LISEZ-MOI.md` |
 
 ## D'où vient chaque fiche

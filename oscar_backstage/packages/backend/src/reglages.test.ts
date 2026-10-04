@@ -265,11 +265,21 @@ describe('le catalogue', () => {
   const systemes = new Set(
     organisation.filter(e => e.kind === 'System').map(e => e.metadata.name),
   );
-  const ressources = new Set(
-    organisation
+  // Les ressources qui ont leur fiche dans un autre depot, et qu on ne peut
+  // donc pas lire ici: chacune nommee, avec le fichier qui la declare. Une
+  // reference a une ressource qui n est ni dans organisation.yaml ni ici est
+  // une faute de frappe, ou une fiche oubliee.
+  const ressourcesDesDepots = new Set([
+    // Harbor, l entrepot des images (plan 17):
+    // oscar-infrastructure/oscar_infra_container_registry/catalog-info.yaml
+    'resource:default/entrepot-images',
+  ]);
+  const ressources = new Set([
+    ...organisation
       .filter(e => e.kind === 'Resource')
       .map(e => `resource:default/${e.metadata.name}`),
-  );
+    ...ressourcesDesDepots,
+  ]);
 
   const enAttente = path.join(PORTAIL, 'catalogue', 'en-attente');
   const fichiersEnAttente = (dossier: string): string[] =>
@@ -308,11 +318,12 @@ describe('le catalogue', () => {
       ...accueil.outils,
       ...accueil.deploiement.fiches,
     ];
-    const structure = new Set(
-      organisation.map(
+    const structure = new Set([
+      ...organisation.map(
         e => `${e.kind.toLocaleLowerCase('en-US')}:default/${e.metadata.name}`,
       ),
-    );
+      ...ressourcesDesDepots,
+    ]);
 
     it('le deploiement ne repete aucune fiche des autres parties, et aucune partie ne se repete', () => {
       // Le laboratoire est a la fois une application du cycle et un outil

@@ -2,17 +2,20 @@
 %% Source de 01-vue-d-ensemble.svg. L'image ne se retouche jamais à la main.
 %% Après une modification, depuis la racine du dépôt:
 %%   docker compose -f docs/outils/compose.yaml run --rm schemas
+%% Depuis le 04/10/2026 (plan 17): les vérifications automatiques construisent l'image
+%% une seule fois et la rangent dans Harbor; Coolify ne construit plus, il la lance.
 flowchart TB
   code["Le poste du développeur<br>code/: les dépôts clonés<br>git et Docker, rien d'autre"]
 
   subgraph github["GitHub, organisation oscar-organisation"]
     depot["Le dépôt de l'application<br>branches travail/#lt;sujet#gt;, test, main"]
-    verifications["Les vérifications automatiques,<br>dans GitHub Actions<br>contrôles, vérifications,<br>déploiement, recette"]
+    verifications["Les vérifications automatiques,<br>dans GitHub Actions<br>contrôles, tests,<br>une construction, mise en ligne"]
     deploiement["Le déploiement, versionné<br>oscar-infrastructure, oscar_infra_deploiement/<br>descriptions, assistant, procédures"]
   end
 
   subgraph serveur["Le serveur OSCAR"]
     exploitation["exploitation/<br>copie de service du déploiement, sur main"]:::discret
+    harbor["Harbor, l'entrepôt des images<br>registry-container.oscar-bot.com"]
     coolify["Coolify<br>deploy.oscar-bot.com"]
     secrets["secret_root/<br>les secrets"]:::discret
     appt["Application en test<br>test-#lt;nom#gt;.oscar-bot.com"]
@@ -21,12 +24,14 @@ flowchart TB
 
   code -- "git push" --> depot
   depot -- "chaque PR, chaque fusion" --> verifications
-  verifications -- "demande le déploiement" --> coolify
-  depot -. "Coolify lit le code sur GitHub" .-> coolify
+  verifications -- "range l'image, une seule fois" --> harbor
+  verifications -- "demande la mise en ligne" --> coolify
+  depot -. "Coolify lit la composition sur GitHub" .-> coolify
+  harbor -- "l'image désignée par l'étiquette" --> coolify
   deploiement -. "copie de main" .-> exploitation
   exploitation -. "l'assistant règle Coolify" .-> coolify
   secrets -. "valeurs de production" .-> coolify
-  coolify -- "construit et lance" --> appt
-  coolify -- "construit et lance" --> appp
+  coolify -- "lance, sans construire" --> appt
+  coolify -- "lance la même image" --> appp
   verifications ~~~ exploitation
   verifications ~~~ secrets

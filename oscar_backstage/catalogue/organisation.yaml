@@ -70,8 +70,9 @@ metadata:
   name: infrastructure
   title: Infrastructure
   description: >-
-    Les briques techniques partagées: les noms de domaine, et le transport de
-    la vidéo en temps réel.
+    Les briques techniques partagées: les noms de domaine, le transport de la
+    vidéo en temps réel, le déploiement, l'entrepôt des images (Harbor) et le
+    réseau privé des robots (WireGuard).
 spec:
   owner: group:default/equipe-oscar
   domain: oscar
@@ -140,10 +141,12 @@ metadata:
   name: coolify
   title: Coolify
   description: >-
-    L'outil qui construit et lance les applications sur le serveur, à la
-    demande des vérifications automatiques de GitHub de chaque dépôt, une fois
-    qu'elles ont réussi. Un projet par application, deux
-    environnements, test et production.
+    L'outil qui lance les applications sur le serveur, à la demande des
+    vérifications automatiques de GitHub de chaque dépôt, une fois qu'elles
+    ont réussi. Depuis le 4 octobre 2026, il ne construit plus: il télécharge
+    dans Harbor l'image désignée et la lance, en test puis la même en
+    production. Un projet par application, deux environnements, test et
+    production.
   links:
     - url: https://deploy.oscar-bot.com
       title: Coolify
@@ -152,8 +155,11 @@ spec:
   type: plateforme-de-deploiement
   owner: group:default/equipe-oscar
   system: infrastructure
+  # Harbor, l'entrepôt des images, a sa fiche dans le dépôt
+  # oscar-infrastructure (oscar_infra_container_registry/catalog-info.yaml).
   dependsOn:
     - resource:default/proxy
+    - resource:default/entrepot-images
 
 ---
 apiVersion: backstage.io/v1alpha1
