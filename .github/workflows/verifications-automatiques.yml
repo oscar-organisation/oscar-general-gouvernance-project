@@ -215,8 +215,12 @@ jobs:
     if: always()
     needs: [verifications_rapides, deploiement]
     runs-on: ubuntu-24.04
+    # Lire le début de l'exécution (sa durée, dans le résumé) demande actions: read;
+    # sans lui, l'API répond 403 « Resource not accessible by integration » (vu sur la
+    # première exécution de la PR 34). Écrire le commentaire demande pull-requests: write.
     permissions:
       contents: read
+      actions: read
       pull-requests: write
     steps:
       - name: Écrire le résumé, et le commentaire de la PR
