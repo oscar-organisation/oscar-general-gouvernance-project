@@ -88,15 +88,20 @@ Pour jouer les scénarios contre une application lancée sur le poste:
 
 | Tâche | Ce qu'elle fait |
 |---|---|
-| `controles` | lignes d'attribution, secrets, un modèle à côté de chaque fichier d'environnement, typographie, fichiers des vérifications automatiques, composition |
-| `verifs` | l'image du laboratoire, `docker compose run --rm -T labo verifier`, les tests de l'action de recette, les images du serveur, l'épreuve du visualiseur |
-| `deploiement` | après une fusion dans `test` ou `main`: le visualiseur, par le déploiement automatique commun (`labo-test`, `labo-production`) |
-| `recette` | si le déploiement a eu lieu: les scénarios du laboratoire contre le niveau de la branche |
+| Vérifications rapides | lignes d'attribution, secrets, un modèle à côté de chaque fichier d'environnement, typographie, fichiers des vérifications automatiques, composition dans ses trois lectures |
+| Tests du code | l'image du laboratoire, sa suite et ses types (`docker compose run --rm -T labo verifier`), les tests de l'action de recette; pas pour la PR de `test` vers `main` ni pour `main` |
+| Construire, ranger et mettre en ligne | le déploiement automatique commun: à la fusion dans `test`, les images `oscar/laboratoire-visualiseur` et `oscar/laboratoire-collecteur` construites une seule fois si celles de ce contenu manquent dans Harbor, le visualiseur éprouvé contre l'image exacte (`visualiseur/eprouver.sh`), Trivy, la mise en ligne sur `labo-test`; à la fusion dans `main`, la même image sur `labo-production` |
+| Résumé | un tableau sur la page de l'exécution, et un seul commentaire dans la PR |
+
+La recette n'est plus jouée après chaque mise en ligne (décisions 91 et 98):
+elle se lance à la main, onglet Actions, « Recette (laboratoire) », « Run
+workflow », avec le niveau et l'application.
 
 **La recette des autres applications.** Le laboratoire porte aussi le workflow
-réutilisable `.github/workflows/recette.yml`, que les vérifications
-automatiques de chaque application appellent après son déploiement, avec le niveau et le nom de
-l'application. Il joue ses scénarios, publie le rapport, que le visualiseur va
+réutilisable `.github/workflows/recette.yml`, qu'on lance à la main depuis le
+4 octobre 2026 (« Run workflow »), avec le niveau et le nom de l'application
+(les vérifications automatiques des applications l'appelaient avant après
+chaque déploiement). Il joue ses scénarios, publie le rapport, que le visualiseur va
 chercher, et échoue si des tests échouent. En production, les scénarios qui
 écrivent sont écartés. Le détail: partie 7 du guide du laboratoire.
 

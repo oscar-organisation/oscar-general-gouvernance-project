@@ -16,18 +16,23 @@ adresse web sous `oscar-bot.com`.
 
 Le code est réparti en dépôts GitHub, dans l'organisation
 [`oscar-organisation`](https://github.com/oscar-organisation). Les applications
-sont déployées sur un serveur par **Coolify**, un outil qui construit et lance
-les conteneurs. Chaque application a deux environnements: **test** et
-**production**.
+sont mises en ligne sur un serveur par **Coolify**, un outil qui lance les
+conteneurs, à partir d'images construites une seule fois par GitHub et rangées
+dans **Harbor**, l'entrepôt des images. Chaque application a deux
+environnements: **test** et **production**, qui tournent sur la même image.
 
 ## La vue d'ensemble
 
-![Vue d'ensemble: le poste du développeur, GitHub et ses vérifications automatiques, Coolify et le serveur, avec code/, exploitation/ et secret_root/](schemas/01-vue-d-ensemble.svg)
+![Vue d'ensemble: le poste du développeur, GitHub et ses vérifications automatiques qui construisent l'image et la rangent dans Harbor, Coolify qui la lance sur le serveur, avec code/, exploitation/ et secret_root/](schemas/01-vue-d-ensemble.svg)
 
 En mots: le développeur travaille dans `code/`, sur son poste, avec git et
 Docker. Il pousse sur GitHub. Les **vérifications automatiques de GitHub**
-contrôlent chaque PR et chaque fusion, puis demandent à Coolify de déployer. Coolify lit le code sur GitHub, construit et lance l'application sur
-le serveur, en test ou en production. La façon dont Coolify est réglé est
+contrôlent chaque PR et chaque fusion. À la fusion dans `test`, elles
+construisent l'image de l'application **une seule fois**, la rangent dans
+**Harbor**, et demandent à Coolify de la mettre en ligne en test; à la fusion
+dans `main`, **la même image** est mise en ligne en production. Coolify lit la
+composition sur GitHub, télécharge l'image dans Harbor et la lance, sans rien
+construire. La façon dont Coolify est réglé est
 versionnée elle aussi, dans le dossier du déploiement du dépôt
 `oscar-infrastructure`; sur le serveur, `exploitation/` en garde une copie de
 service, et `secret_root/` garde les secrets. Le poste du développeur n'a ni

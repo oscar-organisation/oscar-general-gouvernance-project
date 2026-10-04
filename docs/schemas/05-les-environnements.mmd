@@ -2,9 +2,13 @@
 %% Source de 05-les-environnements.svg. L'image ne se retouche jamais à la main.
 %% Après une modification, depuis la racine du dépôt:
 %%   docker compose -f docs/outils/compose.yaml run --rm schemas
+%% Depuis le 04/10/2026 (plan 17): test et production lancent la même image de Harbor.
 flowchart TB
-  local["Local, sur le poste du développeur<br>branche travail/#lt;sujet#gt;<br>docker compose up<br>http://127.0.0.1:18N00<br>variables: le .env du dépôt, aucun secret"]
+  local["Local, sur le poste du développeur<br>branche travail/#lt;sujet#gt;<br>docker compose up, qui construit l'image sur le poste<br>http://127.0.0.1:18N00<br>variables: le .env du dépôt, aucun secret"]
+  harbor["Harbor, l'entrepôt des images<br>oscar/#lt;application#gt;-#lt;service#gt;<br>l'image construite une seule fois"]
   test["Test, sur le serveur<br>branche test<br>Coolify: #lt;application#gt;-test<br>https://test-#lt;nom#gt;.oscar-bot.com<br>variables: dans Coolify, propres au test"]
   prod["Production, sur le serveur<br>branche main<br>Coolify: #lt;application#gt;-production<br>https://#lt;nom#gt;.oscar-bot.com<br>variables: dans Coolify<br>source de vérité: secret_root/"]:::accent
   local -- "PR vers test, puis fusion" --> test
   test -- "PR de test vers main, puis fusion" --> prod
+  harbor -- "contenu-#lt;empreinte#gt;" --> test
+  harbor -- "la même image" --> prod
