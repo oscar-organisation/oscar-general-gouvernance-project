@@ -3,8 +3,10 @@
 # Le portail technique OSCAR, construit entierement dans Docker.
 #
 # Une machine avec Docker et rien d autre suffit: Node, Yarn, Python et MkDocs
-# vivent dans les images. C est ce qui permet a Coolify de construire depuis
-# GitHub (decision A4), et a un developpeur de travailler sans rien installer.
+# vivent dans les images. C est ce qui permet aux verifications automatiques
+# de GitHub de construire l image une seule fois, avant de la ranger dans
+# l entrepot d images d OSCAR (Harbor, decisions 89 et 90), et a un
+# developpeur de travailler sans rien installer.
 #
 # LES ETAPES, ET QUI S EN SERT
 #
@@ -12,7 +14,10 @@
 #   construction           le code compile, et le paquet du portail
 #   dependances-execution  seulement ce qui sert a faire tourner le serveur
 #   verifications          les tests; les verifications automatiques de GitHub
-#                          la visent, Coolify jamais
+#                          la visent
+#   verifications-du-developpeur
+#                          les tests de l accueil et de la charte, a la main
+#                          seulement (decision 91)
 #   developpement          le mode developpement local, avec rechargement a chaud
 #   execution              l image qui tourne en test et en production (la derniere)
 #
@@ -125,11 +130,24 @@ RUN --mount=type=cache,id=oscar-portail-yarn,target=/root/.yarn/berry/cache,shar
 
 # ---------------------------------------------------------------------------
 # Les tests du portail. Les verifications automatiques de GitHub construisent
-# cette etape; Coolify ne la construit jamais, puisqu il vise l image
-# d execution.
+# cette etape avant l image d execution: un test en echec arrete tout.
 # ---------------------------------------------------------------------------
 FROM construction AS verifications
 RUN yarn test:all
+
+
+# ---------------------------------------------------------------------------
+# Les tests de la page d accueil et de la charte, lances a la main seulement.
+#
+# Ils ne sont plus lances par les verifications automatiques (decision 91):
+# l etape « verifications » ci-dessus les exclut (reglage « jest » de
+# packages/app/package.json). Rien d autre ne les lance: on les lance avant
+# de toucher a l accueil ou a la charte, depuis ce dossier:
+#
+#   docker build --target verifications-du-developpeur .
+# ---------------------------------------------------------------------------
+FROM construction AS verifications-du-developpeur
+RUN yarn workspace app test:verifications-du-developpeur
 
 
 # ---------------------------------------------------------------------------
@@ -150,8 +168,10 @@ CMD ["yarn", "start", "--config", "../../app-config.yaml", "--config", "../../ap
 
 
 # ---------------------------------------------------------------------------
-# L image qui tourne en test et en production. Coolify construit la derniere
-# etape du fichier, celle-ci.
+# L image qui tourne en test et en production, la derniere etape du fichier.
+# Les verifications automatiques de GitHub la construisent une seule fois et
+# la rangent dans l entrepot d images (Harbor); Coolify met en ligne cette
+# image, sans rien construire. Le poste la construit par compose.override.yaml.
 # ---------------------------------------------------------------------------
 FROM techdocs AS execution
 

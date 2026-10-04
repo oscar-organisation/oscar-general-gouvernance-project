@@ -11,7 +11,15 @@
     "build": "backstage-cli package build",
     "clean": "backstage-cli package clean",
     "test": "backstage-cli package test",
+    "test:verifications-du-developpeur": "backstage-cli package test modules/accueil modules/charte --testPathIgnorePatterns=/node_modules/",
     "lint": "backstage-cli package lint"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/modules/accueil/",
+      "/modules/charte/"
+    ]
   },
   "dependencies": {
     "@backstage-community/plugin-github-actions": "1.4.0",

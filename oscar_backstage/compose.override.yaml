@@ -8,6 +8,11 @@
 # unique sur une machine, ce qui empecherait le test et la production de
 # tourner cote a cote (lecon 5.4).
 #
+# En local aussi, l image du portail se construit sur le poste: en test et en
+# production, Coolify ne construit rien, il met en ligne l image que les
+# verifications automatiques de GitHub ont rangee dans l entrepot d images
+# (Harbor), celle que designe compose.yaml.
+#
 # En local toujours, personne n a les identifiants de l application GitHub, et
 # personne ne doit en avoir besoin: le portail s ouvre en invite, et lit le
 # catalogue et la documentation dans le depot, sur le poste.
@@ -42,6 +47,19 @@ services:
   # depot du poste a la place de GitHub.
   # ---------------------------------------------------------------------------
   portail:
+    # Le poste construit l image d execution lui-meme, la meme que celle que
+    # les verifications automatiques de GitHub rangent dans l entrepot d images
+    # (Harbor). compose.yaml ne fait que la designer.
+    build:
+      # Le contexte est ce dossier: tout ce qui concerne le portail y vit
+      # (decision 62).
+      context: .
+      target: execution
+    # Jamais l entrepot: il est prive, et l image du poste porte une etiquette
+    # qu il n a pas. Sans ce reglage, docker compose essaie d abord de
+    # telecharger l image, echoue, puis construit (mesure par le prototype du
+    # laboratoire, Docker Compose 5.5.1).
+    pull_policy: never
     ports:
       - "127.0.0.1:${OSCAR_PORT_PUBLIE_PORTAIL:-18500}:7007"
     # Les reglages du poste a la place de ceux de la production: l invite au
