@@ -443,11 +443,14 @@ export const CommencerIci = (props: { reglages: ReglagesDeLAccueil }) => {
               Comment les applications tournent, et comment tout refaire.
             </p>
             <p className={classes.chapeau}>
-              Coolify construit et lance chaque application; Traefik, le
-              proxy, reçoit les visiteurs et les envoie à la bonne; OVHcloud
-              tient le nom de domaine. La documentation du déploiement dit
-              comment tout installer, mettre à jour, vérifier, remettre en
-              arrière, et refaire sur un serveur neuf.
+              GitHub construit l'image de chaque application une seule fois
+              et la range dans Harbor, l'entrepôt des images; Coolify la
+              lance, en test puis la même en production; Traefik, le proxy,
+              reçoit les visiteurs et les envoie à la bonne; OVHcloud tient
+              le nom de domaine. Le réseau privé WireGuard relie les robots
+              et les personnes qui les administrent. La documentation du
+              déploiement dit comment tout installer, mettre à jour,
+              vérifier, remettre en arrière, et refaire sur un serveur neuf.
             </p>
             {deploiement.traefik && <BlocTraefik reglages={deploiement.traefik} />}
             <Fiches references={deploiement.fiches} />

@@ -42,6 +42,10 @@ spec:
   lifecycle: experimental
   owner: group:default/equipe-oscar
   system: verification
+  # Harbor, l'entrepôt des images, garde les images du visualiseur et du
+  # collecteur depuis le 4 octobre 2026 (plan 17); sa fiche vit dans le dépôt
+  # oscar-infrastructure.
   dependsOn:
     - resource:default/coolify
     - resource:default/proxy
+    - resource:default/entrepot-images

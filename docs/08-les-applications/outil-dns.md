@@ -66,12 +66,17 @@ Le laboratoire se lance contre l'outil lancé en local: voir
 patron commun
 ([les vérifications automatiques](../05-les-verifications-automatiques.md)):
 
-| Tâche | Ce qu'elle vérifie |
+| Tâche | Ce qu'elle fait |
 |---|---|
-| `controles` | aucune ligne d'attribution dans les commits, aucun secret, la documentation cohérente, la typographie, les fichiers des vérifications automatiques, la composition dans ses deux lectures |
-| `verifs` | les tests de l'outil DNS et ceux du déploiement automatique commun, la charte graphique de l'interface, la construction des deux images |
-| `deploiement` | par le déploiement automatique commun, après une fusion dans `test` ou `main`, si le contenu de `oscar_infra_dns/` a changé (hors `*.md`) |
-| `recette` | si le déploiement a eu lieu: les scénarios de l'outil DNS au laboratoire, contre ce qui vient d'être déployé, par le workflow de recette du dépôt `oscar-test` |
+| Vérifications rapides | aucune ligne d'attribution dans les commits, aucun secret, la documentation cohérente, la typographie, les fichiers des vérifications automatiques, la composition dans ses deux lectures, la documentation du déploiement construite en mode strict |
+| Tests du code | les tests de l'outil DNS, ceux du déploiement automatique commun et de l'assistant de déploiement, la charte graphique de l'interface; pas pour la PR de `test` vers `main` ni pour `main` |
+| Construire, ranger et mettre en ligne | le déploiement automatique commun: à la fusion dans `test`, les images `oscar/outil-dns-api` et `oscar/outil-dns-interface` construites une seule fois si celles de ce contenu manquent dans Harbor, Trivy, la mise en ligne sur `outil-dns-test`; à la fusion dans `main`, la même image sur `outil-dns-production`. L'empreinte est celle de `oscar_infra_dns/` sans les `*.md` ni `catalog-info.yaml` |
+| Résumé | un tableau sur la page de l'exécution, et un seul commentaire dans la PR |
+
+Les scénarios de l'outil DNS au laboratoire ne sont plus joués après chaque
+mise en ligne: on les lance à la main (décision 98), onglet Actions du dépôt
+`oscar-test`, « Recette (laboratoire) », « Run workflow », le niveau et
+`outil-dns`.
 
 ## Le déploiement
 

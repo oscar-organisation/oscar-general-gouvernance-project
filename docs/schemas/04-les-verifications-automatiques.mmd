@@ -1,27 +1,34 @@
-%% Les vérifications automatiques: leurs tâches, et ce qui se passe selon l'événement.
+%% Les vérifications automatiques: leurs tâches, et ce qui se passe selon l'évènement.
 %% Source de 04-les-verifications-automatiques.svg. L'image ne se retouche jamais à la main.
 %% Après une modification, depuis la racine du dépôt:
 %%   docker compose -f docs/outils/compose.yaml run --rm schemas
+%% Depuis le 04/10/2026 (plan 17): le déploiement automatique commun par image de Harbor.
 flowchart TB
-  evenement(["Un événement sur GitHub"])
-  controles["controles<br>lignes d'attribution, secrets,<br>typographie, YAML, composition"]
-  verifs["verifs<br>les tests propres<br>à l'application"]
+  evenement(["Un évènement sur GitHub"])
+  rapides["Vérifications rapides<br>lignes d'attribution, secrets,<br>typographie, YAML, composition"]
   quoi{"Qu'est-ce qui a lancé<br>les vérifications ?"}
-  pr["Une PR ne déploie rien<br>le résultat s'affiche sur la PR"]:::discret
-  deptest["deploiement<br>#lt;application#gt;-test<br>si le contenu a changé"]
-  rectest["recette<br>tous les scénarios<br>contre test-#lt;nom#gt;"]
-  passage{"Ce contenu est-il<br>passé par test ?"}:::accent
-  avertissement["Avertissement<br>dans le résumé de l'exécution"]:::attention
-  depprod["deploiement<br>#lt;application#gt;-production<br>si le contenu a changé"]
-  recprod["recette<br>scénarios non destructifs<br>contre #lt;nom#gt;"]
-  echec["Une tâche en échec<br>arrête les suivantes"]:::attention
+  tests["Tests du code<br>les tests propres<br>à l'application"]
+  pr["Une PR vers test ne met rien en ligne<br>le résumé s'affiche sur la PR"]:::discret
+  existe{"L'image de ce contenu<br>est-elle dans Harbor ?"}
+  construire["Construire l'image une seule fois,<br>la contrôler, la ranger dans Harbor"]
+  trivy["Trivy lit les failles<br>informe, ne bloque pas"]:::discret
+  enligne["Mettre en ligne en test<br>#lt;application#gt;-test, puis vérifier la santé"]
+  testee{"L'image testée<br>est-elle dans Harbor ?"}:::accent
+  refus["Refus net<br>rien n'est mis en ligne"]:::attention
+  prtest["PR de test vers main<br>ni tests ni construction"]:::discret
+  enprod["Mettre en ligne en production<br>la même image, puis vérifier la santé"]
+  echec["Une tâche en échec<br>arrête les suivantes,<br>rien n'est mis en ligne"]:::attention
 
-  evenement --> controles --> verifs --> quoi
-  quoi -- "une PR vers test<br>ou vers main" --> pr
-  quoi -- "une fusion dans test" --> deptest --> rectest
-  quoi -- "une fusion dans main" --> passage
-  passage -- "oui" --> depprod
-  passage -- "non" --> avertissement --> depprod
-  depprod --> recprod
-  controles -. "en échec" .-> echec
-  verifs -. "en échec" .-> echec
+  evenement --> rapides --> quoi
+  quoi -- "une PR vers test" --> tests
+  tests -- "PR vers test" --> pr
+  quoi -- "une fusion dans test" --> tests
+  tests -- "fusion dans test" --> existe
+  existe -- "non" --> construire --> trivy --> enligne
+  existe -- "oui" --> enligne
+  quoi -- "une PR de test vers main,<br>ou une fusion dans main" --> testee
+  testee -- "non" --> refus
+  testee -- "oui, pour la PR" --> prtest
+  testee -- "oui, pour main" --> enprod
+  rapides -. "en échec" .-> echec
+  tests -. "en échec" .-> echec

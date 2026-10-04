@@ -53,11 +53,18 @@ app:
           # La fiche du deploiement vit dans le depot oscar-infrastructure,
           # dossier oscar_infra_deploiement/, avec sa documentation; les
           # ressources, dans catalogue/organisation.yaml.
+          # Harbor, l entrepot des images, et le reseau prive WireGuard
+          # s y ajoutent a la phase 5 du plan 17 (decision 89): leurs fiches
+          # vivent dans le depot oscar-infrastructure, dans leurs dossiers
+          # (oscar_infra_container_registry/, oscar_infra_vpn/), chacune avec
+          # sa documentation.
           deploiement:
             fiches:
               - component:default/deploiement
               - resource:default/coolify
+              - resource:default/entrepot-images
               - resource:default/proxy
+              - component:default/reseau-prive
               - resource:default/ovhcloud
             # Le tableau de bord de Traefik, protege par un identifiant et un
             # mot de passe. On ecrit ici le CHEMIN du fichier qui les porte,

@@ -2,11 +2,14 @@
 %% Source de 02-trajet-d-une-modification.svg. L'image ne se retouche jamais à la main.
 %% Après une modification, depuis la racine du dépôt:
 %%   docker compose -f docs/outils/compose.yaml run --rm schemas
+%% Depuis le 04/10/2026 (plan 17): une construction, à la fusion dans test; la même
+%% image en production, sans rien reconstruire ni retester.
 sequenceDiagram
   autonumber
   actor D as Développeur
   participant G as GitHub
   participant C as Vérifications automatiques
+  participant H as Harbor
   participant K as Coolify
   participant T as Test
   participant P as Production
@@ -17,30 +20,34 @@ sequenceDiagram
     D->>D: lancer, modifier, tester
     D->>G: git push, puis PR vers test
     G->>C: la PR lance les vérifications automatiques
-    C-->>G: contrôles et vérifications, réussis ou en échec
+    C-->>G: vérifications rapides et tests, réussis ou en échec, et le résumé
   end
 
   rect rgb(234, 231, 223)
     Note over D,T: Vers le test
     D->>G: fusion de la PR dans test
     G->>C: la fusion lance les vérifications automatiques
-    C->>C: contrôles et vérifications
-    C->>K: déployer l'application de test
-    K->>G: lire le code de la branche test
-    K->>T: construire et lancer
-    C->>K: suivre ce déploiement jusqu'au bout
-    C->>T: recette, tous les scénarios du laboratoire
-    C-->>G: déclarer le déploiement en test
+    C->>C: vérifications rapides et tests
+    C->>H: l'image de ce contenu existe-t-elle ?
+    C->>H: sinon, construire une fois, contrôler, ranger
+    C->>K: poser l'étiquette de l'image, mettre en ligne en test
+    K->>H: télécharger l'image
+    K->>T: lancer, sans construire
+    C->>T: vérifier la santé
+    C->>H: noter en-test-depuis-le-date
   end
 
   rect rgb(243, 241, 236)
     Note over D,P: Vers la production
-    D->>G: PR de test vers main, puis fusion
+    D->>G: PR de test vers main
+    G->>C: la PR lance les vérifications automatiques
+    C->>H: l'image testée existe-t-elle ? Ni tests ni construction
+    D->>G: fusion dans main
     G->>C: la fusion lance les vérifications automatiques
-    C->>C: contrôles, vérifications, passage par test
-    C->>K: déployer l'application de production
-    K->>P: construire et lancer
-    C->>P: recette, scénarios non destructifs
-    C-->>G: déclarer le déploiement en production
+    C->>H: retrouver l'image testée, refus net si elle manque
+    C->>K: poser la même étiquette, mettre en ligne en production
+    K->>P: lancer la même image
+    C->>P: vérifier la santé
+    C->>H: noter en-production-depuis-le-date
     D->>P: vérifier que le site est vivant
   end

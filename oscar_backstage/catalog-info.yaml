@@ -43,6 +43,9 @@ spec:
   lifecycle: production
   owner: group:default/equipe-oscar
   system: gouvernance
+  # Harbor, l'entrepôt des images, garde l'image du portail depuis le
+  # 4 octobre 2026 (plan 17); sa fiche vit dans le dépôt oscar-infrastructure.
   dependsOn:
     - resource:default/coolify
     - resource:default/proxy
+    - resource:default/entrepot-images

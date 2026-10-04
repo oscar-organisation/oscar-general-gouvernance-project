@@ -10,8 +10,10 @@ GitHub, Coolify, Backstage, et les rapports du laboratoire.
 | Les vérifications de ma PR réussissent-elles ? | la page de la PR, puis l'onglet Actions |
 | Pourquoi une tâche est-elle en échec ? | l'onglet Actions, le journal de la tâche |
 | Qu'est-ce qui tourne en test, en production, à quel commit ? | la page Deployments du dépôt |
-| Pourquoi la construction a-t-elle échoué sur le serveur ? | Coolify, le journal du déploiement |
-| La recette a-t-elle réussi ? | la tâche `recette` dans Actions, puis le rapport du laboratoire |
+| Pourquoi la construction de l'image a-t-elle échoué ? | l'onglet Actions, la tâche « Construire l'image et la ranger dans Harbor (une seule fois) » |
+| Pourquoi une mise en ligne a-t-elle échoué sur le serveur ? | le résumé de l'exécution, puis Coolify, le journal de la mise en ligne |
+| Quelle image tourne, et quelles sont les précédentes ? | Harbor, le dépôt d'images de l'application, ou l'assistant de déploiement (`--voir-les-etiquettes`) |
+| La recette a-t-elle réussi ? | l'exécution de « Recette (laboratoire) », lancée à la main dans l'onglet Actions d'`oscar-test`, puis le rapport du laboratoire |
 | Où en sont toutes les applications, d'un coup d'oeil ? | Backstage |
 | Le site répond-il ? | la commande de l'[étape 13 du cycle](02-le-cycle-pas-a-pas.md) |
 
@@ -51,9 +53,11 @@ par le déploiement automatique commun.
 https://deploy.oscar-bot.com
 ```
 
-Coolify est l'outil qui construit et lance les applications sur le serveur. On
-y trouve **un projet par application**, chacun avec **deux environnements**,
-`test` et `production`:
+Coolify est l'outil qui lance les applications sur le serveur. Depuis le
+4 octobre 2026, il ne construit plus: il télécharge dans Harbor l'image que
+désigne la variable `ETIQUETTE_IMAGE_A_METTRE_EN_LIGNE` de l'application, et
+la lance. On y trouve **un projet par application**, chacun avec **deux
+environnements**, `test` et `production`:
 
 | Projet | Environnements | Applications |
 |---|---|---|
@@ -63,9 +67,11 @@ y trouve **un projet par application**, chacun avec **deux environnements**,
 
 Lesquelles sont déployées, et à quel commit: le tableau d'[où en est le cycle](02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui).
 
-Sur une application: son état, la liste de ses déploiements, et pour chacun le
-journal de construction. C'est là qu'on lit pourquoi une image ne s'est pas
-construite.
+Sur une application: son état, la liste de ses mises en ligne, et pour
+chacune son journal: on y lit « Pulling image-based services before stopping
+the current deployment », puis la fin, sans construction. C'est là qu'on lit
+pourquoi une image n'a pas pu être téléchargée. La construction, elle, se lit
+dans l'onglet Actions de GitHub.
 
 Coolify demande un compte. **On y regarde, on n'y déploie pas**: pas de bouton
 « Deploy », pas de réglage changé à la main (voir

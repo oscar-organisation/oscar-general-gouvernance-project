@@ -17,7 +17,8 @@ ici », mène un nouveau venu où il doit aller.
 La page d'accueil a quatre parties: les lectures à faire dans l'ordre, les
 applications, les outils, et **le déploiement**: la fiche « Le déploiement »
 (sa documentation vit dans le dépôt `oscar-infrastructure`, dossier
-`oscar_infra_deploiement/`), Coolify, le proxy Traefik et OVHcloud, avec le
+`oscar_infra_deploiement/`), Coolify, le proxy Traefik, Harbor (l'entrepôt des
+images), le réseau privé WireGuard et OVHcloud, avec le
 tableau de bord de Traefik: son adresse, ce qu'on y lit, et le chemin du
 fichier de ses identifiants sur le serveur, jamais leur valeur. Chaque partie
 se règle par une liste de fiches, dans `oscar_backstage/app-config.yaml`
@@ -47,8 +48,10 @@ cd oscar_backstage
 
 ### Le mode service, proche de la production
 
-La même image qu'en production, avec sa vraie base PostgreSQL. Pour vérifier
-ce qui sera déployé.
+La même image d'exécution qu'en production, construite sur le poste
+(`compose.override.yaml`: la construction, `pull_policy: never`, jamais
+Harbor), avec sa vraie base PostgreSQL. Pour vérifier ce qui sera mis en
+ligne.
 
 ```
 docker compose up --build -d
@@ -158,16 +161,25 @@ image de tests de plusieurs gigaoctets, ce qui a pris 19 minutes de plus le
 sans changement prend une dizaine de secondes: tout est repris du cache.
 
 **Ce qu'on doit voir**: la construction va au bout, sans erreur. Elle compile le
-code, construit le portail, puis lance tous ses tests: la page de connexion
-(l'invité sur le poste, GitHub ailleurs, l'icône OSCAR devant son titre), la
-charte (aucune couleur hors de la palette, contrastes lisibles, l'anneau
-orange au focus, le filet de la barre de menu du téléphone), la page
-d'accueil, et les réglages (aucun port publié par `compose.yaml`, le contrôle
-de santé sur la bonne route, les variables toutes décrites, les réglages du
-poste jamais dans l'image).
+code, construit le portail, puis lance ses tests: la page de connexion
+(l'invité sur le poste, GitHub ailleurs, l'icône OSCAR devant son titre), et
+les réglages (aucun port publié par `compose.yaml`, la composition qui désigne
+l'image de Harbor sans construire, le contrôle de santé sur la bonne route,
+les variables toutes décrites, les réglages du poste jamais dans l'image).
+C'est l'étape que jouent les vérifications automatiques.
 
-Les images de marque (le symbole, les icônes) se vérifient à part, et leur
-générateur a ses propres tests:
+**Les tests de l'accueil et de la charte** (aucune couleur hors de la
+palette, contrastes lisibles, l'anneau orange au focus, le filet de la barre
+de menu du téléphone, la page d'accueil) ne sont lancés par rien depuis le
+4 octobre 2026 (décision 91): les lancer **avant de toucher à l'accueil ou à
+la charte**, depuis `oscar_backstage/`:
+
+```
+docker build --target verifications-du-developpeur --output type=cacheonly .
+```
+
+Les images de marque (le symbole, les icônes) se vérifient à part, à la main
+depuis le 4 octobre 2026, et leur générateur a ses propres tests:
 
 ```
 docker compose -f marque/compose.yaml run --rm verifier
@@ -176,7 +188,7 @@ docker compose -f marque/compose.yaml run --rm tester
 
 ### Vérifier la charte à l'écran
 
-Un vrai navigateur, en conteneur, ouvre le portail lancé en mode service, entre
+À la main depuis le 4 octobre 2026 (décision 91). Un vrai navigateur, en conteneur, ouvre le portail lancé en mode service, entre
 en invité, et parcourt la connexion, l'accueil, le catalogue, le graphe, une
 fiche et deux pages du guide, sur ordinateur et sur téléphone, en clair et en
 sombre (28 pages). Sur chacune, il relève chaque couleur affichée et la compare
@@ -190,7 +202,8 @@ des cartes de fiches, et le bloc du tableau de bord de Traefik doit
 donner une adresse en `https`, le chemin de ses identifiants sous
 `secret_root/` et un lien vers sa documentation dans le portail. Une fiche
 absente du catalogue est nommée, sans compter comme un défaut: c'est le cas
-normal en local pour la fiche « Le déploiement ».
+normal en local pour les fiches qui vivent dans le dépôt `oscar-infrastructure`
+(« Le déploiement », Harbor, le réseau privé).
 
 ```
 docker compose up --build -d
@@ -202,7 +215,8 @@ hors charte: 0  textes sous le seuil AA: 0  pages non affichees: aucune`,
 `LIGHTBOX  echecs: aucun`, `FOCUS  sans l anneau de la charte, hors de
 l ecran ou non atteint: aucun`, `DEPLOIEMENT  partie, tableau de bord de
 Traefik ou fiches en defaut: aucune`, en local
-`DEPLOIEMENT  fiches dites absentes du catalogue: component:default/deploiement`,
+`DEPLOIEMENT  fiches dites absentes du catalogue: component:default/deploiement, resource:default/entrepot-images, component:default/reseau-prive`
+(non rejoué depuis l'ajout des deux dernières, le 04/10/2026),
 et le code de sortie 0. Les captures et le
 relevé complet (`releve.json`) sont dans `verifications-ecran/resultats/`, que
 git ne suit pas.
@@ -228,13 +242,21 @@ machine (`network_mode: host`). Sous macOS et Windows: non vérifié.
 ## Les vérifications automatiques
 
 `.github/workflows/verifications-automatiques.yml`, sur le patron commun
-([les vérifications automatiques](../05-les-verifications-automatiques.md)):
+([les vérifications automatiques](../05-les-verifications-automatiques.md)),
+en trois tâches depuis le 4 octobre 2026:
 
-| Tâche | Ce qu'elle vérifie |
+| Tâche | Ce qu'elle fait |
 |---|---|
-| `controles` | aucun secret, `.env` copie de `.env.exemple`, typographie, fichiers des vérifications automatiques, compositions valides, aucun port publié par `compose.yaml` |
-| `verifs` | les tests du portail, l'image d'exécution et son contenu (les réglages du poste n'y sont pas, MkDocs y est), la construction stricte du guide, les schémas, les images de marque et les tests de leur générateur, les tests du contrôle à l'écran |
-| `deploiement` | par le déploiement automatique commun du dépôt `oscar-infrastructure`, après une fusion dans `test` ou `main`, si le contenu de `oscar_backstage/` a changé, hors documentation (`*.md`), fabrication des images de marque (`marque/`) et vérification à l'écran (`verifications-ecran/`) |
+| Vérifications rapides | aucun secret, aucune ligne d'attribution, `.env` copie de `.env.exemple`, typographie, fichiers des vérifications automatiques, compositions valides, aucun port publié par `compose.yaml`, la construction stricte du guide (décision 98) |
+| Tests du code, puis construire, ranger et mettre en ligne | le déploiement automatique commun du dépôt `oscar-infrastructure`: « Tests du code dans l'image » (l'étape `verifications` du Dockerfile, pour une PR vers `test` et à l'envoi sur `test`); à l'envoi sur `test`, la construction de l'image si elle manque dans Harbor, son contrôle par `controler-l-image.sh` (le contenu de l'image exacte qui sera rangée: les réglages du poste n'y sont pas, MkDocs y est), son rangement dans `oscar/portail-portail`, Trivy, la mise en ligne en test; pour `main`, la même image retrouvée et mise en ligne en production, sans tests ni construction |
+| Résumé | un tableau sur la page de l'exécution, et un seul commentaire dans la PR |
+
+L'empreinte du contenu est celle de `oscar_backstage/`, sans la documentation
+(`*.md`), `catalog-info.yaml`, la fabrication des images de marque (`marque/`)
+ni la vérification à l'écran (`verifications-ecran/`), qui n'entrent pas dans
+l'image. Les schémas, les images de marque, le contrôle à l'écran et les tests
+de l'accueil et de la charte se lancent à la main (décision 91;
+`oscar_backstage/LISEZ-MOI.md`, « Les outils du développeur »).
 
 ## Le déploiement
 
@@ -244,6 +266,14 @@ machine (`network_mode: host`). Sous macOS et Windows: non vérifié.
 | Environnement Coolify | `production` | `test` |
 | Application Coolify | `portail-production` | `portail-test` |
 | Branche | `main` | `test` |
+| Image | `oscar/portail-portail` dans Harbor, la même | `oscar/portail-portail`, construite une fois à la fusion dans `test` |
+
+Coolify ne construit plus le portail (plan 17): il lance l'image que désigne
+la variable `ETIQUETTE_IMAGE_A_METTRE_EN_LIGNE` de l'application (une
+étiquette `contenu-<empreinte>`), posée par les vérifications automatiques.
+La base garde l'image publique `postgres:16.15-alpine`. Le retour en arrière
+se fait par l'étiquette d'une image précédente, jamais par le bouton
+« Rollback » de Coolify ([les environnements](../04-les-environnements.md)).
 
 La même application GitHub, `oscar-portail-technique`, sert en test et en
 production (décision 64). Ses identifiants, et le mot de passe de la base de
