@@ -1,0 +1,51 @@
+%% Étape 2 du parcours: la fusion dans test. Une seule construction, l'image rangée dans
+%% Harbor, mise en ligne en test par Coolify. Exemple réel: le portail, fusion de la PR 36
+%% le 04/10/2026 (exécution 37200487941).
+%% Couleur du moment: le test, le papier soutenu de la charte (code de couleur: docs/schemas/README.md).
+%% Source de 10-parcours-2-la-fusion-dans-test.svg. L'image ne se retouche jamais à la main.
+%% Après une modification, depuis la racine du dépôt:
+%%   docker compose -f docs/outils/compose.yaml run --rm schemas
+%% Colonnes élargies et libellés de blocs courts: voir 08-parcours-0-l-envoi.mmd.
+%%{init: {"sequence": {"width": 180, "actorMargin": 40}}}%%
+sequenceDiagram
+  autonumber
+  actor V as Vous
+  participant G as GitHub
+  participant H as Harbor
+  participant K as Coolify
+  participant S as Le site de test
+
+  rect rgb(234, 231, 223)
+    Note over V,S: Étape 2. La fusion dans test (exemple du portail, 04/10/2026)
+    V->>G: fusionner la PR (Merge pull request, Create a merge commit)
+    Note over G: la fusion est un envoi sur test: les vérifications démarrent
+    G->>G: vérifications rapides, puis tests du code (comme à l'étape 1)
+    G->>G: Décider: calculer l'empreinte du contenu
+    G->>H: as-tu l'image contenu-b560247a7806 ?
+    alt contenu nouveau
+      H-->>G: non
+      G->>G: construire l'image, une seule fois, puis contrôler son contenu
+      G->>H: ranger l'image, avec ses étiquettes contenu-... et construite-le-...
+    else contenu déjà construit
+      H-->>G: oui: rien n'est reconstruit
+    end
+    par Trivy (informe, ne bloque jamais)
+      G->>H: Trivy télécharge l'image et lit ses failles de sécurité
+    and Mise en ligne en test
+      G->>K: sers-tu déjà contenu-b560247a7806, et l'application est-elle saine ?
+      alt déjà en ligne
+        K-->>G: oui: rien n'est remis en ligne
+      else nouvelle version
+        G->>K: mets ETIQUETTE_IMAGE_A_METTRE_EN_LIGNE à contenu-b560247a7806, puis relis-la
+        G->>K: dès que la machine est libre, mets en ligne portail-test
+        K->>G: lire compose.yaml (la recette de lancement), au commit de la fusion
+        K->>H: télécharger l'image contenu-b560247a7806
+        K->>S: arrêter l'ancienne version, démarrer la nouvelle
+        G->>K: suivre la mise en ligne jusqu'à la fin, vérifier le commit
+        G->>S: l'adresse de santé répond-elle ?
+        S-->>G: 200 (la nouvelle version est prête)
+        G->>H: ajoute l'étiquette en-test-depuis-le-<br>2026-10-04-a-12h07
+      end
+    end
+    V->>G: lire le résumé de l'exécution (onglet Actions)
+  end

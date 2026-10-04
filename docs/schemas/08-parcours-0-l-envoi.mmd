@@ -1,0 +1,27 @@
+%% Étape 0 du parcours: l'envoi (push) d'une branche de travail. Rien n'est mis en ligne.
+%% Couleur du moment: l'envoi, blanc (code de couleur: docs/schemas/README.md).
+%% Source de 08-parcours-0-l-envoi.svg. L'image ne se retouche jamais à la main.
+%% Après une modification, depuis la racine du dépôt:
+%%   docker compose -f docs/outils/compose.yaml run --rm schemas
+%% Des colonnes plus larges que le réglage commun, pour que les phrases restent lisibles.
+%% Les libellés des blocs (opt, alt, par) restent courts: un libellé sur plusieurs lignes
+%% fait s'arrêter les traits des acteurs avant la fin du schéma (constaté avec Mermaid 11.17.1).
+%%{init: {"sequence": {"width": 180, "actorMargin": 40}}}%%
+sequenceDiagram
+  autonumber
+  actor V as Vous (votre poste)
+  participant G as GitHub
+  participant H as Harbor
+  participant K as Coolify
+
+  rect rgb(255, 255, 255)
+    Note over V,K: Étape 0. L'envoi (push) de la branche travail/sujet
+    V->>V: git commit: enregistrer les modifications, sur votre poste
+    V->>G: git push: envoyer la branche sur GitHub
+    G-->>V: la branche est rangée sur GitHub
+    Note over G,H: Aucune vérification automatique ne démarre: elles attendent une PR vers test ou main, ou une fusion dans test ou main
+    Note over H,K: Harbor et Coolify ne sont pas prévenus: rien n'est construit, rien n'est mis en ligne
+    opt une PR est déjà ouverte
+      G->>G: le nouvel envoi relance les vérifications de la PR (étape 1)
+    end
+  end

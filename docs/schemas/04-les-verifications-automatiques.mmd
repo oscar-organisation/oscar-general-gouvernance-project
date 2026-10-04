@@ -11,7 +11,7 @@ flowchart TB
   pr["Une PR vers test ne met rien en ligne<br>le résumé s'affiche sur la PR"]:::discret
   existe{"L'image de ce contenu<br>est-elle dans Harbor ?"}
   construire["Construire l'image une seule fois,<br>la contrôler, la ranger dans Harbor"]
-  trivy["Trivy lit les failles<br>informe, ne bloque pas"]:::discret
+  trivy["En même temps que la mise en ligne,<br>Trivy lit les failles<br>informe, ne bloque pas"]:::discret
   enligne["Mettre en ligne en test<br>#lt;application#gt;-test, puis vérifier la santé"]
   testee{"L'image testée<br>est-elle dans Harbor ?"}:::accent
   refus["Refus net<br>rien n'est mis en ligne"]:::attention
@@ -24,8 +24,9 @@ flowchart TB
   tests -- "PR vers test" --> pr
   quoi -- "une fusion dans test" --> tests
   tests -- "fusion dans test" --> existe
-  existe -- "non" --> construire --> trivy --> enligne
+  existe -- "non" --> construire --> enligne
   existe -- "oui" --> enligne
+  enligne -.- trivy
   quoi -- "une PR de test vers main,<br>ou une fusion dans main" --> testee
   testee -- "non" --> refus
   testee -- "oui, pour la PR" --> prtest
