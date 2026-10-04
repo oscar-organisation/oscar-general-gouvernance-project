@@ -75,8 +75,9 @@ docker compose -f marque/compose.yaml run --rm verifier
 
 **Ce qu'on doit voir**: une ligne `A JOUR` par fichier de marque, et le code de sortie 0.
 Sinon, une ligne `PERIME` ou `MANQUE` nomme le fichier en cause, et le code de
-sortie est 1. Cette commande n'écrit rien; les vérifications automatiques de
-GitHub la lancent à chaque exécution.
+sortie est 1. Cette commande n'écrit rien. **Elle se lance à la main**: les
+vérifications automatiques de GitHub ne la lancent plus (décision 91); la
+lancer après toute modification des images ou de `fabriquer.py`.
 
 ## Les adresses des icônes
 
@@ -113,5 +114,5 @@ docker compose -f marque/compose.yaml run --rm tester
 Les tests (`test_fabriquer.py`) partent d'une page et d'un manifeste sans
 empreinte, et vérifient que chaque adresse reçoit la bonne, recalculée à
 part; ils vérifient aussi chaque refus, et l'icône de la page de connexion.
-Ils n'écrivent rien; les vérifications automatiques de GitHub les lancent à
-chaque exécution.
+Ils n'écrivent rien. **Ils se lancent à la main**: les vérifications
+automatiques de GitHub ne les lancent plus (décision 91).
