@@ -16,8 +16,9 @@ Deux usages, dans le conteneur decrit par compose.yaml, a cote:
 
 Pourquoi un script plutot que des images faites a la main: une image faite a
 la main ne se refait pas a l identique. Celles-ci se refont a l octet pres, et
-la verification le prouve a chaque execution des verifications automatiques
-de GitHub.
+la verification le prouve quand on la lance. C est un outil du developpeur,
+lance a la main: les verifications automatiques de GitHub ne le lancent plus
+(decision 91).
 
 Le script tient aussi les adresses qui citent ces images: dans la page du
 portail (public/index.html) et dans son manifeste (public/manifest.json),

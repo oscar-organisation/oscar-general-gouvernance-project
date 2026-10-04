@@ -61,8 +61,26 @@ describe('la composition lue par Coolify, compose.yaml', () => {
     );
   });
 
-  it('construit l image d execution, et aucune autre', () => {
-    expect(composition.services.portail.build.target).toBe('execution');
+  it('ne construit rien: chaque service est une image deja faite', () => {
+    // Decisions 89 et 90: les verifications automatiques de GitHub
+    // construisent l image une seule fois; Coolify met en ligne cette image,
+    // en test puis en production, sans jamais construire.
+    for (const [nom, service] of services) {
+      expect([nom, service.build]).toEqual([nom, undefined]);
+      expect([nom, typeof service.image]).toEqual([nom, 'string']);
+    }
+  });
+
+  it('designe le portail dans l entrepot d images, par les noms des conventions', () => {
+    // L adresse de l entrepot et l etiquette viennent de Coolify; chacune a
+    // une valeur par defaut, jamais la forme « :? » (lecon 6.7). Le depot
+    // d images est oscar/<application>-<service>, ici oscar/portail-portail
+    // (conventions de la phase 3 du plan 17, decision 101): le deploiement
+    // automatique commun refuse de ranger une image que la composition ne
+    // designe pas exactement ainsi.
+    expect(composition.services.portail.image).toMatch(
+      /^\$\{ADRESSE_ENTREPOT_IMAGES:-registry-container\.oscar-bot\.com\}\/oscar\/portail-portail:\$\{ETIQUETTE_IMAGE_A_METTRE_EN_LIGNE:-[a-z0-9-]+\}$/,
+    );
   });
 });
 
@@ -87,6 +105,16 @@ describe('le complement du poste, compose.override.yaml', () => {
     expect(complement.services.portail.volumes).toContain(
       './app-config.poste.yaml:/app/app-config.poste.yaml:ro',
     );
+  });
+
+  it('construit l image d execution sur le poste, sans jamais demander l entrepot', () => {
+    // Le nom de l image vient de compose.yaml seul: le poste construit sous
+    // ce nom. pull_policy « never »: l entrepot est prive, et l image du poste
+    // porte une etiquette qu il n a pas.
+    const portail = complement.services.portail;
+    expect(portail.build).toEqual({ context: '.', target: 'execution' });
+    expect(portail.pull_policy).toBe('never');
+    expect(portail.image).toBeUndefined();
   });
 
   it('ne lance le mode developpement qu a la demande', () => {
@@ -168,6 +196,45 @@ describe('les reglages de Backstage', () => {
         rules: [{ allow: ['Component', 'API', 'Location'] }],
       },
     ]);
+  });
+});
+
+describe('les tests de l accueil et de la charte, hors du parcours automatique', () => {
+  // Decision 91: ils ne sont plus lances par les verifications automatiques,
+  // mais restent des outils du developpeur, lances a la main. Les dossiers
+  // exclus sont ecrits a deux endroits, l exclusion et la commande a la main:
+  // ce test les garde d accord (lecon 3.3).
+  const app = JSON.parse(lire('packages/app/package.json'));
+  const motifs: string[] = app.jest?.testPathIgnorePatterns ?? [];
+  const exclus = motifs.filter(motif => motif !== '/node_modules/');
+
+  it('exclut seulement les dossiers de l accueil et de la charte', () => {
+    expect(motifs).toContain('/node_modules/');
+    expect(exclus).toEqual(['/modules/accueil/', '/modules/charte/']);
+  });
+
+  it('les lance a la main, tous et seulement eux, et chacun a encore son test', () => {
+    const commande: string =
+      app.scripts['test:verifications-du-developpeur'] ?? '';
+    expect(exclus.length).toBeGreaterThan(0);
+    for (const motif of exclus) {
+      const dossier = motif.replace(/^\/|\/$/g, '');
+      expect([dossier, commande.includes(dossier)]).toEqual([dossier, true]);
+      // Les dossiers avant l option: ecrits apres, ils deviennent des valeurs
+      // de --testPathIgnorePatterns, et la commande lance tous les autres
+      // tests au lieu de ceux-la (essaye le 04/10/2026).
+      expect([dossier, commande.indexOf(dossier) < commande.indexOf(' --')]).toEqual([dossier, true]);
+      const tests = fs
+        .readdirSync(path.join(PORTAIL, 'packages', 'app', 'src', dossier))
+        .filter(fichier => /\.test\.tsx?$/.test(fichier));
+      expect([dossier, tests.length > 0]).toEqual([dossier, true]);
+    }
+  });
+
+  it('le Dockerfile a l etape qui lance cette commande', () => {
+    expect(lire('Dockerfile')).toMatch(
+      /FROM construction AS verifications-du-developpeur\nRUN yarn workspace app test:verifications-du-developpeur\n/,
+    );
   });
 });
 

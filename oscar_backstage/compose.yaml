@@ -1,8 +1,10 @@
 # Le portail technique OSCAR: le portail, et sa base de donnees.
 #
 # Coolify lit ce fichier, et lui seul, pour deployer le test et la production.
-# En local, docker compose le lit aussi, puis lui ajoute compose.override.yaml,
-# qui publie les ports et ouvre l acces invite. Voir ce fichier-la.
+# Il n y construit rien: le portail y est une image deja construite, rangee
+# dans l entrepot d images d OSCAR (Harbor). En local, docker compose le lit
+# aussi, puis lui ajoute compose.override.yaml, qui construit l image sur le
+# poste, publie les ports et ouvre l acces invite. Voir ce fichier-la.
 #
 # CE QUE CETTE COMPOSITION NE FAIT PAS, ET POURQUOI
 #
@@ -30,10 +32,12 @@
 # AUCUNE VARIABLE N EST EXIGEE ICI: la forme « :- » avec une valeur par defaut,
 # jamais la forme « :? » qui arrete tout si la variable manque
 #
-# Coolify construit l image avec un fichier d environnement de construction
-# qui ne porte pas les secrets, poses pour l execution seulement: une
-# variable exigee ici ferait echouer la construction (mesure le 26/09/2026,
-# premier deploiement de portail-test). L exigence est la ou elle sert, au
+# Coolify construisait l image avec un fichier d environnement de
+# construction qui ne portait pas les secrets, poses pour l execution
+# seulement: une variable exigee ici faisait echouer la construction (mesure
+# le 26/09/2026, premier deploiement de portail-test). Coolify ne construit
+# plus rien, mais la regle reste: le meme comportement a la lecture de la
+# composition n a pas ete verifie en mode image. L exigence est la ou elle sert, au
 # demarrage: PostgreSQL refuse de s initialiser sans mot de passe, et
 # Backstage refuse de demarrer sans son adresse publique, chacun avec un
 # message clair dans son journal. L outil DNS et le laboratoire font de meme.
@@ -78,11 +82,21 @@ services:
   # Le portail lui-meme.
   # ---------------------------------------------------------------------------
   portail:
-    build:
-      # Le contexte est ce dossier: tout ce qui concerne le portail y vit, ce
-      # qui permet a Coolify de ne viser que lui (decision 62).
-      context: .
-      target: execution
+    # L image deja construite et rangee dans l entrepot d images d OSCAR
+    # (Harbor), jamais une construction: les verifications automatiques de
+    # GitHub construisent l image une seule fois, la rangent, puis Coolify met
+    # en ligne cette image precise en test, et la meme en production
+    # (decisions 89 et 90). Le poste, lui, construit l image en local:
+    # compose.override.yaml.
+    #
+    # L etiquette dit quelle image mettre en ligne. Coolify la recoit dans
+    # ETIQUETTE_IMAGE_A_METTRE_EN_LIGNE, posee par le deploiement automatique
+    # (contenu-<empreinte du contenu>). Pour revenir en arriere, on y met une
+    # etiquette en-production-depuis-le-<date> precedente, puis « Redeploy »
+    # (decision 101). Sans etiquette, la valeur par defaut n existe pas dans
+    # l entrepot: la mise en ligne echoue au telechargement, avant d arreter
+    # la version en service (mesure par le prototype du laboratoire).
+    image: "${ADRESSE_ENTREPOT_IMAGES:-registry-container.oscar-bot.com}/oscar/portail-portail:${ETIQUETTE_IMAGE_A_METTRE_EN_LIGNE:-construite-sur-le-poste-du-developpeur}"
     depends_on:
       base:
         condition: service_healthy
