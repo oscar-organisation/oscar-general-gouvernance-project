@@ -1,0 +1,30 @@
+%% Étape 3 du parcours: la PR de test vers main. Elle vérifie seulement, en quelques
+%% secondes, que l'image testée existe. Exemple réel: le portail, PR 37 du 04/10/2026.
+%% Couleur du moment: une PR, le gris de la charte à 30 % (code de couleur: docs/schemas/README.md).
+%% Source de 11-parcours-3-la-pr-vers-main.svg. L'image ne se retouche jamais à la main.
+%% Après une modification, depuis la racine du dépôt:
+%%   docker compose -f docs/outils/compose.yaml run --rm schemas
+%% Colonnes élargies et libellés de blocs courts: voir 08-parcours-0-l-envoi.mmd.
+%%{init: {"sequence": {"width": 180, "actorMargin": 40}}}%%
+sequenceDiagram
+  autonumber
+  actor V as Vous
+  participant G as GitHub
+  participant H as Harbor
+  participant K as Coolify
+
+  rect rgba(107, 107, 107, 0.3)
+    Note over V,K: Étape 3. La PR de test vers main (exemple du portail, 04/10/2026)
+    V->>G: ouvrir la PR de test vers main
+    G->>G: vérifications rapides
+    G->>G: Décider: calculer l'empreinte du contenu, la même qu'en test
+    G->>H: as-tu contenu-b560247a7806, avec une étiquette en-test-depuis-le-... ?
+    alt oui
+      H-->>G: oui, avec en-test-depuis-le-<br>2026-10-04-a-12h07
+      G->>V: résumé: « Image testée: retrouvée, déjà mise en ligne en test »
+    else non
+      H-->>G: non: elle manque, ou n'a jamais été mise en ligne en test
+      G->>V: refus net, PR en échec: ne pas fusionner
+    end
+    Note over G,K: Ni tests, ni construction, ni Trivy, et Coolify n'est pas appelé
+  end

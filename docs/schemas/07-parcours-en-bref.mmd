@@ -1,0 +1,23 @@
+%% Le parcours d'une modification en bref: les cinq moments et le retour en arrière.
+%% C'est aussi la légende des couleurs: chaque moment garde sa couleur sur tous les
+%% schémas de la page « Comment une modification arrive en production »
+%% (le code de couleur est écrit une fois, dans docs/schemas/README.md).
+%% Source de 07-parcours-en-bref.svg. L'image ne se retouche jamais à la main.
+%% Après une modification, depuis la racine du dépôt:
+%%   docker compose -f docs/outils/compose.yaml run --rm schemas
+flowchart TB
+  envoi["0. L'envoi (push)<br>sur la branche travail/sujet<br>rien ne démarre"]:::envoi
+  pr1["1. La PR vers test<br>vérifications et tests<br>rien n'est mis en ligne"]:::pr
+  test["2. La fusion dans test<br>une seule construction, rangée dans Harbor<br>mise en ligne en test"]:::test
+  pr2["3. La PR de test vers main<br>l'image testée existe-t-elle ?<br>quelques secondes, rien n'est refait"]:::pr
+  prod["4. La fusion dans main<br>LA MÊME image<br>mise en ligne en production"]:::prod
+  retour["Le retour en arrière<br>l'image d'avant, remise à la main<br>depuis Harbor et Coolify"]:::retour
+
+  envoi --> pr1 --> test --> pr2 --> prod
+  prod -. "si la production casse" .-> retour
+
+  classDef envoi fill:#FFFFFF,stroke:#6B6B6B,stroke-width:1.5px,stroke-dasharray:5 4,color:#1B1D1E
+  classDef pr fill:#6B6B6B,fill-opacity:0.3,stroke:#6B6B6B,stroke-width:1.5px,color:#1B1D1E
+  classDef test fill:#EAE7DF,stroke:#33383A,stroke-width:1.5px,color:#1B1D1E
+  classDef prod fill:#D85810,fill-opacity:0.18,stroke:#D85810,stroke-width:3px,color:#1B1D1E
+  classDef retour fill:#33383A,fill-opacity:0.4,stroke:#1B1D1E,stroke-width:1.5px,color:#1B1D1E

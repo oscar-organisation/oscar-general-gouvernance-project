@@ -22,6 +22,7 @@ docs_dir: docs
 
 nav:
   - Commencer ici: README.md
+  - Comment une modification arrive en production: 01-comment-une-modification-arrive-en-production.md
   - Le cycle pas à pas: 02-le-cycle-pas-a-pas.md
   - Comment se comporter: 03-comment-se-comporter.md
   - Les environnements: 04-les-environnements.md

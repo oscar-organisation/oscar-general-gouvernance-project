@@ -7,6 +7,12 @@ Version 1.0 du 25 septembre 2026. Il suit le plan du cycle de développement
 (plan 11 du projet) et les décisions de Joel. Ce qui n'existe pas encore y est
 dit comme tel, avec le lot du plan qui l'apporte.
 
+> **Comment une modification arrive en production.** L'envoi, la PR vers
+> `test`, la fusion dans `test`, la PR vers `main`, la fusion dans `main`: ce
+> qui se passe à chaque étape, qui parle à qui (GitHub, Harbor, Coolify), les
+> étiquettes des images, et comment revenir en arrière, avec un schéma en
+> couleur par étape: [la page du parcours](01-comment-une-modification-arrive-en-production.md).
+
 ## OSCAR en quelques lignes
 
 OSCAR (Operating System & Control Architecture for Robotics) est une plateforme
@@ -100,8 +106,9 @@ administrateur de l'organisation.
    erreur déjà faite.
 2. Lire [comment se comporter](03-comment-se-comporter.md): les règles de
    l'équipe, en une page.
-3. Suivre [le cycle pas à pas](02-le-cycle-pas-a-pas.md), sur l'application
-   qu'on va toucher, avec sa page dans [les applications](08-les-applications/README.md).
+3. Lire [comment une modification arrive en production](01-comment-une-modification-arrive-en-production.md),
+   puis suivre [le cycle pas à pas](02-le-cycle-pas-a-pas.md), sur
+   l'application qu'on va toucher, avec sa page dans [les applications](08-les-applications/README.md).
 4. Garder sous la main [le glossaire](09-glossaire.md): chaque mot technique du
    guide y est expliqué.
 
@@ -110,6 +117,7 @@ administrateur de l'organisation.
 | Page | Ce qu'on y trouve |
 |---|---|
 | [Commencer ici](README.md) | cette page |
+| [Comment une modification arrive en production](01-comment-une-modification-arrive-en-production.md) | ce qui se passe à chaque étape, de l'envoi à la production, schéma par schéma; les étiquettes; le retour en arrière |
 | [Le cycle pas à pas](02-le-cycle-pas-a-pas.md) | de `git clone` à la production, étape par étape, avec les commandes |
 | [Comment se comporter](03-comment-se-comporter.md) | les règles de l'équipe, et pourquoi |
 | [Les environnements](04-les-environnements.md) | local, test, production: les noms, les variables, les ports |
