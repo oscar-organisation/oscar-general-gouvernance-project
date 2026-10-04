@@ -96,7 +96,7 @@ services:
     # (decision 101). Sans etiquette, la valeur par defaut n existe pas dans
     # l entrepot: la mise en ligne echoue au telechargement, avant d arreter
     # la version en service (mesure par le prototype du laboratoire).
-    image: "${ADRESSE_ENTREPOT_IMAGES:-registry-container.oscar-bot.com}/oscar/portail-backstage:${ETIQUETTE_IMAGE_A_METTRE_EN_LIGNE:-construite-sur-le-poste-du-developpeur}"
+    image: "${ADRESSE_ENTREPOT_IMAGES:-registry-container.oscar-bot.com}/oscar/portail-portail:${ETIQUETTE_IMAGE_A_METTRE_EN_LIGNE:-construite-sur-le-poste-du-developpeur}"
     depends_on:
       base:
         condition: service_healthy

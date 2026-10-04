@@ -20,7 +20,7 @@ Aucun secret n'est nécessaire: en local, on entre en invité. Le poste construi
 l'image lui-même (`compose.override.yaml`); en test et en production, Coolify
 ne construit rien: il met en ligne l'image que les vérifications automatiques
 de GitHub ont construite une seule fois et rangée dans l'entrepôt d'images
-d'OSCAR, Harbor (`oscar/portail-backstage`).
+d'OSCAR, Harbor (`oscar/portail-portail`).
 
 ## Les outils du développeur, lancés à la main
 
@@ -47,6 +47,7 @@ nomment les mêmes dossiers.
 compose.yaml                  le portail (l image rangee dans Harbor) et sa base, tels que Coolify les deploie
 compose.override.yaml         ce que le poste ajoute: la construction de l image, les ports, l invite, le mode developpement
 Dockerfile                    la construction, entierement dans Docker
+controler-l-image.sh          le controle du contenu de l image, avant de la ranger dans Harbor
 .env.exemple, .env            chaque variable, son role et son niveau
 app-config*.yaml              les reglages de Backstage, un fichier par role (voir app-config.yaml)
 catalogue/                    la structure du catalogue, et les fiches en attente

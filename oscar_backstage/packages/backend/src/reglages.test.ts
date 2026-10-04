@@ -74,10 +74,12 @@ describe('la composition lue par Coolify, compose.yaml', () => {
   it('designe le portail dans l entrepot d images, par les noms des conventions', () => {
     // L adresse de l entrepot et l etiquette viennent de Coolify; chacune a
     // une valeur par defaut, jamais la forme « :? » (lecon 6.7). Le depot
-    // d images est oscar/portail-backstage (conventions de la phase 3 du
-    // plan 17, decision 101).
+    // d images est oscar/<application>-<service>, ici oscar/portail-portail
+    // (conventions de la phase 3 du plan 17, decision 101): le deploiement
+    // automatique commun refuse de ranger une image que la composition ne
+    // designe pas exactement ainsi.
     expect(composition.services.portail.image).toMatch(
-      /^\$\{ADRESSE_ENTREPOT_IMAGES:-registry-container\.oscar-bot\.com\}\/oscar\/portail-backstage:\$\{ETIQUETTE_IMAGE_A_METTRE_EN_LIGNE:-[a-z0-9-]+\}$/,
+      /^\$\{ADRESSE_ENTREPOT_IMAGES:-registry-container\.oscar-bot\.com\}\/oscar\/portail-portail:\$\{ETIQUETTE_IMAGE_A_METTRE_EN_LIGNE:-[a-z0-9-]+\}$/,
     );
   });
 });
