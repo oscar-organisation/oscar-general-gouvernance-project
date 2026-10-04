@@ -15,6 +15,13 @@ Chaque schéma a deux fichiers, côte à côte: sa **source**, écrite en Mermai
 | Les vérifications automatiques | [`04-les-verifications-automatiques.mmd`](04-les-verifications-automatiques.mmd) | [`04-les-verifications-automatiques.svg`](04-les-verifications-automatiques.svg) | [Les vérifications automatiques](../05-les-verifications-automatiques.md) |
 | Les environnements | [`05-les-environnements.mmd`](05-les-environnements.mmd) | [`05-les-environnements.svg`](05-les-environnements.svg) | [Les environnements](../04-les-environnements.md) |
 | Quand une vérification automatique échoue | [`06-quand-une-verification-echoue.mmd`](06-quand-une-verification-echoue.mmd) | [`06-quand-une-verification-echoue.svg`](06-quand-une-verification-echoue.svg) | [Comment se comporter](../03-comment-se-comporter.md) |
+| Le parcours en bref, et la légende des couleurs | [`07-parcours-en-bref.mmd`](07-parcours-en-bref.mmd) | [`07-parcours-en-bref.svg`](07-parcours-en-bref.svg) | [Comment une modification arrive en production](../01-comment-une-modification-arrive-en-production.md) |
+| Étape 0, l'envoi | [`08-parcours-0-l-envoi.mmd`](08-parcours-0-l-envoi.mmd) | [`08-parcours-0-l-envoi.svg`](08-parcours-0-l-envoi.svg) | la même |
+| Étape 1, la PR vers test | [`09-parcours-1-la-pr-vers-test.mmd`](09-parcours-1-la-pr-vers-test.mmd) | [`09-parcours-1-la-pr-vers-test.svg`](09-parcours-1-la-pr-vers-test.svg) | la même |
+| Étape 2, la fusion dans test | [`10-parcours-2-la-fusion-dans-test.mmd`](10-parcours-2-la-fusion-dans-test.mmd) | [`10-parcours-2-la-fusion-dans-test.svg`](10-parcours-2-la-fusion-dans-test.svg) | la même |
+| Étape 3, la PR de test vers main | [`11-parcours-3-la-pr-vers-main.mmd`](11-parcours-3-la-pr-vers-main.mmd) | [`11-parcours-3-la-pr-vers-main.svg`](11-parcours-3-la-pr-vers-main.svg) | la même |
+| Étape 4, la fusion dans main (la production) | [`12-parcours-4-la-fusion-dans-main.mmd`](12-parcours-4-la-fusion-dans-main.mmd) | [`12-parcours-4-la-fusion-dans-main.svg`](12-parcours-4-la-fusion-dans-main.svg) | la même |
+| Le retour en arrière | [`13-parcours-5-le-retour-en-arriere.mmd`](13-parcours-5-le-retour-en-arriere.mmd) | [`13-parcours-5-le-retour-en-arriere.svg`](13-parcours-5-le-retour-en-arriere.svg) | la même |
 
 **La source fait foi. L'image ne se retouche jamais à la main**: on corrige la
 source, puis on refait l'image par la commande ci-dessous.
@@ -69,8 +76,9 @@ docker compose -f docs/outils/compose.yaml run --rm schemas
 ```
 
 **Ce qu'on doit voir**: une ligne `FABRIQUE` par schéma, puis
-`6 schema(s), chaque image correspond a sa source.` La commande prend environ
-deux minutes: chaque schéma est dessiné par un navigateur, dans le conteneur.
+`13 schema(s), chaque image correspond a sa source.` La commande prend
+moins d'une minute (20 s mesurées le 04/10/2026 pour 13 schémas): chaque schéma est
+dessiné par un navigateur, dans le conteneur.
 
 Sous Linux, les images sont écrites avec l'identité `1000`, celle du premier
 compte d'une machine. Pour une autre identité:
@@ -139,3 +147,36 @@ actif dans le portail.
 Les deux teintes de fond du schéma de séquence (`rect rgb(...)` dans sa source)
 sont les deux fonds de la charte: Mermaid ne permet pas de les prendre dans la
 configuration.
+
+## Le code de couleur du parcours de mise en ligne
+
+Les schémas 07 à 13 donnent à chaque moment du parcours sa couleur, la même
+partout: le fond du schéma de séquence (`rect` dans sa source) et la case du
+schéma 07, qui sert de légende.
+
+**Chaque couleur est une couleur de la charte, ou une couleur de la charte
+rendue transparente** (la transparence est écrite dans la source:
+`rgba(...)` pour un fond de séquence, `fill-opacity` pour une case), comme la
+charte trace elle-même ses filets (le noir à 12 %). Aucune couleur nouvelle:
+le contrôle à l'écran du portail, qui refuse toute couleur hors de la charte
+et compte une couleur transparente pour sa teinte, l'accepte. Un seul orange,
+`#D85810`, réservé au moment le plus important, la production. Le texte reste
+à l'encre `#1B1D1E`, lisible sur chaque fond (contraste de 6 pour 1 au moins).
+
+| Moment | Fond | Ce que l'œil voit | Bord, dans le schéma 07 |
+|---|---|---|---|
+| l'envoi | `#FFFFFF`, la carte de la charte | blanc | `#6B6B6B`, en pointillé |
+| une PR (vers `test` ou vers `main`) | le gris `#6B6B6B` à 30 %, `rgba(107, 107, 107, 0.3)` | gris moyen | `#6B6B6B` |
+| la fusion dans `test` | le papier soutenu `#EAE7DF`, `rgb(234, 231, 223)` | papier, beige clair | `#33383A` |
+| la fusion dans `main`, la production | l'orange `#D85810` à 18 %, `rgba(216, 88, 16, 0.18)` | orange très clair | `#D85810`, épais; les notes du schéma 12 ont aussi ce bord |
+| le retour en arrière | l'encre douce `#33383A` à 40 %, `rgba(51, 56, 58, 0.4)` | gris foncé | `#1B1D1E` |
+
+Une couleur qui change se change dans tous ces schémas à la fois, dans ce
+tableau, et dans la légende de la page « Comment une modification arrive en
+production ».
+
+Ces schémas de séquence élargissent leurs colonnes (`width` 180 au lieu de 130,
+par une ligne `%%{init: ...}%%` en tête de leur source), pour que les phrases
+restent lisibles. Les libellés de leurs blocs (`alt`, `opt`, `par`) restent
+courts: un libellé sur plusieurs lignes fait s'arrêter les traits des acteurs
+avant la fin du schéma (constaté le 04/10/2026 avec Mermaid 11.17.1).

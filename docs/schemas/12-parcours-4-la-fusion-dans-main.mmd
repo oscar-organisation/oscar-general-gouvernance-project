@@ -1,0 +1,48 @@
+%% Étape 4 du parcours: la fusion dans main, la production. LA MÊME image que le test,
+%% retrouvée dans Harbor: rien n'est reconstruit ni retesté. Exemple réel: le portail,
+%% fusion de la PR 37 le 04/10/2026 (exécution 37201414623).
+%% Couleur du moment: la production, l'orange de la charte à 18 %, le seul orange (code de couleur: docs/schemas/README.md).
+%% Les notes y portent le bord orange de la charte, réservé à ce moment.
+%% Source de 12-parcours-4-la-fusion-dans-main.svg. L'image ne se retouche jamais à la main.
+%% Après une modification, depuis la racine du dépôt:
+%%   docker compose -f docs/outils/compose.yaml run --rm schemas
+%% Colonnes élargies et libellés de blocs courts: voir 08-parcours-0-l-envoi.mmd.
+%%{init: {"sequence": {"width": 180, "actorMargin": 40}, "themeVariables": {"noteBorderColor": "#D85810", "noteBkgColor": "#FFFFFF"}}}%%
+sequenceDiagram
+  autonumber
+  actor V as Vous
+  participant G as GitHub
+  participant H as Harbor
+  participant K as Coolify
+  participant P as Le site de production
+
+  rect rgba(216, 88, 16, 0.18)
+    Note over V,P: Étape 4. La fusion dans main: la production (exemple du portail, 04/10/2026)
+    V->>G: fusionner la PR de test vers main (Create a merge commit)
+    Note over G: la fusion est un envoi sur main: les vérifications démarrent
+    G->>G: vérifications rapides
+    G->>G: Décider: calculer l'empreinte, qui n'a pas changé depuis le test
+    G->>H: as-tu l'image contenu-b560247a7806 ?
+    alt non
+      H-->>G: non
+      G->>V: refus net: rien n'est mis en production
+    else oui
+      H-->>G: oui
+      Note over G,H: RIEN n'est reconstruit, RIEN n'est retesté, pas de Trivy
+      G->>K: sers-tu déjà contenu-b560247a7806, et l'application est-elle saine ?
+      alt déjà en ligne
+        K-->>G: oui: rien n'est remis en ligne
+      else nouvelle version
+        G->>K: mets ETIQUETTE_IMAGE_A_METTRE_EN_LIGNE à contenu-b560247a7806, puis relis-la
+        G->>K: dès que la machine est libre, mets en ligne portail-production
+        K->>G: lire compose.yaml (la recette de lancement), au commit de main
+        K->>H: télécharger LA MÊME image, contenu-b560247a7806
+        K->>P: arrêter l'ancienne version, démarrer la nouvelle
+        G->>K: suivre la mise en ligne jusqu'à la fin, vérifier le commit
+        G->>P: l'adresse de santé répond-elle ?
+        P-->>G: 200 (la nouvelle version est prête)
+        G->>H: ajoute l'étiquette en-production-depuis-le-<br>2026-10-04-a-12h15
+      end
+    end
+    V->>G: lire le résumé de l'exécution (onglet Actions)
+  end

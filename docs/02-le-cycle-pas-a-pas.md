@@ -17,6 +17,11 @@ production, sans rien reconstruire ni retester (plan 17, depuis le 04/10/2026).
 
 Source du schéma: [`schemas/02-trajet-d-une-modification.mmd`](schemas/02-trajet-d-une-modification.mmd).
 
+Cette page donne les commandes. Ce qui se passe derrière, à chaque étape (qui
+parle à qui, dans quel ordre, ce qui arrête tout, les étiquettes, le retour en
+arrière), avec un schéma par étape:
+[comment une modification arrive en production](01-comment-une-modification-arrive-en-production.md).
+
 ## Comment lire les commandes
 
 Ce qui est entre `<` et `>` est à remplacer, sans les chevrons:

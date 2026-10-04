@@ -1,0 +1,30 @@
+%% Le retour en arrière: remettre en ligne, à la main, l'image d'avant, depuis Harbor puis
+%% Coolify. Exemple: le portail en production, retour de contenu-b560247a7806 à
+%% contenu-093b638ca881 (les deux images réelles du 04/10/2026; ce retour n'a pas été fait).
+%% Couleur du moment: le retour en arrière, l'encre douce de la charte à 40 % (code de couleur: docs/schemas/README.md).
+%% Source de 13-parcours-5-le-retour-en-arriere.svg. L'image ne se retouche jamais à la main.
+%% Après une modification, depuis la racine du dépôt:
+%%   docker compose -f docs/outils/compose.yaml run --rm schemas
+%% Colonnes élargies et libellés de blocs courts: voir 08-parcours-0-l-envoi.mmd.
+%%{init: {"sequence": {"width": 180, "actorMargin": 40}}}%%
+sequenceDiagram
+  autonumber
+  actor V as Vous
+  participant H as Harbor
+  participant K as Coolify
+  participant P as Le site de production
+  participant G as GitHub
+
+  rect rgba(51, 56, 58, 0.4)
+    Note over V,G: Le retour en arrière: remettre en ligne l'image d'avant (exemple du portail)
+    V->>H: Projects, oscar, portail-portail: lire les étiquettes des images
+    H-->>V: l'image d'avant porte contenu-093b638ca881<br>et en-production-depuis-le-<br>2026-10-04-a-10h54
+    V->>K: portail-production, onglet Environment Variables:<br>ETIQUETTE_IMAGE_A_METTRE_EN_LIGNE<br>= contenu-093b638ca881, enregistrer
+    V->>K: cliquer sur Redeploy
+    K->>G: lire compose.yaml (la recette de lancement), sur la branche main
+    K->>H: télécharger l'image contenu-093b638ca881
+    K->>P: arrêter la version fautive, démarrer celle d'avant
+    V->>P: vérifier que le site répond
+    Note over P,G: GitHub ne sait rien de ce retour: aucune étiquette n'est ajoutée dans Harbor, et la prochaine fusion dans main remettra le contenu de main
+    V->>G: pour de bon: une PR qui annule la modification (git revert), puis les étapes 1 à 4
+  end

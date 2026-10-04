@@ -1,0 +1,30 @@
+%% Étape 1 du parcours: la PR (demande de fusion) d'une branche de travail vers test.
+%% Exemple réel: le portail, PR 36 du 04/10/2026. Rien n'est construit ni mis en ligne.
+%% Couleur du moment: une PR, le gris de la charte à 30 % (code de couleur: docs/schemas/README.md).
+%% Source de 09-parcours-1-la-pr-vers-test.svg. L'image ne se retouche jamais à la main.
+%% Après une modification, depuis la racine du dépôt:
+%%   docker compose -f docs/outils/compose.yaml run --rm schemas
+%% Colonnes élargies et libellés de blocs courts: voir 08-parcours-0-l-envoi.mmd.
+%%{init: {"sequence": {"width": 180, "actorMargin": 40}}}%%
+sequenceDiagram
+  autonumber
+  actor V as Vous
+  participant G as GitHub
+  participant H as Harbor
+  participant K as Coolify
+
+  rect rgba(107, 107, 107, 0.3)
+    Note over V,K: Étape 1. La PR de travail/sujet vers test (exemple du portail)
+    V->>G: ouvrir la PR vers test
+    Note over G: GitHub prête un ordinateur neuf et lance les vérifications
+    G->>G: vérifications rapides (environ 30 s)
+    G->>G: Décider: une PR vers test ne construit rien et ne met rien en ligne
+    G->>G: tests du code, unitaires et d'intégration (environ 3 min)
+    G->>V: le commentaire de résumé dans la PR, et le verdict
+    alt en échec
+      V->>V: ne pas fusionner, corriger sur la même branche et renvoyer (étape 0)
+    else réussi
+      V->>V: la PR peut être fusionnée (étape 2)
+    end
+    Note over H,K: Ni Harbor ni Coolify ne sont appelés: aucune image, rien en ligne
+  end

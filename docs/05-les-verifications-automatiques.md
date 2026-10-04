@@ -43,7 +43,7 @@ Le déploiement automatique commun, appelé par la troisième tâche:
 |---|---|
 | Décider (parcours, empreinte du contenu, images déjà rangées) | choisit le parcours selon l'évènement et la branche, calcule l'empreinte, regarde dans Harbor l'image `contenu-<empreinte>` de chaque service |
 | Construire l'image et la ranger dans Harbor (une seule fois) | seulement à l'envoi sur `test`, et seulement si l'image manque: construire, contrôler l'image exacte (commande de l'application), ranger |
-| Sécurité: lecture des failles par Trivy (informe, ne bloque pas) | seulement quand une image est construite pour `test`: le nombre de failles par niveau va dans le résumé (A42) |
+| Sécurité: lecture des failles par Trivy (informe, ne bloque pas) | à chaque envoi sur `test`, que l'image vienne d'être construite ou qu'elle soit déjà rangée, en même temps que la mise en ligne: le nombre de failles par niveau va dans le résumé (A42); l'exécution finit quand Trivy a fini |
 | Mettre en ligne et vérifier la santé | à l'envoi sur `test` ou sur `main`: poser l'étiquette de l'image sur l'application Coolify `<application>-<environnement>`, attendre que la machine soit libre, mettre en ligne, suivre, vérifier que l'adresse de santé répond 200, puis noter dans Harbor `en-test-depuis-le-<date>` ou `en-production-depuis-le-<date>` |
 
 **Une tâche en échec arrête tout, et rien n'est mis en ligne.** Prouvé le

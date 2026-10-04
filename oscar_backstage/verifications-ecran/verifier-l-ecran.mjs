@@ -36,7 +36,8 @@
  *
  * Code de sortie: 0 si aucune couleur hors charte n a ete vue, si chaque
  * texte atteint le contraste AA de sa taille, si chaque page s est affichee,
- * si LightBox s ouvre sur chaque page du cycle, si chaque focus porte
+ * si LightBox s ouvre sur la page du cycle et sur celle du parcours de mise
+ * en ligne, si chaque focus porte
  * l anneau de la charte, et si la partie « Le deploiement » de l accueil est
  * complete; 1 sinon.
  *
@@ -94,6 +95,9 @@ const PAGES = mode === 'invite'
       fiche: { chemin: '/catalog/default/component/portail', pret: 'text=Portail technique' },
       guide: { chemin: '/docs/default/component/oscar-general-gouvernance-project/', pret: '.md-content h1', attente: 120000 },
       cycle: { chemin: '/docs/default/component/oscar-general-gouvernance-project/02-le-cycle-pas-a-pas/', pret: '.md-content h1', attente: 120000 },
+      // La page du parcours de mise en ligne: sept schemas en couleur, dont
+      // chaque teinte doit etre une couleur de la charte (ou sa transparence).
+      parcours: { chemin: '/docs/default/component/oscar-general-gouvernance-project/01-comment-une-modification-arrive-en-production/', pret: '.md-content h1', attente: 120000 },
     }
   : {};
 
@@ -206,7 +210,7 @@ for (const [nomEcran, taille] of Object.entries(ECRANS)) {
         const absentes = deploiement.absentes?.length ? deploiement.absentes.join(', ') : 'aucune';
         console.log(`${''.padEnd(34)} le deploiement: partie ${deploiement.partie}, tableau de bord ${deploiement.tableauDeBord ?? '-'}, identifiants ${deploiement.identifiants ?? '-'}, documentation ${deploiement.documentation ?? '-'}, fiches ${deploiement.fiches ?? 0}, absentes du catalogue: ${absentes}`);
       }
-      if (nomPage === 'cycle') {
+      if (nomPage === 'cycle' || nomPage === 'parcours') {
         const lightbox = await essayerLightBox(page);
         bilan[bilan.length - 1].lightbox = lightbox;
         console.log(`${''.padEnd(34)} un clic sur le schema l ouvre en grand (LightBox): ${lightbox}`);

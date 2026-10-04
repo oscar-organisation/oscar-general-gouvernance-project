@@ -188,6 +188,44 @@ const useStyles = makeStyles(theme => ({
   // Le bloc du tableau de bord: une carte comme les autres, pleine largeur,
   // au-dessus des fiches.
   bloc: { marginTop: 24 },
+  // La mise en avant du parcours de mise en ligne, en tete de la page: une
+  // carte comme les autres, marquee a gauche par le filet orange de la charte
+  // (l orange signale l element actif, il ne porte pas le texte).
+  parcours: {
+    background: theme.palette.background.paper,
+    border: `1px solid ${theme.palette.divider}`,
+    borderLeft: `4px solid ${theme.palette.secondary.main}`,
+    borderRadius: 18,
+    padding: 28,
+    marginTop: 24,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 16,
+  },
+  titreDuParcours: {
+    fontSize: 'clamp(24px, 3vw, 32px)',
+    fontWeight: 500,
+    letterSpacing: '-0.02em',
+    margin: 0,
+  },
+  moments: {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0,
+    display: 'grid',
+    gap: 12,
+    gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+  },
+  moment: {
+    borderTop: `1px solid ${theme.palette.divider}`,
+    paddingTop: 12,
+  },
+  // La production, le moment le plus important: son filet est orange.
+  momentProduction: {
+    borderTop: `2px solid ${theme.palette.secondary.main}`,
+  },
+  titreDuMoment: { fontSize: 15, fontWeight: 600, margin: '4px 0' },
+  lienDuParcours: { fontSize: 16, fontWeight: 600 },
   // Un chemin de fichier: la police technique de la charte, et le droit de
   // passer a la ligne n importe ou, pour tenir sur un telephone.
   chemin: {
@@ -321,6 +359,88 @@ const BlocTraefik = (props: { reglages: ReglagesDeTraefik }) => {
   );
 };
 
+/**
+ * Les cinq moments du parcours d une modification, dans l ordre. Le detail de
+ * chacun, avec son schema, est dans la page du guide nommee ci-dessous.
+ */
+const MOMENTS_DU_PARCOURS = [
+  {
+    numero: '0',
+    titre: "L'envoi",
+    texte: 'sur une branche de travail: rien ne démarre',
+  },
+  {
+    numero: '1',
+    titre: 'La PR vers test',
+    texte: "vérifications et tests, rien n'est mis en ligne",
+  },
+  {
+    numero: '2',
+    titre: 'La fusion dans test',
+    texte: 'une seule construction, puis la mise en ligne en test',
+  },
+  {
+    numero: '3',
+    titre: 'La PR vers main',
+    texte: "quelques secondes: l'image testée existe-t-elle ?",
+  },
+  {
+    numero: '4',
+    titre: 'La fusion dans main',
+    texte: 'la même image, mise en ligne en production',
+  },
+];
+
+/** La page du guide qui explique le parcours, etape par etape. */
+const PAGE_DU_PARCOURS = '01-comment-une-modification-arrive-en-production/';
+
+/**
+ * La mise en avant du parcours de mise en ligne: la premiere chose qu on lit
+ * sur l accueil, parce que c est ce qu il faut comprendre avant de modifier
+ * quoi que ce soit.
+ */
+const BlocDuParcours = (props: { guide: string }) => {
+  const classes = useStyles();
+  const idDuTitre = useId();
+  return (
+    <section className={classes.section} aria-labelledby={idDuTitre}>
+      <Etiquette>Le parcours</Etiquette>
+      <div className={classes.parcours}>
+        <h2 id={idDuTitre} className={classes.titreDuParcours}>
+          Comment une modification arrive en production
+        </h2>
+        <p className={classes.chapeau}>
+          Ce qui se passe à chaque étape, qui parle à qui (GitHub, Harbor,
+          Coolify), les étiquettes des images, et comment revenir en arrière:
+          un schéma en couleur par étape.
+        </p>
+        <ol className={classes.moments}>
+          {MOMENTS_DU_PARCOURS.map(moment => (
+            <li
+              key={moment.numero}
+              className={
+                moment.numero === '4'
+                  ? `${classes.moment} ${classes.momentProduction}`
+                  : classes.moment
+              }
+            >
+              <span className={classes.numero}>{moment.numero}</span>
+              <h3 className={classes.titreDuMoment}>{moment.titre}</h3>
+              <p className={classes.description}>{moment.texte}</p>
+            </li>
+          ))}
+        </ol>
+        <Link
+          className={classes.lienDuParcours}
+          to={adresseDeLaDocumentation(props.guide, PAGE_DU_PARCOURS)}
+        >
+          Lire le parcours, étape par étape
+        </Link>
+      </div>
+    </section>
+  );
+};
+
 const Fiches = (props: { references: string[] }) => {
   const classes = useStyles();
   const { fiches, erreur } = useFiches(props.references);
@@ -369,6 +489,8 @@ export const CommencerIci = (props: { reglages: ReglagesDeLAccueil }) => {
       </header>
 
       <main className={classes.enveloppe}>
+        <BlocDuParcours guide={guide} />
+
         <section className={classes.section}>
           <Etiquette as="h2">Commencer ici</Etiquette>
           <p className={classes.titreDeSection}>Quatre lectures, dans l'ordre.</p>

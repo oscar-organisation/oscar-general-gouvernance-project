@@ -130,6 +130,46 @@ describe('la page Commencer ici', () => {
   });
 });
 
+describe('la mise en avant du parcours de mise en ligne', () => {
+  const titre = 'Comment une modification arrive en production';
+
+  it('vient en tete de la page, avant les quatre lectures', async () => {
+    await afficher();
+    const bloc = screen.getByRole('region', { name: titre });
+    const commencer = screen.getByRole('heading', { level: 2, name: 'Commencer ici' });
+    // Le bloc precede « Commencer ici » dans la page: c est la premiere chose lue.
+    expect(
+      bloc.compareDocumentPosition(commencer) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('nomme les cinq moments du parcours, dans l ordre', async () => {
+    await afficher();
+    const bloc = screen.getByRole('region', { name: titre });
+    const moments = within(bloc)
+      .getAllByRole('listitem')
+      .map(moment => within(moment).getByRole('heading', { level: 3 }).textContent);
+    expect(moments).toEqual([
+      "L'envoi",
+      'La PR vers test',
+      'La fusion dans test',
+      'La PR vers main',
+      'La fusion dans main',
+    ]);
+  });
+
+  it('mene a la page du parcours, dans le guide du cycle', async () => {
+    await afficher();
+    const bloc = screen.getByRole('region', { name: titre });
+    expect(
+      within(bloc).getByRole('link', { name: 'Lire le parcours, étape par étape' }),
+    ).toHaveAttribute(
+      'href',
+      '/docs/default/component/oscar-general-gouvernance-project/01-comment-une-modification-arrive-en-production/',
+    );
+  });
+});
+
 describe('la partie Le deploiement', () => {
   it('montre ses fiches, dans l ordre des reglages', async () => {
     await afficher();
