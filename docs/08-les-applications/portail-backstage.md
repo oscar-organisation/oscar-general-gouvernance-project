@@ -251,15 +251,24 @@ machine (`network_mode: host`). Sous macOS et Windows: non vérifié.
 
 ## Les vérifications automatiques
 
-`.github/workflows/verifications-automatiques.yml`, sur le patron commun
-([les vérifications automatiques](../05-les-verifications-automatiques.md)),
-en trois tâches depuis le 4 octobre 2026:
+Le portail a son propre workflow, `.github/workflows/portail.yml`
+(« Portail »), sur le patron commun
+([les vérifications automatiques](../05-les-verifications-automatiques.md)).
+Il ne se lance que pour une PR ou un envoi qui modifie `oscar_backstage/` ou
+ce fichier, et à la main (« Run workflow »); le reste du dépôt a ses propres
+workflows ([un workflow par sous-projet](../05-un-workflow-par-sous-projet.md)):
 
 | Tâche | Ce qu'elle fait |
 |---|---|
-| Vérifications rapides | aucun secret, aucune ligne d'attribution, `.env` copie de `.env.exemple`, typographie, fichiers des vérifications automatiques, compositions valides, aucun port publié par `compose.yaml`, la construction stricte du guide (décision 98) |
+| Vérifications rapides | `.env` copie de `.env.exemple`, compositions valides, aucun port publié par `compose.yaml` |
 | Tests du code, puis construire, ranger et mettre en ligne | le déploiement automatique commun du dépôt `oscar-infrastructure`: « Tests du code dans l'image » (l'étape `verifications` du Dockerfile, pour une PR vers `test` et à l'envoi sur `test`); à l'envoi sur `test`, la construction de l'image si elle manque dans Harbor, son contrôle par `controler-l-image.sh` (le contenu de l'image exacte qui sera rangée: les réglages du poste n'y sont pas, MkDocs y est), son rangement dans `oscar/portail-portail`, Trivy, la mise en ligne en test; pour `main`, la même image retrouvée et mise en ligne en production, sans tests ni construction |
-| Résumé | un tableau sur la page de l'exécution, et un seul commentaire dans la PR |
+| Résumé | un tableau sur la page de l'exécution, et, dans la PR, un commentaire titré « Portail: le résumé » |
+
+À côté, dans le même dépôt: `verifications-communes.yml` (« Vérifications
+communes »: aucune ligne d'attribution, aucun secret, chaque `.env` avec son
+modèle, la typographie, les fichiers des workflows, la machine de GitHub), à
+chaque PR et à chaque envoi; et `guide.yml` (« Guide »: la construction
+stricte du guide, décision 98), quand `docs/` ou `mkdocs.yml` changent.
 
 L'empreinte du contenu est celle de `oscar_backstage/`, sans la documentation
 (`*.md`), `catalog-info.yaml`, la fabrication des images de marque (`marque/`)
