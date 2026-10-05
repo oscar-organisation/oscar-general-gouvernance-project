@@ -79,15 +79,22 @@ aucun identifiant n'est écrit dans les fichiers des vérifications
 automatiques. Le plan gratuit de GitHub les permet sur un dépôt privé (mesuré
 au lot 2).
 
-## Les trois applications
+## Les quatre applications, et le serveur temps réel
 
 | Application | Dépôt, dossier | Production | Test | Projet Coolify | Applications Coolify | Dépôts d'images dans Harbor |
 |---|---|---|---|---|---|---|
 | Outil DNS | `oscar-infrastructure`, `oscar_infra_dns/` | `dns`, `api-dns` | `test-dns`, `test-api-dns` | `outil-dns` | `outil-dns-production`, `outil-dns-test` | `oscar/outil-dns-api`, `oscar/outil-dns-interface` |
 | Laboratoire de tests | `oscar-test`, `oscar_labo_test_application/` | `labo` | `test-labo` | `labo` | `labo-production`, `labo-test` | `oscar/laboratoire-visualiseur`, `oscar/laboratoire-collecteur` |
 | Portail Backstage | `oscar-general-gouvernance-project`, `oscar_backstage/` | `tech` | `test-tech` | `portail` | `portail-production`, `portail-test` | `oscar/portail-portail` |
+| Console d'administration | `oscar-console-admin`, `oscar_console_admin_frontend/` et `oscar_console_admin_api_backend/` | `console`, `api-console` | `test-console`, `test-api-console` | `console-admin` | `console-admin-interface-production`, `console-admin-interface-test`, `console-admin-api-production`, `console-admin-api-test` | `oscar/console-admin-interface`, `oscar/console-admin-api` |
+| Serveur temps réel (LiveKit), pour la console | `oscar-infrastructure`, `oscar_infra_realtime_server/` | `stream` | `test-stream` | aucun: lancé par `livekit.sh`, hors de Coolify | aucune; projets Docker `oscar-serveur-temps-reel-production`, `oscar-serveur-temps-reel-test` | aucun: l'image publique `livekit/livekit-server`, version 1.9.9 figée |
 
 Toutes les adresses sont sous `oscar-bot.com`.
+
+Le serveur temps réel n'est pas une application du cycle: il ne passe ni par
+Harbor ni par Coolify. Il transporte la vidéo et les commandes des robots pour
+la console, un serveur par environnement, et se gère par la commande
+`livekit.sh` de son dossier ([la page de la console](08-les-applications/console-admin.md)).
 
 Ce qui est en service aujourd'hui, application par application: le tableau
 d'[où en est le cycle](02-le-cycle-pas-a-pas.md#ou-en-est-le-cycle-aujourdhui).
@@ -125,7 +132,7 @@ OSCAR, 18000 à 18999:
 |---|---|---|---|
 | `180xx` | réservé à un outil commun à plusieurs applications | aucun | libre |
 | `181xx` | outil DNS | `18100` API, `18101` interface | en place |
-| `182xx` | console d'administration | `18200` console, `18201` authentification | réservés |
+| `182xx` | console d'administration | `18200` interface, `18201` authentification (réservé), `18202` API, `18203` base de l'API | en place |
 | `183xx` | Coolify | réservé | Coolify tourne en réalité sur d'autres ports, voir la convention |
 | `184xx` | laboratoire de tests | `18400` visualiseur de rapports | en place |
 | `185xx` | portail Backstage | `18500` service, `18501` et `18502` mode développement | en place |
