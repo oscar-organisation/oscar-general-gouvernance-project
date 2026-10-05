@@ -122,6 +122,7 @@ administrateur de l'organisation.
 | [Comment se comporter](03-comment-se-comporter.md) | les règles de l'équipe, et pourquoi |
 | [Les environnements](04-les-environnements.md) | local, test, production: les noms, les variables, les ports |
 | [Les vérifications automatiques](05-les-verifications-automatiques.md) | ce que GitHub contrôle et déploie seul, à chaque événement |
+| [Un workflow par sous-projet](05-un-workflow-par-sous-projet.md) | quel workflow se lance quand un envoi modifie un, deux ou cinq sous-projets; relancer un sous-projet à la main; le détacher un jour dans son propre dépôt |
 | [Le code et l'exploitation](06-le-code-et-l-exploitation.md) | ce qui vit dans un dépôt, ce qui vit sur le serveur |
 | [Surveiller](07-surveiller.md) | où regarder: GitHub, Coolify, Backstage, les rapports du laboratoire |
 | [Les applications](08-les-applications/README.md) | une page par application |

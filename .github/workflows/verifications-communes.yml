@@ -1,0 +1,161 @@
+# Les vérifications communes à tout le dépôt oscar-general-gouvernance-project.
+#
+# Ce qu'il vérifie: les règles qui valent pour chaque fichier du dépôt, quel que
+# soit le sous-projet qui le porte:
+#   - aucune ligne d'attribution dans les messages de commit (décision A18);
+#   - aucun motif de secret dans les fichiers;
+#   - chaque fichier .env versionné a son modèle .env.exemple à côté;
+#   - la typographie: ni tiret long, ni caractère « points de suspension »;
+#   - les fichiers des vérifications automatiques sont valides (actionlint);
+#   - toutes les tâches tournent sur la même machine de GitHub, nommée par sa
+#     version (décision A38).
+# Puis un résumé, sur la page de l'exécution et dans un commentaire de la PR
+# titré « Vérifications communes: le résumé ».
+#
+# Quand il se lance: à chaque PR vers test ou main, et à chaque envoi sur test
+# ou main (une fusion est un envoi). Toujours, quel que soit le fichier modifié:
+# il n'a pas de filtre de chemins, parce que ces règles n'appartiennent à aucun
+# sous-projet.
+#
+# Pourquoi un fichier à part: depuis le 05/10/2026 (décisions 124 et 125),
+# chaque sous-projet a son propre workflow, qui ne se lance que si un envoi le
+# modifie:
+#   portail.yml  le portail Backstage, dossier oscar_backstage/
+#   guide.yml    le guide commun, docs/ et mkdocs.yml à la racine
+# Ce qui vaut pour tout le dépôt est écrit ici, une seule fois, et reste léger:
+# des lectures de fichiers, sans construction ni test.
+#
+# Ce workflow ne met rien en ligne. Une vérification commune en échec n'arrête
+# pas le workflow d'un sous-projet, qui tourne à côté sans l'attendre: elle
+# s'affiche en échec sur la PR, et on ne fusionne pas tant qu'elle l'est.
+#
+# Le jour où un sous-projet part dans son propre dépôt, il emporte une copie de
+# ce fichier, à adapter (la page « Un workflow par sous-projet » du guide le
+# détaille).
+name: Vérifications communes
+
+on:
+  push:
+    branches: [test, main]
+  pull_request:
+    branches: [test, main]
+
+# Par défaut, une exécution ne fait que lire. Le résumé demande en plus le droit
+# d'écrire son commentaire dans la PR.
+permissions:
+  contents: read
+
+jobs:
+
+  verifications_rapides:
+    name: Vérifications rapides
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # L'historique complet: le contrôle des messages de commit doit
+          # pouvoir dire quels commits l'exécution apporte.
+          fetch-depth: 0
+
+      - name: Aucune ligne d'attribution dans les commits
+        # La règle A18, écrite une fois, avec ses tests, dans une action du
+        # dépôt oscar-infrastructure.
+        uses: oscar-organisation/oscar-infrastructure/.github/actions/controler-les-commits@main
+
+      - name: Chercher des motifs de secrets
+        run: |
+          set -u
+          motifs='github_pat_[A-Za-z0-9_]{20,}|ghp_[A-Za-z0-9]{30,}|gho_[A-Za-z0-9]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----'
+          if grep -rInE "$motifs" . --exclude-dir=.git --exclude-dir=node_modules ; then
+            echo "::error::Un secret semble présent dans le dépôt."
+            exit 1
+          fi
+          echo "Aucun motif de secret trouvé."
+
+      - name: Chaque fichier d'environnement a son exemple
+        run: |
+          # Décision 46: les fichiers .env sont versionnés pendant le
+          # développement, chacun avec son .env.exemple, qui explique chaque
+          # réglage. Que celui du portail soit la copie exacte de son exemple
+          # est vérifié dans portail.yml.
+          set -u
+          manque=0
+          for f in $(git ls-files | grep -E '(^|/)\.env$') ; do
+            d=$(dirname "$f")
+            if [ ! -f "$d/.env.exemple" ] ; then
+              echo "::error::$f n'a pas de fichier d'exemple à côté."
+              manque=1
+            fi
+          done
+          [ "$manque" = "0" ]
+
+      - name: Typographie, pas de caractère interdit
+        run: |
+          set -u
+          # Les motifs sont écrits en hexadécimal pour que ce fichier ne
+          # contienne pas lui-même les caractères qu'il interdit.
+          if grep -rInP '\x{2014}|\x{2026}' \
+               --include='*.md' --include='*.ts' --include='*.tsx' --include='*.js' \
+               --include='*.css' --include='*.yml' --include='*.yaml' --include='*.json' \
+               --include='*.py' --include='*.sh' --include='*.mmd' --include='Dockerfile' \
+               --exclude-dir=node_modules --exclude-dir=.git --exclude=yarn.lock . ; then
+            echo "::error::Caractère interdit trouvé. Utiliser le tiret simple et trois points."
+            exit 1
+          fi
+          echo "Typographie conforme."
+
+      - name: Les fichiers des vérifications automatiques sont valides
+        # Tous les fichiers de .github/workflows/, ceux des sous-projets compris.
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color
+
+      - name: Les ordinateurs de GitHub qui font les vérifications sont fixés sur une version
+        # Décision A38: les vérifications automatiques donnent le même résultat
+        # d'une semaine à l'autre. Un nom qui bouge, comme ubuntu-latest (Ubuntu 26
+        # à partir du 19/10/2026), changerait le système sans que rien ne change
+        # chez nous. Toutes les tâches tournent donc sur une version nommée, la
+        # même partout: on en change dans une PR à part, pour toutes les tâches à
+        # la fois, une fois les vérifications automatiques réussies.
+        # La version n'est écrite qu'aux lignes runs-on, pas ici. Le contrôle lit
+        # tous les fichiers de .github/workflows/: les trois workflows du dépôt
+        # doivent nommer la même machine.
+        run: |
+          set -u
+          # Les machines nommées aux lignes runs-on, une par ligne, puis sur une seule ligne.
+          machines=$(sed -nE 's/^[[:space:]]+runs-on:[[:space:]]*//p' .github/workflows/*.yml | sort -u)
+          liste=$(printf '%s\n' "$machines" | paste -sd ' ' -)
+          if [ -z "$machines" ] ; then
+            echo "::error::Aucune ligne runs-on lue dans .github/workflows: le contrôle ne voit rien."
+            exit 1
+          fi
+          if printf '%s\n' "$machines" | grep -q -- '-latest' ; then
+            echo "::error::Une tâche tourne sur une machine qui change seule ($liste). La nommer, par exemple ubuntu-24.04 (décision A38)."
+            exit 1
+          fi
+          if [ "$(printf '%s\n' "$machines" | wc -l)" -ne 1 ] ; then
+            echo "::error::Les tâches ne tournent pas toutes sur la même machine ($liste). En changer pour toutes à la fois (décision A38)."
+            exit 1
+          fi
+          echo "Toutes les tâches tournent sur $liste."
+
+  resume:
+    name: Résumé
+    # Toujours, même quand la tâche précédente échoue: le résumé dit alors ce qui a
+    # échoué.
+    if: always()
+    needs: [verifications_rapides]
+    runs-on: ubuntu-24.04
+    # Lire le début de l'exécution (sa durée, dans le résumé) demande actions: read;
+    # sans lui, l'API répond 403 « Resource not accessible by integration » (vu sur la
+    # première exécution de la PR 34). Écrire le commentaire demande pull-requests: write.
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    steps:
+      - name: Écrire le résumé, et le commentaire de la PR
+        uses: oscar-organisation/oscar-infrastructure/.github/actions/deploiement-par-image-harbor@main
+        with:
+          etape: resumer
+          taches: ${{ toJSON(needs) }}
+          numero_de_la_pr: ${{ github.event.pull_request.number }}
+          jeton_github: ${{ github.token }}

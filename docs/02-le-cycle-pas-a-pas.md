@@ -250,12 +250,14 @@ vérifications automatiques, qui tournent.
 
 ## Étape 7. Les vérifications automatiques contrôlent la PR
 
-GitHub lance les « Vérifications rapides », puis les « Tests du code » (pour
-le portail, les « Tests du code dans l'image », une étape de son Dockerfile).
-Rien n'est construit pour Harbor ni mis en ligne à ce stade. Un résumé de
-l'exécution arrive en commentaire dans la PR, « Vérifications automatiques:
-le résumé », mis à jour à chaque exécution. Le détail des tâches:
-[les vérifications automatiques](05-les-verifications-automatiques.md).
+GitHub lance les vérifications communes à tout le dépôt et, pour chaque
+sous-projet que la PR modifie, son workflow: ses « Vérifications rapides »,
+puis ses « Tests du code » (pour le portail, les « Tests du code dans
+l'image », une étape de son Dockerfile). Rien n'est construit pour Harbor ni
+mis en ligne à ce stade. Chaque workflow lancé écrit son résumé en commentaire
+dans la PR, titré par son nom, et le met à jour à chaque exécution. Le détail
+des tâches: [les vérifications automatiques](05-les-verifications-automatiques.md);
+lesquelles se lancent: [un workflow par sous-projet](05-un-workflow-par-sous-projet.md).
 
 **Ce qu'on doit voir**: sur la PR, chaque vérification réussit. Le détail
 est dans l'onglet Actions du dépôt:
@@ -320,7 +322,9 @@ mis en ligne. Le journal de la tâche en échec, dans l'onglet Actions, donne le
 premier message d'erreur (une construction ratée, un contrôle de l'image, la
 réponse de Coolify, une santé qui ne vient pas). Une image illisible fait
 échouer la mise en ligne **avant** l'arrêt de l'ancienne version, qui reste en
-service.
+service. Un échec venu de l'extérieur (réseau, Harbor, Coolify) se rattrape en
+relançant le workflow du sous-projet, même si aucun envoi suivant ne le touche:
+[relancer un sous-projet à la main](05-un-workflow-par-sous-projet.md#relancer-un-sous-projet-a-la-main).
 
 Où c'est en place: le tableau d'[où en est le cycle](#ou-en-est-le-cycle-aujourdhui), au début de cette page.
 

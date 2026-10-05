@@ -3,9 +3,12 @@
 %% Après une modification, depuis la racine du dépôt:
 %%   docker compose -f docs/outils/compose.yaml run --rm schemas
 %% Depuis le 04/10/2026 (plan 17): le déploiement automatique commun par image de Harbor.
+%% Depuis le 05/10/2026 (décisions 124 et 125): le workflow d'un sous-projet, lancé quand
+%% un évènement le modifie; à côté, sans l'attendre, les vérifications communes du dépôt.
 flowchart TB
-  evenement(["Un évènement sur GitHub"])
-  rapides["Vérifications rapides<br>lignes d'attribution, secrets,<br>typographie, YAML, composition"]
+  evenement(["Un évènement sur GitHub<br>qui modifie le sous-projet"])
+  communes["À côté, sans l'attendre:<br>les vérifications communes<br>attribution, secrets, typographie, YAML,<br>à chaque évènement, pour tout le dépôt"]:::discret
+  rapides["Vérifications rapides du sous-projet<br>sa composition,<br>ce qui lui est propre"]
   quoi{"Qu'est-ce qui a lancé<br>les vérifications ?"}
   tests["Tests du code<br>les tests propres<br>à l'application"]
   pr["Une PR vers test ne met rien en ligne<br>le résumé s'affiche sur la PR"]:::discret
@@ -20,6 +23,7 @@ flowchart TB
   echec["Une tâche en échec<br>arrête les suivantes,<br>rien n'est mis en ligne"]:::attention
 
   evenement --> rapides --> quoi
+  evenement -.- communes
   quoi -- "une PR vers test" --> tests
   tests -- "PR vers test" --> pr
   quoi -- "une fusion dans test" --> tests
