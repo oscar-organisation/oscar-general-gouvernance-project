@@ -117,7 +117,7 @@ même dépôt:
   toute l'organisation: au-delà, les tâches attendent leur tour, et rien
   n'échoue pour autant.
 
-Quelques cas, pour fixer les idées:
+Quelques cas concrets:
 
 | Dépôt | Ce que l'envoi modifie | Ce qui se lance |
 |---|---|---|
