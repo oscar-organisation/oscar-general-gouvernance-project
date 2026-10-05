@@ -39,10 +39,14 @@ app:
     - home-page-layout:home/commencer-ici:
         config:
           guide: component:default/oscar-general-gouvernance-project
+          # La console d administration a deux fiches, une par application
+          # (son interface et son API), dans le depot oscar-console-admin.
           applications:
             - component:default/outil-dns
             - component:default/labo
             - component:default/portail
+            - component:default/console-admin-interface
+            - component:default/console-admin-api
           outils:
             - domain:default/oscar
             - component:default/labo
@@ -119,10 +123,19 @@ backend:
   csp:
     connect-src: ["'self'", 'http:', 'https:']
   # Les adresses que le portail a le droit de lire en dehors de GitHub: les
-  # descriptions d API publiees par les applications elles-memes.
+  # descriptions d API publiees par les applications elles-memes. Une adresse
+  # absente d ici, et la fiche de l API reste vide, avec « Reading from ... is
+  # not allowed » dans le journal du portail.
+  #   api-dns            l API de l outil DNS
+  #   api-console        l API de la console d administration, dont la fiche
+  #                      (console-admin-api) lit la description de production
+  #   test-api-console   la meme, en test, pour qu une fiche puisse la lire
+  #                      sans changer ce reglage
   reading:
     allow:
       - host: api-dns.oscar-bot.com
+      - host: api-console.oscar-bot.com
+      - host: test-api-console.oscar-bot.com
 
 # La documentation des depots, construite par le portail lui-meme, avec le
 # MkDocs de son image (techdocs/requirements.txt), puis gardee sur place.

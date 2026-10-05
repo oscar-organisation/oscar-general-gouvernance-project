@@ -1,6 +1,6 @@
 # Les applications
 
-Trois applications suivent aujourd'hui le cycle de ce guide. Chacune a sa page,
+Quatre applications suivent aujourd'hui le cycle de ce guide. Chacune a sa page,
 avec **la même structure**, pour qu'on trouve la même information au même
 endroit, quelle que soit l'application.
 
@@ -9,8 +9,9 @@ endroit, quelle que soit l'application.
 | Outil DNS | [outil-dns.md](outil-dns.md) | `oscar-infrastructure` |
 | Laboratoire de tests | [laboratoire.md](laboratoire.md) | `oscar-test` |
 | Portail Backstage | [portail-backstage.md](portail-backstage.md) | `oscar-general-gouvernance-project` |
+| Console d'administration | [console-admin.md](console-admin.md) | `oscar-console-admin` |
 
-Les noms, les adresses et les projets Coolify des trois sont réunis dans
+Les noms, les adresses et les projets Coolify des quatre sont réunis dans
 [les environnements](../04-les-environnements.md).
 
 ## La structure d'une page d'application

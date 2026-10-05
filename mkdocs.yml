@@ -34,6 +34,7 @@ nav:
       - Outil DNS: 08-les-applications/outil-dns.md
       - Laboratoire de tests: 08-les-applications/laboratoire.md
       - Portail Backstage: 08-les-applications/portail-backstage.md
+      - Console d'administration: 08-les-applications/console-admin.md
   - Glossaire: 09-glossaire.md
   - Les schémas: schemas/README.md
 

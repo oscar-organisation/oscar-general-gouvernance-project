@@ -47,17 +47,19 @@ dise.
 de Coolify, l'API de GitHub, Harbor et une requête à chaque site. C'est **le
 seul tableau d'état du guide**: les autres pages y renvoient au lieu de le
 recopier, pour qu'il ne se contredise jamais. Il se met à jour à chaque
-livraison, relevé et non de mémoire.
+livraison, relevé et non de mémoire. La colonne de la console
+d'administration est relevée le 5 octobre 2026, de 06h19 à 06h21 UTC, par
+l'API de Coolify, Harbor et une requête à chaque site.
 
-| Pièce | Outil DNS | Laboratoire | Portail |
-|---|---|---|---|
-| La branche `test` | en place | en place | en place |
-| Les vérifications automatiques de GitHub, dans `.github/workflows/` | sur `test` et `main`, sur le déploiement automatique commun par image | sur `test` et `main`, idem | sur `test` et `main`, idem |
-| Les applications Coolify | `outil-dns-test`, `outil-dns-production`, en service, en mode image | `labo-test`, `labo-production`, en service, en mode image | `portail-test`, `portail-production`, en service, en mode image |
-| L'image en service dans Harbor, **la même en test et en production** | `contenu-9438e947dc23` (`oscar/outil-dns-api`, `oscar/outil-dns-interface`) | `contenu-fa85a4f15def` (`oscar/laboratoire-visualiseur`, `oscar/laboratoire-collecteur`) | `contenu-093b638ca881` (`oscar/portail-portail`) |
-| Mise en ligne en test, puis en production | 04/10 10h15, puis 10h38 | 04/10 10h20, puis 10h42 | 04/10 10h32, puis 10h54 |
-| La recette par le laboratoire | lancée à la main (décision 98) | lancée à la main | pas branchée: le laboratoire n'a pas encore de scénario du portail |
-| Les sites | `test-dns`, `dns` et leur API de santé répondent | `test-labo`, `labo` répondent `401` sans identifiants, `/sante` `200` | `test-tech`, `tech` et leurs routes de disponibilité répondent `200`; la connexion part vers GitHub |
+| Pièce | Outil DNS | Laboratoire | Portail | Console d'administration |
+|---|---|---|---|---|
+| La branche `test` | en place | en place | en place | en place |
+| Les vérifications automatiques de GitHub, dans `.github/workflows/` | sur `test` et `main`, sur le déploiement automatique commun par image | sur `test` et `main`, idem | sur `test` et `main`, idem | sur `test` et `main`, idem, une tâche par application |
+| Les applications Coolify | `outil-dns-test`, `outil-dns-production`, en service, en mode image | `labo-test`, `labo-production`, en service, en mode image | `portail-test`, `portail-production`, en service, en mode image | `console-admin-api-test`, `console-admin-api-production`, `console-admin-interface-test`, `console-admin-interface-production`, en service, en mode image |
+| L'image en service dans Harbor, **la même en test et en production** | `contenu-9438e947dc23` (`oscar/outil-dns-api`, `oscar/outil-dns-interface`) | `contenu-fa85a4f15def` (`oscar/laboratoire-visualiseur`, `oscar/laboratoire-collecteur`) | `contenu-093b638ca881` (`oscar/portail-portail`) | `contenu-ceae23770639` (`oscar/console-admin-api`), `contenu-4cc1b2c168b6` (`oscar/console-admin-interface`) |
+| Mise en ligne en test, puis en production | 04/10 10h15, puis 10h38 | 04/10 10h20, puis 10h42 | 04/10 10h32, puis 10h54 | l'API 05/10 05h49, puis 06h14; l'interface 05/10 05h51, puis 06h15 |
+| La recette par le laboratoire | lancée à la main (décision 98) | lancée à la main | pas branchée: le laboratoire n'a pas encore de scénario du portail | pas branchée: le laboratoire vise encore l'ancienne console |
+| Les sites | `test-dns`, `dns` et leur API de santé répondent | `test-labo`, `labo` répondent `401` sans identifiants, `/sante` `200` | `test-tech`, `tech` et leurs routes de disponibilité répondent `200`; la connexion part vers GitHub | `test-console`, `console` et leur cockpit `/xr/` répondent `200`; la santé de `test-api-console` et `api-console` répond `"database":"ok"` |
 
 Les heures sont celles des mises en ligne réussies, lues dans les étiquettes
 `en-test-depuis-le-...` et `en-production-depuis-le-...` de Harbor. Une
