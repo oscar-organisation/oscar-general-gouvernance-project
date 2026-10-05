@@ -62,16 +62,28 @@ Le laboratoire se lance contre l'outil lancé en local: voir
 
 ## Les vérifications automatiques
 
-`.github/workflows/verifications-automatiques.yml`, à la racine du dépôt, au
-patron commun
-([les vérifications automatiques](../05-les-verifications-automatiques.md)):
+L'outil DNS a son propre workflow, `.github/workflows/outil-dns.yml`
+(« Outil DNS »), à la racine du dépôt, au patron commun
+([les vérifications automatiques](../05-les-verifications-automatiques.md)).
+Il se lance pour une PR ou un envoi qui modifie `oscar_infra_dns/`, son propre
+fichier ou le déploiement automatique commun (l'outil DNS est le seul à le
+faire tourner en vrai sur `test` avant `main`), et à la main (« Run
+workflow »):
 
 | Tâche | Ce qu'elle fait |
 |---|---|
-| Vérifications rapides | aucune ligne d'attribution dans les commits, aucun secret, la documentation cohérente, la typographie, les fichiers des vérifications automatiques, la composition dans ses deux lectures, la documentation du déploiement construite en mode strict |
-| Tests du code | les tests de l'outil DNS, ceux du déploiement automatique commun et de l'assistant de déploiement, la charte graphique de l'interface; pas pour la PR de `test` vers `main` ni pour `main` |
+| Vérifications rapides | la documentation cohérente (son `docs/README.md` et les versions qu'il annonce), la composition dans ses deux lectures |
+| Tests du code | les tests de l'outil DNS et la charte graphique de l'interface; pas pour la PR de `test` vers `main` ni pour `main` |
 | Construire, ranger et mettre en ligne | le déploiement automatique commun: à la fusion dans `test`, les images `oscar/outil-dns-api` et `oscar/outil-dns-interface` construites une seule fois si celles de ce contenu manquent dans Harbor, Trivy, la mise en ligne sur `outil-dns-test`; à la fusion dans `main`, la même image sur `outil-dns-production`. L'empreinte est celle de `oscar_infra_dns/` sans les `*.md` ni `catalog-info.yaml` |
-| Résumé | un tableau sur la page de l'exécution, et un seul commentaire dans la PR |
+| Résumé | un tableau sur la page de l'exécution, et, dans la PR, un commentaire titré « Outil DNS: le résumé » |
+
+Les autres workflows du dépôt `oscar-infrastructure` tournent à côté, chacun
+quand son sous-projet change: « Vérifications communes » (attribution,
+secrets, modèles `.env`, typographie, fichiers des workflows, machine de
+GitHub) à chaque fois, « Outil de déploiement » (l'assistant et la
+documentation du déploiement), « Actions communes » (les tests du déploiement
+automatique commun et du contrôle des commits). Voir
+[un workflow par sous-projet](../05-un-workflow-par-sous-projet.md).
 
 Les scénarios de l'outil DNS au laboratoire ne sont plus joués après chaque
 mise en ligne: on les lance à la main (décision 98), onglet Actions du dépôt

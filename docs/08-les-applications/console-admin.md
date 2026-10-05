@@ -94,17 +94,22 @@ console visent encore l'ancienne adresse. Voir [sa page](laboratoire.md).
 
 ## Les vérifications automatiques
 
-`.github/workflows/verifications-automatiques.yml`, à la racine du dépôt, au
-patron commun
-([les vérifications automatiques](../05-les-verifications-automatiques.md)):
+Chaque application a son propre workflow, à la racine du dépôt, au patron
+commun ([les vérifications automatiques](../05-les-verifications-automatiques.md)),
+plus les vérifications communes à tout le dépôt
+([un workflow par sous-projet](../05-un-workflow-par-sous-projet.md)):
 
-| Tâche | Ce qu'elle fait |
-|---|---|
-| Vérifications rapides | aucune ligne d'attribution dans les commits, aucun secret, chaque fichier d'environnement et chaque variable des compositions expliqués, la typographie, les fichiers des vérifications automatiques, les compositions dans leurs trois lectures, les deux règles de sécurité de l'interface, le cockpit XR complet, la documentation des deux applications construite sans avertissement |
-| Tests du code | les tests de l'API et les vérifications de l'interface, chacun par le `tester.sh` de son dossier, puis le contrôle de l'image de l'interface; pas pour la PR de `test` vers `main` ni pour `main` |
-| API: construire, ranger et mettre en ligne | le déploiement automatique commun: à la fusion dans `test`, l'image `oscar/console-admin-api` construite une seule fois si celle de ce contenu manque dans Harbor, la mise en ligne sur `console-admin-api-test`; à la fusion dans `main`, la même image sur `console-admin-api-production` |
-| Interface: construire, ranger et mettre en ligne | de même, après l'API, avec l'image `oscar/console-admin-interface`, sur `console-admin-interface-test` puis `console-admin-interface-production` |
-| Résumé | un tableau sur la page de l'exécution, et un seul commentaire dans la PR |
+| Fichier de `.github/workflows/` | Ce qui le lance, en plus de son propre fichier | Ce qu'il fait |
+|---|---|---|
+| `verifications-communes.yml`, « Vérifications communes » | chaque PR et chaque envoi | aucune ligne d'attribution dans les commits, aucun secret, chaque fichier d'environnement avec son modèle, la typographie, les fichiers des workflows, la machine de GitHub; puis son résumé |
+| `console-admin-api.yml`, « API de la console » | `oscar_console_admin_api_backend/` | chaque variable des compositions expliquée, les compositions dans leurs trois lectures, la documentation construite sans avertissement; les tests de l'API par son `tester.sh` (pas pour la PR de `test` vers `main` ni pour `main`); le déploiement automatique commun: à la fusion dans `test`, l'image `oscar/console-admin-api` construite une seule fois si celle de ce contenu manque dans Harbor, la mise en ligne sur `console-admin-api-test`; à la fusion dans `main`, la même image sur `console-admin-api-production`; son résumé |
+| `console-admin-interface.yml`, « Interface de la console » | `oscar_console_admin_frontend/` | les mêmes contrôles pour son dossier, plus les deux règles de sécurité nginx et le cockpit XR complet; les vérifications de l'interface par son `tester.sh`, puis le contrôle de son image; le déploiement de même, avec l'image `oscar/console-admin-interface`, sur `console-admin-interface-test` puis `console-admin-interface-production`; son résumé |
+
+**L'API et l'interface ne s'attendent pas** (décision 125): modifiées ensemble,
+elles sont vérifiées et mises en ligne en même temps, chacune de son côté. Une
+modification de l'API doit donc continuer à marcher avec l'interface déjà en
+ligne: on ajoute d'abord, on retire plus tard, une fois l'interface passée
+([les sous-projets liés restent indépendants](../05-un-workflow-par-sous-projet.md#les-sous-projets-lies-restent-independants)).
 
 L'empreinte de chaque image est celle du dossier de son application, sans les
 `*.md`, `catalog-info.yaml`, `mkdocs.yml` ni `docs/`: une modification de la

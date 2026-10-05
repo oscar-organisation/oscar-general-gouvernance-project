@@ -1,0 +1,101 @@
+# Le workflow du guide commun du cycle de développement, le sous-projet fait de
+# docs/ et de mkdocs.yml, à la racine du dépôt.
+#
+# Ce qu'il vérifie:
+#   verifications_rapides  la composition des outils du guide est valide, et le guide
+#                          se construit en mode strict, comme TechDocs, le lecteur de
+#                          documentation du portail, le construit: un lien cassé, une
+#                          page oubliée dans le menu ou une ancre absente arrêtent tout
+#                          (décision 98)
+#   resume                 un résumé de l'exécution, et un commentaire dans la PR titré
+#                          « Guide: le résumé »
+#
+# Le guide n'est pas mis en ligne par ce workflow: le portail le lit sur GitHub, à côté
+# de catalog-info.yaml (techdocs-ref: dir:.), et le construit lui-même.
+#
+# Quand il se lance: pour une PR vers test ou main et pour un envoi sur test ou main,
+# seulement s'ils modifient un fichier que la construction lit, ou ce fichier-ci; et à
+# la main (« Run workflow » sur la page Actions, branche test ou main). Ici, les pages
+# .md sont le guide lui-même: les modifier lance ce workflow.
+#
+# Pourquoi: depuis le 05/10/2026 (décisions 124 et 125), chaque sous-projet du dépôt a
+# son propre workflow. Un envoi qui ne modifie que le portail ne reconstruit pas le
+# guide, et ce fichier se modifie sans toucher aux autres. Les vérifications communes à
+# tout le dépôt (attribution, secrets, typographie...) sont dans
+# verifications-communes.yml, qui se lance à chaque fois, à côté de celui-ci.
+#
+# Ne sont pas lancées ici (décision 91): la vérification et la fabrication des schémas,
+# des outils du développeur lancés à la main (docs/outils/compose.yaml).
+#
+# Le détacher un jour dans son propre dépôt: docs/ et mkdocs.yml vont à la racine du
+# nouveau dépôt, avec sa fiche catalog-info.yaml (techdocs-ref: dir:.), et ce fichier y
+# part aussi; DOSSIER reste « . » et le filtre de chemins disparaît. Le reste
+# (vérifications communes) est dans la page « Un workflow par sous-projet » du guide.
+name: Guide
+
+on:
+  # Le filtre de chemins vise exactement ce que la construction lit: mkdocs.yml et le
+  # dossier docs/ qu'il désigne (docs_dir), où se trouve aussi la composition qui
+  # construit (docs/outils/compose.yaml). GitHub n'accepte pas de variable à cet
+  # endroit: les chemins y sont écrits en clair.
+  push:
+    branches: [test, main]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.github/workflows/guide.yml'
+  pull_request:
+    branches: [test, main]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - '.github/workflows/guide.yml'
+  workflow_dispatch:
+
+# Une exécution ne fait que lire. Le résumé demande en plus le droit d'écrire son
+# commentaire dans la PR.
+permissions:
+  contents: read
+
+env:
+  # Le dossier du guide: la racine du dépôt, où se trouvent mkdocs.yml et docs/.
+  # Toutes les étapes de ce fichier le lisent ici.
+  DOSSIER: .
+
+jobs:
+
+  verifications_rapides:
+    name: Vérifications rapides
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: La composition des outils du guide est valide
+        run: docker compose -f "$DOSSIER/docs/outils/compose.yaml" config --quiet
+
+      - name: Le guide se construit, sans aucun avertissement
+        # Dans un conteneur sans réseau, avec l'image figée du générateur de TechDocs.
+        run: docker compose -f "$DOSSIER/docs/outils/compose.yaml" run --rm construire
+
+  resume:
+    name: Résumé
+    # Toujours, même quand la tâche précédente échoue: le résumé dit alors ce qui a
+    # échoué.
+    if: always()
+    needs: [verifications_rapides]
+    runs-on: ubuntu-24.04
+    # Lire le début de l'exécution (sa durée, dans le résumé) demande actions: read;
+    # sans lui, l'API répond 403 « Resource not accessible by integration » (vu sur la
+    # première exécution de la PR 34). Écrire le commentaire demande pull-requests: write.
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    steps:
+      - name: Écrire le résumé, et le commentaire de la PR
+        uses: oscar-organisation/oscar-infrastructure/.github/actions/deploiement-par-image-harbor@main
+        with:
+          etape: resumer
+          taches: ${{ toJSON(needs) }}
+          numero_de_la_pr: ${{ github.event.pull_request.number }}
+          jeton_github: ${{ github.token }}

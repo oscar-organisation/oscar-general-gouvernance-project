@@ -53,7 +53,20 @@ docker compose -f docs/outils/compose.yaml run --rm verifier-schemas
 
 Par le cycle du guide, comme pour toute application: une branche
 `travail/<sujet>` partie de `test`, une PR vers `test`, puis une PR de `test`
-vers `main`. Les vérifications automatiques de GitHub, écrites dans
-`.github/workflows/verifications-automatiques.yml`, contrôlent chaque PR et
+vers `main`. Les vérifications automatiques de GitHub contrôlent chaque PR et
 déploient après chaque fusion. Personne ne déploie à la main. Voir
 [le cycle pas à pas](docs/02-le-cycle-pas-a-pas.md).
+
+Elles sont écrites dans `.github/workflows/`: un fichier pour les règles de
+tout le dépôt, lancé à chaque fois, et un fichier par partie du dépôt, lancé
+seulement quand cette partie change:
+
+```
+verifications-communes.yml  les règles de tout le dépôt (attribution, secrets,
+                            typographie...), à chaque PR et à chaque envoi
+portail.yml                 le portail: oscar_backstage/, vérifié et mis en ligne
+guide.yml                   le guide: docs/ et mkdocs.yml, construit en mode strict
+```
+
+Pourquoi, et ce qui se passe quand un envoi touche les deux: [un workflow par
+sous-projet](docs/05-un-workflow-par-sous-projet.md).

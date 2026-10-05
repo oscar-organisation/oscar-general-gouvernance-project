@@ -35,8 +35,10 @@ Les mots du guide, dans l'ordre alphabétique.
 | **Réseau privé** | Le réseau WireGuard qui relie les robots et les personnes qui les administrent, `10.66.0.0/24`, par `vpn.oscar-bot.com`. |
 | **Route de santé** | Une adresse d'une application qui dit si elle est prête à répondre. Par exemple `/v1/health` pour l'API de l'outil DNS. |
 | **Secret** | Un mot de passe, un jeton, une clé. Il ne va jamais dans un envoi, sauf les `.env` de développement versionnés par décision. |
+| **Sous-projet** | Une partie d'un dépôt rangée dans son dossier, avec son propre workflow: une application (le portail), un outil (l'outil de déploiement) ou le guide. Un envoi ne vérifie que les sous-projets qu'il modifie. Voir [un workflow par sous-projet](05-un-workflow-par-sous-projet.md). |
 | **SVG** | Un format d'image fait de traits et de textes, net à toutes les tailles. |
 | **TechDocs** | La partie de Backstage qui affiche la documentation des dépôts, dont ce guide. |
 | **Test** | L'environnement où chaque changement est déployé et vérifié avant la production: `test-<nom>.oscar-bot.com`, branche `test`. |
-| **Vérifications automatiques** | Les contrôles et les tests que GitHub lance seul, à chaque PR et à chaque fusion, et qui construisent l'image et la mettent en ligne quand ils réussissent. Leur fichier est `.github/workflows/verifications-automatiques.yml`. Chaque lancement s'appelle une exécution. |
+| **Vérifications automatiques** | Les contrôles et les tests que GitHub lance seul, à chaque PR et à chaque fusion, et qui construisent l'image et la mettent en ligne quand ils réussissent. Elles sont écrites dans les fichiers de `.github/workflows/`: un par sous-projet, plus les vérifications communes à tout le dépôt. Chaque lancement s'appelle une exécution. |
+| **Workflow** | Un fichier du dossier `.github/workflows/` d'un dépôt, qui dit quand GitHub lance des vérifications automatiques, et lesquelles. Chaque sous-projet a le sien. |
 | **Workflow réutilisable** | Un fichier de GitHub Actions écrit une fois et appelé par plusieurs dépôts. Le déploiement automatique commun en est un, rangé dans `oscar-infrastructure`. |

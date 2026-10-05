@@ -84,9 +84,10 @@ Vous travaillez sur une branche (une ligne de travail à part) nommée
 3. GitHub la range. C'est tout: **rien ne démarre.** Les vérifications
    automatiques ne se lancent que pour une PR vers `test` ou vers `main`, et
    pour une fusion dans `test` ou dans `main` (c'est ce que dit le bloc `on:`
-   du fichier `.github/workflows/verifications-automatiques.yml` de chaque
-   dépôt). Harbor et Coolify ne sont pas prévenus: rien n'est construit, rien
-   n'est mis en ligne.
+   de chaque fichier de `.github/workflows/`, un par sous-projet, plus les
+   vérifications communes: voir [un workflow par
+   sous-projet](05-un-workflow-par-sous-projet.md)). Harbor et Coolify ne sont
+   pas prévenus: rien n'est construit, rien n'est mis en ligne.
 4. **Une exception**: si une PR est déjà ouverte depuis cette branche, chaque
    nouvel envoi relance les vérifications de cette PR (étape 1). C'est ainsi
    qu'on corrige une PR en échec: on corrige sur la même branche, et on renvoie.
@@ -115,8 +116,9 @@ Chaque échange du schéma:
 4. Les **tests du code** (unitaires: une fonction à la fois; d'intégration:
    plusieurs morceaux ensemble, par exemple l'API appelée comme le ferait un
    navigateur). Le détail par application est juste en dessous.
-5. GitHub écrit un **commentaire de résumé** dans la PR, et affiche le verdict
-   au bas de la PR: chaque vérification réussie, ou en échec.
+5. GitHub écrit un **commentaire de résumé** dans la PR, un par workflow
+   lancé, et affiche le verdict au bas de la PR: chaque vérification réussie,
+   ou en échec.
 6. **Si une vérification ou un test est en échec: on ne fusionne pas.** On lit
    le premier message d'erreur (lien « Details » à côté de la vérification), on
    corrige sur la même branche, et on renvoie (étape 0): les vérifications
@@ -130,19 +132,25 @@ Source du schéma: [`schemas/09-parcours-1-la-pr-vers-test.mmd`](schemas/09-parc
 
 ### Ce qui tourne exactement
 
-**Les vérifications rapides**, une par une (le portail; les deux autres dépôts
-ont les mêmes, avec ce qui leur est propre):
+**Les vérifications rapides**, une par une, dans le dépôt du portail. Elles
+sont rangées en trois workflows, qui tournent côte à côte: les vérifications
+communes à tout le dépôt, à chaque PR; celles du portail, quand la PR modifie
+son dossier; celle du guide, quand elle modifie le guide (voir [un workflow
+par sous-projet](05-un-workflow-par-sous-projet.md)). Les autres dépôts ont les
+mêmes vérifications communes, et chacun de leurs sous-projets ce qui lui est
+propre.
 
-| Vérification | Ce qu'elle refuse |
-|---|---|
-| Aucune ligne d'attribution dans les commits | un message de commit qui porte une ligne de signature d'un outil (décision A18) |
-| Chercher des motifs de secrets | un jeton ou une clé privée écrits dans un fichier |
-| Chaque fichier d'environnement a son exemple, identique | un `.env` sans son modèle `.env.exemple`, ou différent de lui |
-| Typographie | le tiret long et le caractère « points de suspension » |
-| Les fichiers des vérifications automatiques sont valides | une faute dans un fichier de GitHub Actions (contrôlé par l'outil `actionlint`) |
-| Les ordinateurs de GitHub sont fixés sur une version | une tâche sur `ubuntu-latest`, qui changerait seule de version |
-| Les compositions sont valides | un `compose.yaml` (la recette de lancement de l'application) que Coolify ne saurait pas lire, ou qui publie un port |
-| Le guide se construit, sans aucun avertissement | un lien cassé, une page oubliée dans le menu, une ancre absente dans ce guide |
+| Vérification | Workflow | Ce qu'elle refuse |
+|---|---|---|
+| Aucune ligne d'attribution dans les commits | Vérifications communes | un message de commit qui porte une ligne de signature d'un outil (décision A18) |
+| Chercher des motifs de secrets | Vérifications communes | un jeton ou une clé privée écrits dans un fichier |
+| Chaque fichier d'environnement a son exemple | Vérifications communes | un `.env` sans son modèle `.env.exemple` |
+| Typographie | Vérifications communes | le tiret long et le caractère « points de suspension » |
+| Les fichiers des vérifications automatiques sont valides | Vérifications communes | une faute dans un fichier de GitHub Actions (contrôlé par l'outil `actionlint`) |
+| Les ordinateurs de GitHub sont fixés sur une version | Vérifications communes | une tâche sur `ubuntu-latest`, qui changerait seule de version |
+| Le fichier d'environnement du portail est la copie de son exemple | Portail | un `.env` du portail différent de son `.env.exemple` |
+| Les compositions sont valides | Portail | un `compose.yaml` (la recette de lancement de l'application) que Coolify ne saurait pas lire, ou qui publie un port |
+| Le guide se construit, sans aucun avertissement | Guide | un lien cassé, une page oubliée dans le menu, une ancre absente dans ce guide |
 
 **Les tests du code**, par application, avec leur nombre (mesurés le
 04/10/2026, sur les exécutions citées):
@@ -194,14 +202,20 @@ sous le titre « Vérifications automatiques: le résumé »:
 | Mis en ligne | rien: seul un envoi sur test ou sur main met en ligne |
 | Durée | 3 min 29 s |
 
-Il n'y en a qu'un par PR: chaque nouvel envoi le met à jour.
+Depuis le découpage en un workflow par sous-projet (décisions 124 et 125),
+chaque workflow lancé écrit son propre commentaire, titré par son nom
+(« Vérifications communes: le résumé », « Portail: le résumé », « Guide: le
+résumé »), et chaque nouvel envoi met à jour le sien.
 
 **Ce qui arrête tout**: une seule vérification ou un seul test en échec. La PR
 s'affiche en échec, et on ne fusionne pas. GitHub n'empêche pas techniquement
 de cliquer sur le bouton de fusion (le plan gratuit de GitHub ne permet pas de
-le bloquer sur un dépôt privé): c'est une règle de l'équipe. Et si quelqu'un
-fusionnait quand même, la fusion rejouerait les tests (étape 2), ils
-échoueraient, et rien ne serait construit ni mis en ligne.
+le bloquer sur un dépôt privé): c'est une règle de l'équipe. Si quelqu'un
+fusionnait quand même, la fusion rejouerait les tests du sous-projet
+(étape 2): s'ils échouaient, rien ne serait construit ni mis en ligne. Mais une
+vérification commune en échec (un secret, une ligne d'attribution) n'arrête
+pas, elle, la mise en ligne d'un sous-projet, qui tourne dans son propre
+workflow: c'est une raison de plus de ne jamais fusionner une PR en échec.
 
 ## Étape 2. La fusion dans `test`
 
@@ -544,8 +558,9 @@ Source du schéma: [`schemas/13-parcours-5-le-retour-en-arriere.mmd`](schemas/13
 
 | Ce qui arrive | À quelle étape | Ce qui se passe |
 |---|---|---|
-| une vérification rapide en échec | toutes | **tout s'arrête**: la suite est sautée, rien n'est mis en ligne |
-| un test en échec | PR vers `test`, fusion dans `test` | **tout s'arrête**: rien n'est construit ni mis en ligne |
+| une vérification rapide d'un sous-projet en échec | toutes | **tout s'arrête pour ce sous-projet**: la suite de son workflow est sautée, il n'est pas mis en ligne; les autres sous-projets suivent leur propre workflow |
+| une vérification commune en échec | toutes | **la PR s'affiche en échec**, et on ne la fusionne pas; elle n'arrête pas le workflow d'un sous-projet, qui tourne à côté |
+| un test en échec | PR vers `test`, fusion dans `test` | **tout s'arrête pour ce sous-projet**: rien n'est construit ni mis en ligne |
 | la construction ou le contrôle de l'image en échec | fusion dans `test` | **tout s'arrête**: rien n'est rangé dans Harbor |
 | l'image testée absente de Harbor | PR vers `main`, fusion dans `main` | **refus net**: rien n'est mis en production |
 | l'image jamais mise en ligne en test | PR vers `main` | **refus net** |
