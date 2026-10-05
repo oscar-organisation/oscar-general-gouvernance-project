@@ -94,8 +94,10 @@ attente, et la fiche du dépôt avec ce guide, tels qu'ils sont au lancement. Le
 fiches des autres dépôts n'y sont pas: le portail ne les lit que sur GitHub, en
 test et en production. C'est le cas des fiches du dépôt
 `oscar-infrastructure`, posées dans leur dépôt le 28 septembre 2026: l'outil
-DNS et son API, le serveur temps réel, et « Le déploiement ». Sur l'accueil,
-en local, leurs cartes disent qu'elles ne sont pas encore dans le catalogue.
+DNS et son API, le serveur temps réel, et « Le déploiement ». C'est aussi le
+cas des fiches de la console d'administration, dans le dépôt
+`oscar-console-admin`. Sur l'accueil, en local, leurs cartes disent qu'elles ne
+sont pas encore dans le catalogue.
 
 La fiche et le guide sont **copiés** à chaque lancement, par le service
 `copie-du-depot`: TechDocs réécrit `mkdocs.yml` avant chaque construction, et ne
@@ -113,6 +115,14 @@ Chaque variable est décrite dans `oscar_backstage/.env.exemple`: son rôle et
 son niveau (local, test, production). Le fichier `.env` en est une copie, et
 suffit pour travailler. Les ports suivent la convention: `18500`, `18501` et
 `18502`, sur `127.0.0.1` seulement.
+
+Une fiche d'API peut afficher la description que l'application publie
+elle-même, à une adresse (`/openapi.json`). Le portail ne lit une telle adresse
+que si son nom est dans la liste `backend.reading.allow` de
+`oscar_backstage/app-config.yaml`: aujourd'hui `api-dns`, `api-console` et
+`test-api-console`, sous `oscar-bot.com`. Sinon la fiche reste vide, et le
+journal du portail dit « Reading from ... is not allowed ». Une API de plus est
+une ligne de plus dans cette liste.
 
 ## Construire ce guide en local
 

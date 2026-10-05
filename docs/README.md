@@ -69,9 +69,9 @@ Cette liste suit la carte des dépôts tenue sur la machine du projet
 (`_pilotage/07-carte-des-depots.md`). En cas d'écart, c'est la carte qui fait
 foi.
 
-**Les trois applications qui suivent aujourd'hui ce cycle** sont l'outil DNS, le
-laboratoire de tests et le portail Backstage. Chacune a sa page:
-[les applications](08-les-applications/README.md).
+**Les quatre applications qui suivent aujourd'hui ce cycle** sont l'outil DNS, le
+laboratoire de tests, le portail Backstage et la console d'administration.
+Chacune a sa page: [les applications](08-les-applications/README.md).
 
 ## Ce qu'il faut sur son poste
 
